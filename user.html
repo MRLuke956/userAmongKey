@@ -3,298 +3,132 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'sha256-dN780KZ9MejTiynLmFNhnhiSUdYFfZYgbNh/bGAnVRA='; /* <<< HASH ADICIONADO AQUI */
-    style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
-    font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' https://i.imgur.com data:;
-    connect-src 'self' https://keygenx-ce8h.onrender.com;
-    object-src 'none';
-    /* frame-ancestors 'none'; REMOVIDO DA META TAG PARA EVITAR AVISO */
-  ">
-  <title>Painel de Chaves - Among Us</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+  <title>Gerador de Chaves - Among Us</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       font-family: 'Orbitron', sans-serif;
-      background-color: #080A10;
-      color: #E0E0E0;
+      background-color: #0d0d0d;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      background-image: url('https://i.imgur.com/3ZQ3ZQ3.png');
+      background-image: url('https://i.imgur.com/3ZQ3ZQ3.png'); /* você pode substituir */
       background-size: cover;
       background-position: center;
-      background-attachment: fixed;
       padding: 20px;
-      box-sizing: border-box;
     }
-
     .container {
-      background-color: rgba(10, 20, 40, 0.9);
-      padding: 30px 40px;
-      border-radius: 15px;
+      background-color: rgba(0, 0, 0, 0.85);
+      padding: 30px;
+      border-radius: 10px;
       text-align: center;
-      max-width: 480px;
+      max-width: 420px;
       width: 100%;
-      border: 2px solid #00FFFF;
-      box-shadow: 0 0 20px #00FFFF, 0 0 8px #00FFFF inset;
     }
-
     h1 {
-      color: #FF4136;
+      color: #c51111;
       margin-bottom: 20px;
-      font-size: 2em;
-      text-transform: uppercase;
-      text-shadow: 0 0 8px #FF4136, 0 0 12px #FF4136;
     }
-
-    p {
-      font-size: 0.95em;
-      line-height: 1.6;
-      color: #A0D2DB;
-      margin-bottom: 25px;
-    }
-
-    .button-group {
-      margin-bottom: 25px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 15px;
-    }
-
     button {
-      background-color: #FFC600;
+      background-color: #132ed1;
       border: none;
-      color: #1A1A1A;
-      padding: 12px 25px;
-      font-size: 1em;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-      border-bottom: 3px solid #D4A300;
-      box-shadow: 0 0 8px rgba(255, 198, 0, 0.4);
-    }
-
-    button:hover:not(:disabled) {
-      background-color: #FFD700;
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-    }
-
-    button:active:not(:disabled) {
-      transform: translateY(1px);
-      border-bottom-width: 2px;
-    }
-
-    button:disabled {
-      background-color: #777777;
-      color: #AAAAAA;
-      cursor: not-allowed;
-      opacity: 0.7;
-      border-bottom-color: #555555;
-      box-shadow: none;
-    }
-
-    #keyDisplay {
-      margin-top: 25px;
-      font-size: 1.3em;
-      color: #39FF14;
-      background-color: #05080F;
-      padding: 12px 15px;
+      color: #fff;
+      padding: 15px 30px;
+      font-size: 1.1em;
       border-radius: 5px;
-      border: 1px solid #39FF14;
-      min-height: 1.5em;
-      word-break: break-all;
-      box-shadow: 0 0 8px #39FF14 inset;
-      letter-spacing: 1px;
-    }
-
-    #message {
+      cursor: pointer;
       margin-top: 15px;
-      font-size: 0.9em;
-      min-height: 1.2em;
-      padding: 5px;
     }
-
-    .message-error { color: #FF4136; font-weight: bold; }
-    .message-success { color: #39FF14; font-weight: bold; }
-    .message-loading { color: #FFC600; font-weight: bold; }
-    .message-info { color: #A0D2DB; }
-
+    button:hover {
+      background-color: #117f2d;
+    }
+    #keyDisplay {
+      margin-top: 20px;
+      font-size: 1.4em;
+      color: #f1c40f;
+    }
+    #message {
+      margin-top: 10px;
+      color: #e74c3c;
+    }
     ul#minhasChaves {
       list-style: none;
       padding-left: 0;
-      margin-top: 25px;
+      margin-top: 20px;
       text-align: left;
       color: #f39c12;
-      max-height: 150px;
-      overflow-y: auto;
-      background-color: rgba(0, 0, 0, 0.3);
-      border-radius: 5px;
-      padding: 10px;
-      border: 1px dashed #f39c12;
-      display: none; /* Escondido por padrão */
     }
-
     ul#minhasChaves li {
-      background-color: rgba(255, 255, 255, 0.07);
-      padding: 8px 12px;
-      margin-bottom: 6px;
-      border-radius: 4px;
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 0.9em;
-      color: #FFD700;
-      word-break: break-all;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+      font-family: monospace;
     }
-    ul#minhasChaves li:last-child {
-      margin-bottom: 0;
-    }
-
-    ul#minhasChaves::-webkit-scrollbar { width: 8px; }
-    ul#minhasChaves::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-    ul#minhasChaves::-webkit-scrollbar-thumb { background-color: #f39c12; border-radius: 4px; }
-    ul#minhasChaves::-webkit-scrollbar-thumb:hover { background-color: #e68a00; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Painel de Chaves</h1>
-    <p>Tripulante, o sistema da nave requer autenticação. Gere uma nova chave ou veja suas chaves.</p>
-
-    <div class="button-group">
-      <button id="generateKeyButton">🎮 Gerar Nova Chave</button>
-      <button id="viewKeysButton">📜 Ver Minhas Chaves</button>
-    </div>
-
+    <h1>Gerador de Chaves</h1>
+    <p>Clique no botão abaixo para gerar sua chave única.</p>
+    <button onclick="generateKey()">🎮 Gerar Chave</button>
+    <button onclick="verMinhasChaves()">📜 Ver Minhas Chaves</button>
     <div id="keyDisplay"></div>
     <div id="message"></div>
     <ul id="minhasChaves"></ul>
   </div>
 
   <script>
-    // Selecionando os elementos do DOM
-    const generateKeyButton = document.getElementById('generateKeyButton');
-    const viewKeysButton = document.getElementById('viewKeysButton');
-    const keyDisplay = document.getElementById('keyDisplay');
-    const message = document.getElementById('message');
-    const minhasChavesList = document.getElementById('minhasChaves');
-
-    const originalGenerateButtonText = generateKeyButton.textContent;
-    const originalViewKeysButtonText = viewKeysButton.textContent;
-
-    // Função auxiliar para mostrar mensagens e seus tipos
-    function showMessage(text, type = 'info') {
-      message.textContent = text;
-      message.className = `message-${type}`;
-    }
-
-    // Função centralizada para chamadas fetch
-    async function fetchData(url, buttonToManage, loadingText) {
-      if (buttonToManage) {
-        buttonToManage.disabled = true;
-        buttonToManage.textContent = loadingText;
-      }
+    async function generateKey() {
+      const keyDisplay = document.getElementById('keyDisplay');
+      const message = document.getElementById('message');
+      const list = document.getElementById('minhasChaves');
       keyDisplay.textContent = '';
-      showMessage('Comunicando com a central...', 'loading');
-      minhasChavesList.style.display = 'none';
+      message.textContent = '';
+      list.innerHTML = '';
 
       try {
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
+        const response = await fetch('https://keygenx-ce8h.onrender.com/generate_key');
+        const data = await response.json();
 
-        if (!response.ok) {
-          let errorData;
-          try {
-            errorData = await response.json();
-          } catch (e) {
-            errorData = { message: response.statusText || `Erro HTTP ${response.status}` };
-          }
-          throw new Error(`Falha na resposta do servidor (${response.status}): ${errorData.message}`);
-        }
-        return await response.json();
-      } catch (error) {
-        console.error('Erro na chamada API:', error);
-        showMessage(`ERRO: ${error.message}. Verifique a conexão ou tente mais tarde.`, 'error');
-        keyDisplay.textContent = '--- FALHA NA COMUNICAÇÃO ---';
-        return null;
-      }
-    }
-
-    // Função para gerar chave
-    async function generateAndDisplayKey() {
-      const data = await fetchData('https://keygenx-ce8h.onrender.com/generate_key', generateKeyButton, 'GERANDO...');
-
-      if (data) {
         if (data.status === 'success' && data.keys?.length > 0) {
-          keyDisplay.textContent = `🔑 Nova Chave: ${data.keys[0]}`;
-          showMessage('Chave de acesso gerada pela central!', 'success');
+          keyDisplay.textContent = `🔐 Nova chave: ${data.keys[0]}`;
+          verMinhasChaves();
         } else {
-          keyDisplay.textContent = '--- FALHA NA GERAÇÃO ---';
-          showMessage(data.message || 'Resposta inesperada do servidor ao gerar chave.', 'error');
+          message.textContent = data.message || 'Erro ao gerar chave.';
         }
+      } catch (error) {
+        message.textContent = 'Erro ao conectar com o servidor.';
       }
-      generateKeyButton.disabled = false;
-      generateKeyButton.textContent = originalGenerateButtonText;
     }
 
-    // Função para ver/mostrar as chaves do usuário
-    async function displayUserKeys(manageButtonState = true) {
-      const data = await fetchData('https://keygenx-ce8h.onrender.com/user_keys', manageButtonState ? viewKeysButton : null, 'BUSCANDO SUAS CHAVES...');
+    async function verMinhasChaves() {
+      const list = document.getElementById('minhasChaves');
+      const message = document.getElementById('message');
+      list.innerHTML = '';
+      message.textContent = '';
 
-      minhasChavesList.innerHTML = '';
+      try {
+        const response = await fetch('https://keygenx-ce8h.onrender.com/user_keys');
+        const data = await response.json();
 
-      if (data) {
-        if (data.status === 'success' && data.keys) {
+        if (data.status === 'success') {
           if (data.keys.length === 0) {
-            const li = document.createElement('li');
-            li.textContent = 'Nenhuma chave encontrada para este usuário.';
-            minhasChavesList.appendChild(li);
-            showMessage('Você ainda não possui chaves.', 'info');
+            list.innerHTML = '<li>Nenhuma chave gerada ainda.</li>';
           } else {
-            data.keys.forEach(key => {
-              const li = document.createElement('li');
-              li.textContent = key;
-              minhasChavesList.appendChild(li);
-            });
-            showMessage(`${data.keys.length} chave(s) carregada(s) da central.`, 'success');
+            list.innerHTML = data.keys.map(k => `<li>${k}</li>`).join('');
           }
-          minhasChavesList.style.display = 'block';
         } else {
-          const li = document.createElement('li');
-          li.textContent = 'Erro ao buscar chaves.';
-          minhasChavesList.appendChild(li);
-          minhasChavesList.style.display = 'block';
-          showMessage(data.message || 'Resposta inesperada do servidor ao buscar chaves.', 'error');
+          message.textContent = data.message || 'Erro ao buscar chaves.';
         }
-      } else {
-        const li = document.createElement('li');
-        li.textContent = 'Não foi possível carregar as chaves devido a um erro.';
-        minhasChavesList.appendChild(li);
-        minhasChavesList.style.display = 'block';
-      }
-
-      if (manageButtonState) {
-        viewKeysButton.disabled = false;
-        viewKeysButton.textContent = originalViewKeysButtonText;
+      } catch (error) {
+        message.textContent = 'Erro de conexão ao buscar suas chaves.';
       }
     }
-
-    generateKeyButton.addEventListener('click', generateAndDisplayKey);
-    viewKeysButton.addEventListener('click', () => displayUserKeys(true));
-
   </script>
 </body>
 </html>

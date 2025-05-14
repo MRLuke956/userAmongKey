@@ -3,33 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <!--
-    Política de Segurança de Conteúdo (CSP)
-    - default-src 'self': Por padrão, permite conteúdo apenas do mesmo domínio.
-    - script-src 'self': Permite scripts apenas do mesmo domínio (NÃO inline).
-    - style-src 'self' https://fonts.googleapis.com 'unsafe-inline': Permite estilos do mesmo domínio,
-      Google Fonts e estilos inline (necessário pelos estilos no <head>).
-      Idealmente, todos os estilos estariam em um arquivo .css separado para remover 'unsafe-inline'.
-    - font-src 'self' https://fonts.gstatic.com: Permite fontes do mesmo domínio e Google Fonts.
-    - img-src 'self' https://i.imgur.com data:: Permite imagens do mesmo domínio, i.imgur.com e data URIs.
-      Se quiser usar outra fonte de imagem (ex: i.ytimg.com), adicione-a aqui.
-      Ex: img-src 'self' https://i.imgur.com https://i.ytimg.com data:;
-    - connect-src 'self' https://keygenx-ce8h.onrender.com: Permite conexões (fetch)
-      para o mesmo domínio e para a API de chaves.
-    - object-src 'none': Não permite plugins como Flash.
-    - frame-ancestors 'none': Impede que a página seja embutida em iframes de outros sites (ajuda contra clickjacking).
-      Este aviso sobre 'frame-ancestors' em meta tags pode ser ignorado ou a diretiva removida da meta tag
-      e configurada via cabeçalho HTTP no servidor, se possível.
-  -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self';
+    script-src 'self' 'sha256-dN780KZ9MejTiynLmFNhnhiSUdYFfZYgbNh/bGAnVRA='; /* <<< HASH ADICIONADO AQUI */
     style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' https://i.imgur.com data:;
     connect-src 'self' https://keygenx-ce8h.onrender.com;
     object-src 'none';
-    frame-ancestors 'none';
+    /* frame-ancestors 'none'; REMOVIDO DA META TAG PARA EVITAR AVISO */
   ">
   <title>Painel de Chaves - Among Us</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
@@ -37,15 +19,14 @@
     body {
       margin: 0;
       font-family: 'Orbitron', sans-serif;
-      background-color: #080A10; /* Azul escuro do espaço profundo */
-      color: #E0E0E0; /* Cinza claro para texto geral */
+      background-color: #080A10;
+      color: #E0E0E0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      /* Imagem de fundo original do seu código a.txt */
-      background-image: url('https://i.imgur.com/OUDk9M5.mp4');
+      background-image: url('https://i.imgur.com/3ZQ3ZQ3.png');
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
@@ -60,12 +41,12 @@
       text-align: center;
       max-width: 480px;
       width: 100%;
-      border: 2px solid #00FFFF; /* Borda Ciano Neon */
+      border: 2px solid #00FFFF;
       box-shadow: 0 0 20px #00FFFF, 0 0 8px #00FFFF inset;
     }
 
     h1 {
-      color: #FF4136; /* Vermelho "Emergência" */
+      color: #FF4136;
       margin-bottom: 20px;
       font-size: 2em;
       text-transform: uppercase;
@@ -88,7 +69,7 @@
     }
 
     button {
-      background-color: #FFC600; /* Amarelo "Task" */
+      background-color: #FFC600;
       border: none;
       color: #1A1A1A;
       padding: 12px 25px;
@@ -126,7 +107,7 @@
     #keyDisplay {
       margin-top: 25px;
       font-size: 1.3em;
-      color: #39FF14; /* Verde Neon */
+      color: #39FF14;
       background-color: #05080F;
       padding: 12px 15px;
       border-radius: 5px;
@@ -154,7 +135,7 @@
       padding-left: 0;
       margin-top: 25px;
       text-align: left;
-      color: #f39c12; /* Laranja */
+      color: #f39c12;
       max-height: 150px;
       overflow-y: auto;
       background-color: rgba(0, 0, 0, 0.3);
@@ -171,7 +152,7 @@
       border-radius: 4px;
       font-family: 'Consolas', 'Monaco', monospace;
       font-size: 0.9em;
-      color: #FFD700; /* Amarelo claro */
+      color: #FFD700;
       word-break: break-all;
     }
     ul#minhasChaves li:last-child {
@@ -213,7 +194,7 @@
     // Função auxiliar para mostrar mensagens e seus tipos
     function showMessage(text, type = 'info') {
       message.textContent = text;
-      message.className = `message-${type}`; // Adiciona classe para estilização específica
+      message.className = `message-${type}`;
     }
 
     // Função centralizada para chamadas fetch
@@ -222,10 +203,9 @@
         buttonToManage.disabled = true;
         buttonToManage.textContent = loadingText;
       }
-      // Limpa keyDisplay e message ao iniciar uma nova chamada
       keyDisplay.textContent = '';
       showMessage('Comunicando com a central...', 'loading');
-      minhasChavesList.style.display = 'none'; // Esconde a lista durante o carregamento
+      minhasChavesList.style.display = 'none';
 
       try {
         const response = await fetch(url, {
@@ -240,7 +220,6 @@
           try {
             errorData = await response.json();
           } catch (e) {
-            // Se o corpo do erro não for JSON ou estiver vazio
             errorData = { message: response.statusText || `Erro HTTP ${response.status}` };
           }
           throw new Error(`Falha na resposta do servidor (${response.status}): ${errorData.message}`);
@@ -250,9 +229,7 @@
         console.error('Erro na chamada API:', error);
         showMessage(`ERRO: ${error.message}. Verifique a conexão ou tente mais tarde.`, 'error');
         keyDisplay.textContent = '--- FALHA NA COMUNICAÇÃO ---';
-        return null; // Retorna null para indicar falha
-      } finally {
-        // A reabilitação dos botões será feita pelas funções específicas
+        return null;
       }
     }
 
@@ -260,18 +237,15 @@
     async function generateAndDisplayKey() {
       const data = await fetchData('https://keygenx-ce8h.onrender.com/generate_key', generateKeyButton, 'GERANDO...');
 
-      if (data) { // Verifica se data não é null (ou seja, não houve erro no fetch)
+      if (data) {
         if (data.status === 'success' && data.keys?.length > 0) {
           keyDisplay.textContent = `🔑 Nova Chave: ${data.keys[0]}`;
           showMessage('Chave de acesso gerada pela central!', 'success');
-          // Opcional: atualizar e mostrar a lista de chaves automaticamente
-          // await displayUserKeys(false);
         } else {
           keyDisplay.textContent = '--- FALHA NA GERAÇÃO ---';
           showMessage(data.message || 'Resposta inesperada do servidor ao gerar chave.', 'error');
         }
       }
-      // Reabilitar o botão de gerar chave
       generateKeyButton.disabled = false;
       generateKeyButton.textContent = originalGenerateButtonText;
     }
@@ -280,7 +254,7 @@
     async function displayUserKeys(manageButtonState = true) {
       const data = await fetchData('https://keygenx-ce8h.onrender.com/user_keys', manageButtonState ? viewKeysButton : null, 'BUSCANDO SUAS CHAVES...');
 
-      minhasChavesList.innerHTML = ''; // Limpa a lista antes de popular
+      minhasChavesList.innerHTML = '';
 
       if (data) {
         if (data.status === 'success' && data.keys) {
@@ -292,12 +266,12 @@
           } else {
             data.keys.forEach(key => {
               const li = document.createElement('li');
-              li.textContent = key; // Seguro contra XSS
+              li.textContent = key;
               minhasChavesList.appendChild(li);
             });
             showMessage(`${data.keys.length} chave(s) carregada(s) da central.`, 'success');
           }
-          minhasChavesList.style.display = 'block'; // Mostra a lista
+          minhasChavesList.style.display = 'block';
         } else {
           const li = document.createElement('li');
           li.textContent = 'Erro ao buscar chaves.';
@@ -306,8 +280,6 @@
           showMessage(data.message || 'Resposta inesperada do servidor ao buscar chaves.', 'error');
         }
       } else {
-        // Se data for null, a fetchData já mostrou uma mensagem de erro de conexão.
-        // Podemos adicionar um item à lista indicando a falha.
         const li = document.createElement('li');
         li.textContent = 'Não foi possível carregar as chaves devido a um erro.';
         minhasChavesList.appendChild(li);
@@ -320,7 +292,6 @@
       }
     }
 
-    // Adicionando os event listeners aos botões
     generateKeyButton.addEventListener('click', generateAndDisplayKey);
     viewKeysButton.addEventListener('click', () => displayUserKeys(true));
 

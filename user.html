@@ -13,7 +13,7 @@
       --warning: #f1c40f;
       --error: #e74c3c;
       --background: #0d0d0d;
-      --card-bg: rgba(0, 0, 0, 0.85);
+      --card-bg: rgba(13, 13, 13, 0.95);
       --text: #ffffff;
     }
 
@@ -23,29 +23,56 @@
       box-sizing: border-box;
     }
 
+    @keyframes twinkle {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-2000px); }
+    }
+
     body {
       margin: 0;
       font-family: 'Space Grotesk', sans-serif;
       background-color: var(--background);
       color: var(--text);
       min-height: 100vh;
-      background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-                        url('https://images.pexels.com/photos/7130555/pexels-photo-7130555.jpeg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      padding: 20px;
-      display: grid;
-      place-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 200%;
+      pointer-events: none;
+      animation: float 50s linear infinite;
+      background: transparent;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
     }
 
     .container {
+      position: relative;
+      z-index: 1;
       background-color: var(--card-bg);
       padding: 2.5rem;
       border-radius: 15px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      width: 100%;
+      width: 90%;
       max-width: 480px;
+      margin: 2rem auto;
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -55,8 +82,20 @@
       color: var(--primary);
       margin-bottom: 1.5rem;
       font-size: 2.2rem;
-      text-shadow: 0 0 10px rgba(197, 17, 17, 0.3);
+      text-shadow: 0 0 10px rgba(197, 17, 17, 0.5);
       text-align: center;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
     }
 
     p {
@@ -76,7 +115,7 @@
     button {
       flex: 1;
       min-width: 160px;
-      background-color: var(--secondary);
+      background: linear-gradient(135deg, var(--secondary), #1e40af);
       border: none;
       color: var(--text);
       padding: 1rem 1.5rem;
@@ -95,7 +134,7 @@
     }
 
     button:hover {
-      background-color: var(--success);
+      background: linear-gradient(135deg, var(--success), #15803d);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(17, 127, 45, 0.3);
     }
@@ -133,6 +172,7 @@
       opacity: 0;
       transform: translateY(10px);
       transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .key-container.visible {
@@ -145,6 +185,7 @@
       font-size: 1.2rem;
       color: var(--warning);
       word-break: break-all;
+      text-shadow: 0 0 5px rgba(241, 196, 15, 0.3);
     }
 
     .message {
@@ -175,6 +216,7 @@
       color: var(--warning);
       margin-bottom: 1rem;
       font-size: 1.4rem;
+      text-shadow: 0 0 5px rgba(241, 196, 15, 0.3);
     }
 
     .keys-list ul {
@@ -195,6 +237,13 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .keys-list li:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
     }
 
     .keys-list li::before {
@@ -205,6 +254,8 @@
     @media (max-width: 480px) {
       .container {
         padding: 1.5rem;
+        width: 95%;
+        margin: 1rem auto;
       }
 
       h1 {
@@ -222,6 +273,7 @@
   </style>
 </head>
 <body>
+  <div id="stars" class="stars"></div>
   <div class="container">
     <h1>Gerador de Chaves</h1>
     <p>Clique no botão abaixo para gerar sua chave única do Among Us.</p>
@@ -248,6 +300,34 @@
   </div>
 
   <script>
+    // Create starfield
+    function createStarfield() {
+      const stars = document.getElementById('stars');
+      const numberOfStars = 200;
+      
+      for (let i = 0; i < numberOfStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        // Random position
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        
+        // Random size
+        const size = Math.random() * 2 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        
+        // Random twinkle animation
+        star.style.animation = `twinkle ${Math.random() * 3 + 2}s infinite`;
+        
+        stars.appendChild(star);
+      }
+    }
+
+    // Initialize starfield
+    createStarfield();
+
     const generateBtn = document.getElementById('generateBtn');
     const viewKeysBtn = document.getElementById('viewKeysBtn');
     const keyContainer = document.getElementById('keyContainer');

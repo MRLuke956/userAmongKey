@@ -177,26 +177,31 @@
       });
     }
 
-    async function generateKey(){
-      setLoading(true);
-      keyCont.className='key-container';
-      msg.className='message';
-      try {
-        const res=await fetch('https://keygenx-ce8h.onrender.com/generate_key');
-        if(!res.ok) throw new Error(res.status);
-        const data=await res.json();
-        if(data.status==='success' && data.key){
-          keyVal.textContent=`🔐 ${data.key}`;
-          keyCont.className='key-container visible';
-          await fetchUserKeys();
-        } else {
-          showMessage(data.message||'Erro ao gerar chave.');
-        }
-      } catch(e){
-        console.error(e);
-        showMessage('Erro de conexão.');
-      } finally { setLoading(false); }
+    async function generateKey() {
+  setLoading(true);
+  keyCont.className = 'key-container';
+  msg.className = 'message';
+
+  try {
+    const res = await fetch('https://keygenx-ce8h.onrender.com/generate_key');
+
+    const data = await res.json(); // tentar ler o JSON mesmo em erro
+    if (res.ok && data.status === 'success' && data.key) {
+      keyVal.textContent = `🔐 ${data.key}`;
+      keyCont.className = 'key-container visible';
+      await fetchUserKeys();
+    } else {
+      showMessage(data.message || 'Erro ao gerar chave.');
     }
+
+  } catch (e) {
+    console.error('Erro ao gerar chave:', e);
+    showMessage('Erro de conexão ao gerar chave.');
+  } finally {
+    setLoading(false);
+  }
+}
+
 
     async function fetchUserKeys(){
       setLoading(true);

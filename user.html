@@ -1,26 +1,37 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <!--
-    Política de Segurança de Conteúdo (CSP) para aumentar a segurança.
-    Ajuste 'img-src' se você usar uma URL de imagem específica de um domínio diferente.
-    'unsafe-inline' para style-src é mantido devido aos estilos no <head>,
-    idealmente, todos os estilos estariam em um arquivo .css separado para maior segurança.
+    Política de Segurança de Conteúdo (CSP)
+    - default-src 'self': Por padrão, permite conteúdo apenas do mesmo domínio.
+    - script-src 'self': Permite scripts apenas do mesmo domínio (NÃO inline).
+    - style-src 'self' https://fonts.googleapis.com 'unsafe-inline': Permite estilos do mesmo domínio,
+      Google Fonts e estilos inline (necessário pelos estilos no <head>).
+      Idealmente, todos os estilos estariam em um arquivo .css separado para remover 'unsafe-inline'.
+    - font-src 'self' https://fonts.gstatic.com: Permite fontes do mesmo domínio e Google Fonts.
+    - img-src 'self' https://i.imgur.com data:: Permite imagens do mesmo domínio, i.imgur.com e data URIs.
+      Se quiser usar outra fonte de imagem (ex: i.ytimg.com), adicione-a aqui.
+      Ex: img-src 'self' https://i.imgur.com https://i.ytimg.com data:;
+    - connect-src 'self' https://keygenx-ce8h.onrender.com: Permite conexões (fetch)
+      para o mesmo domínio e para a API de chaves.
+    - object-src 'none': Não permite plugins como Flash.
+    - frame-ancestors 'none': Impede que a página seja embutida em iframes de outros sites (ajuda contra clickjacking).
+      Este aviso sobre 'frame-ancestors' em meta tags pode ser ignorado ou a diretiva removida da meta tag
+      e configurada via cabeçalho HTTP no servidor, se possível.
   -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self';
     style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
     font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' https://i.imgur.com data:; /* Permite 'self', imgur.com e data URIs para imagens */
+    img-src 'self' https://i.imgur.com data:;
     connect-src 'self' https://keygenx-ce8h.onrender.com;
     object-src 'none';
     frame-ancestors 'none';
   ">
-  <title>Painel de Controle - Among Us</title>
+  <title>Painel de Chaves - Among Us</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -33,28 +44,24 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      /* SUGESTÃO de IMAGEM DE FUNDO (substitua por uma URL válida ou use data URI)
-         Procure por "among us space background stars" para encontrar opções.
-         Exemplo: 'https://wallpapers.com/images/hd/among-us-space-digital-painting-xasa8pnhl57j70ql.jpg'
-         OU use a anterior se gostar: 'https://i.imgur.com/3ZQ3ZQ3.png'
-      */
-      background-image: url('https://i.ytimg.com/vi/6BFhVrifW-0/maxresdefault.jpg'); /* Imagem de placeholder, substitua! */
+      /* Imagem de fundo original do seu código a.txt */
+      background-image: url('https://i.imgur.com/3ZQ3ZQ3.png');
       background-size: cover;
       background-position: center;
-      background-attachment: fixed; /* Efeito de paralaxe sutil */
+      background-attachment: fixed;
       padding: 20px;
       box-sizing: border-box;
     }
 
     .container {
-      background-color: rgba(10, 20, 40, 0.9); /* Painel azulado translúcido, mais opaco */
+      background-color: rgba(10, 20, 40, 0.9);
       padding: 30px 40px;
       border-radius: 15px;
       text-align: center;
-      max-width: 480px; /* Um pouco mais largo para a lista de chaves */
+      max-width: 480px;
       width: 100%;
       border: 2px solid #00FFFF; /* Borda Ciano Neon */
-      box-shadow: 0 0 20px #00FFFF, 0 0 8px #00FFFF inset; /* Brilho Ciano Neon mais intenso */
+      box-shadow: 0 0 20px #00FFFF, 0 0 8px #00FFFF inset;
     }
 
     h1 {
@@ -68,22 +75,22 @@
     p {
       font-size: 0.95em;
       line-height: 1.6;
-      color: #A0D2DB; /* Azul claro para parágrafos */
+      color: #A0D2DB;
       margin-bottom: 25px;
     }
 
     .button-group {
       margin-bottom: 25px;
       display: flex;
-      flex-wrap: wrap; /* Permite que os botões quebrem linha em telas menores */
+      flex-wrap: wrap;
       justify-content: center;
-      gap: 15px; /* Espaço entre os botões */
+      gap: 15px;
     }
 
     button {
       background-color: #FFC600; /* Amarelo "Task" */
       border: none;
-      color: #1A1A1A; /* Preto para contraste no amarelo */
+      color: #1A1A1A;
       padding: 12px 25px;
       font-size: 1em;
       font-family: 'Orbitron', sans-serif;
@@ -118,8 +125,8 @@
 
     #keyDisplay {
       margin-top: 25px;
-      font-size: 1.3em; /* Ajustado para melhor leitura da chave com prefixo */
-      color: #39FF14; /* Verde Neon para a chave */
+      font-size: 1.3em;
+      color: #39FF14; /* Verde Neon */
       background-color: #05080F;
       padding: 12px 15px;
       border-radius: 5px;
@@ -142,57 +149,45 @@
     .message-loading { color: #FFC600; font-weight: bold; }
     .message-info { color: #A0D2DB; }
 
-
     ul#minhasChaves {
       list-style: none;
       padding-left: 0;
       margin-top: 25px;
       text-align: left;
-      color: #f39c12; /* Laranja para a lista de chaves */
-      max-height: 150px; /* Altura máxima para a lista com scroll */
-      overflow-y: auto; /* Adiciona scroll se a lista for grande */
-      background-color: rgba(0, 0, 0, 0.3); /* Fundo leve para a área da lista */
+      color: #f39c12; /* Laranja */
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: rgba(0, 0, 0, 0.3);
       border-radius: 5px;
       padding: 10px;
-      border: 1px dashed #f39c12; /* Borda tracejada laranja */
+      border: 1px dashed #f39c12;
+      display: none; /* Escondido por padrão */
     }
 
     ul#minhasChaves li {
-      background-color: rgba(255, 255, 255, 0.07); /* Fundo levemente mais claro para itens */
+      background-color: rgba(255, 255, 255, 0.07);
       padding: 8px 12px;
       margin-bottom: 6px;
       border-radius: 4px;
-      font-family: 'Consolas', 'Monaco', monospace; /* Fonte monoespaçada para chaves */
+      font-family: 'Consolas', 'Monaco', monospace;
       font-size: 0.9em;
-      color: #FFD700; /* Amarelo claro para o texto da chave */
+      color: #FFD700; /* Amarelo claro */
       word-break: break-all;
     }
     ul#minhasChaves li:last-child {
       margin-bottom: 0;
     }
 
-    /* Estilo para a barra de rolagem da lista (opcional, para navegadores WebKit) */
-    ul#minhasChaves::-webkit-scrollbar {
-      width: 8px;
-    }
-    ul#minhasChaves::-webkit-scrollbar-track {
-      background: rgba(0,0,0,0.2);
-      border-radius: 4px;
-    }
-    ul#minhasChaves::-webkit-scrollbar-thumb {
-      background-color: #f39c12;
-      border-radius: 4px;
-    }
-    ul#minhasChaves::-webkit-scrollbar-thumb:hover {
-      background-color: #e68a00;
-    }
-
+    ul#minhasChaves::-webkit-scrollbar { width: 8px; }
+    ul#minhasChaves::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+    ul#minhasChaves::-webkit-scrollbar-thumb { background-color: #f39c12; border-radius: 4px; }
+    ul#minhasChaves::-webkit-scrollbar-thumb:hover { background-color: #e68a00; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Painel de Chaves</h1>
-    <p>Tripulante, o sistema da nave requer autenticação. Gere uma nova chave de acesso ou visualize suas chaves existentes.</p>
+    <p>Tripulante, o sistema da nave requer autenticação. Gere uma nova chave ou veja suas chaves.</p>
 
     <div class="button-group">
       <button id="generateKeyButton">🎮 Gerar Nova Chave</button>
@@ -205,6 +200,7 @@
   </div>
 
   <script>
+    // Selecionando os elementos do DOM
     const generateKeyButton = document.getElementById('generateKeyButton');
     const viewKeysButton = document.getElementById('viewKeysButton');
     const keyDisplay = document.getElementById('keyDisplay');
@@ -214,18 +210,22 @@
     const originalGenerateButtonText = generateKeyButton.textContent;
     const originalViewKeysButtonText = viewKeysButton.textContent;
 
-    // Função auxiliar para mostrar mensagens
+    // Função auxiliar para mostrar mensagens e seus tipos
     function showMessage(text, type = 'info') {
       message.textContent = text;
-      message.className = `message-${type}`;
+      message.className = `message-${type}`; // Adiciona classe para estilização específica
     }
 
-    // Função auxiliar para lidar com chamadas fetch
-    async function fetchData(url, buttonToDisable, loadingText) {
-      buttonToDisable.disabled = true;
-      buttonToDisable.textContent = loadingText;
-      keyDisplay.textContent = ''; // Limpar display de chave nova
-      showMessage('Processando solicitação à central...', 'loading');
+    // Função centralizada para chamadas fetch
+    async function fetchData(url, buttonToManage, loadingText) {
+      if (buttonToManage) {
+        buttonToManage.disabled = true;
+        buttonToManage.textContent = loadingText;
+      }
+      // Limpa keyDisplay e message ao iniciar uma nova chamada
+      keyDisplay.textContent = '';
+      showMessage('Comunicando com a central...', 'loading');
+      minhasChavesList.style.display = 'none'; // Esconde a lista durante o carregamento
 
       try {
         const response = await fetch(url, {
@@ -240,96 +240,89 @@
           try {
             errorData = await response.json();
           } catch (e) {
-            errorData = { message: response.statusText || 'Erro desconhecido do servidor' };
+            // Se o corpo do erro não for JSON ou estiver vazio
+            errorData = { message: response.statusText || `Erro HTTP ${response.status}` };
           }
           throw new Error(`Falha na resposta do servidor (${response.status}): ${errorData.message}`);
         }
         return await response.json();
       } catch (error) {
         console.error('Erro na chamada API:', error);
-        showMessage(`FALHA CRÍTICA: ${error.message}. Tente novamente.`, 'error');
-        keyDisplay.textContent = '--- ERRO ---';
-        return null; // Retornar null em caso de erro
+        showMessage(`ERRO: ${error.message}. Verifique a conexão ou tente mais tarde.`, 'error');
+        keyDisplay.textContent = '--- FALHA NA COMUNICAÇÃO ---';
+        return null; // Retorna null para indicar falha
       } finally {
-        // A reativação do botão específico e texto será feita pela função chamadora
+        // A reabilitação dos botões será feita pelas funções específicas
       }
     }
 
-    generateKeyButton.addEventListener('click', async () => {
-      // Esconder a lista de chaves ao gerar uma nova
-      minhasChavesList.innerHTML = '';
-      minhasChavesList.style.display = 'none';
-
+    // Função para gerar chave
+    async function generateAndDisplayKey() {
       const data = await fetchData('https://keygenx-ce8h.onrender.com/generate_key', generateKeyButton, 'GERANDO...');
 
-      if (data) {
+      if (data) { // Verifica se data não é null (ou seja, não houve erro no fetch)
         if (data.status === 'success' && data.keys?.length > 0) {
           keyDisplay.textContent = `🔑 Nova Chave: ${data.keys[0]}`;
-          showMessage('Nova chave de acesso gerada com sucesso!', 'success');
-          // Opcionalmente, atualizar a lista de chaves após gerar uma nova
-          // await verMinhasChaves(false); // Passar false para não re-desabilitar o botão
+          showMessage('Chave de acesso gerada pela central!', 'success');
+          // Opcional: atualizar e mostrar a lista de chaves automaticamente
+          // await displayUserKeys(false);
         } else {
           keyDisplay.textContent = '--- FALHA NA GERAÇÃO ---';
-          showMessage(`Alerta da Central: ${data.message || 'Não foi possível gerar a chave.'}`, 'error');
+          showMessage(data.message || 'Resposta inesperada do servidor ao gerar chave.', 'error');
         }
       }
-      // Reabilitar botão e restaurar texto
+      // Reabilitar o botão de gerar chave
       generateKeyButton.disabled = false;
       generateKeyButton.textContent = originalGenerateButtonText;
-    });
+    }
 
-    async function verMinhasChaves(shouldDisableButton = true) {
-      keyDisplay.textContent = ''; // Limpar display de chave nova ao ver a lista
-      let buttonToManage = viewKeysButton;
-      let originalText = originalViewKeysButtonText;
+    // Função para ver/mostrar as chaves do usuário
+    async function displayUserKeys(manageButtonState = true) {
+      const data = await fetchData('https://keygenx-ce8h.onrender.com/user_keys', manageButtonState ? viewKeysButton : null, 'BUSCANDO SUAS CHAVES...');
 
-      if (!shouldDisableButton) { // Se chamado internamente, não precisa gerenciar o botão
-        buttonToManage = { disabled: false, textContent: '' }; // Mock para não dar erro
-      }
-
-      const data = await fetchData('https://keygenx-ce8h.onrender.com/user_keys', buttonToManage, 'BUSCANDO CHAVES...');
-
-      minhasChavesList.innerHTML = ''; // Limpar lista anterior
-      minhasChavesList.style.display = 'block'; // Garantir que a lista está visível
+      minhasChavesList.innerHTML = ''; // Limpa a lista antes de popular
 
       if (data) {
-        if (data.status === 'success') {
-          if (data.keys && data.keys.length > 0) {
-            // Usar textContent para cada chave para segurança (evita XSS se a chave contiver HTML)
-            data.keys.forEach(keyText => {
-              const listItem = document.createElement('li');
-              listItem.textContent = keyText;
-              minhasChavesList.appendChild(listItem);
-            });
-            showMessage(`Suas ${data.keys.length} chaves foram carregadas.`, 'success');
+        if (data.status === 'success' && data.keys) {
+          if (data.keys.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'Nenhuma chave encontrada para este usuário.';
+            minhasChavesList.appendChild(li);
+            showMessage('Você ainda não possui chaves.', 'info');
           } else {
-            const listItem = document.createElement('li');
-            listItem.textContent = 'Nenhuma chave encontrada na base de dados.';
-            minhasChavesList.appendChild(listItem);
-            showMessage('Você ainda não possui chaves registradas.', 'info');
+            data.keys.forEach(key => {
+              const li = document.createElement('li');
+              li.textContent = key; // Seguro contra XSS
+              minhasChavesList.appendChild(li);
+            });
+            showMessage(`${data.keys.length} chave(s) carregada(s) da central.`, 'success');
           }
+          minhasChavesList.style.display = 'block'; // Mostra a lista
         } else {
-          const listItem = document.createElement('li');
-          listItem.textContent = 'Erro ao carregar chaves.';
-          minhasChavesList.appendChild(listItem);
-          showMessage(`Alerta da Central: ${data.message || 'Não foi possível buscar suas chaves.'}`, 'error');
+          const li = document.createElement('li');
+          li.textContent = 'Erro ao buscar chaves.';
+          minhasChavesList.appendChild(li);
+          minhasChavesList.style.display = 'block';
+          showMessage(data.message || 'Resposta inesperada do servidor ao buscar chaves.', 'error');
         }
       } else {
-         const listItem = document.createElement('li');
-         listItem.textContent = 'Falha na conexão ao buscar chaves.';
-         minhasChavesList.appendChild(listItem);
+        // Se data for null, a fetchData já mostrou uma mensagem de erro de conexão.
+        // Podemos adicionar um item à lista indicando a falha.
+        const li = document.createElement('li');
+        li.textContent = 'Não foi possível carregar as chaves devido a um erro.';
+        minhasChavesList.appendChild(li);
+        minhasChavesList.style.display = 'block';
       }
 
-      if (shouldDisableButton) {
+      if (manageButtonState) {
         viewKeysButton.disabled = false;
         viewKeysButton.textContent = originalViewKeysButtonText;
       }
     }
 
-    viewKeysButton.addEventListener('click', () => verMinhasChaves(true));
-
-    // Inicialmente, esconder a lista de chaves
-    minhasChavesList.style.display = 'none';
+    // Adicionando os event listeners aos botões
+    generateKeyButton.addEventListener('click', generateAndDisplayKey);
+    viewKeysButton.addEventListener('click', () => displayUserKeys(true));
 
   </script>
 </body>

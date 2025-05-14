@@ -16,428 +16,206 @@
       --card-bg: rgba(13, 13, 13, 0.95);
       --text: #ffffff;
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    @keyframes twinkle {
-      0% { opacity: 0.3; }
-      50% { opacity: 1; }
-      100% { opacity: 0.3; }
-    }
-
-    @keyframes float {
-      from { transform: translateY(0); }
-      to { transform: translateY(-2000px); }
-    }
-
+    *{margin:0;padding:0;box-sizing:border-box;}
     body {
-      margin: 0;
-      font-family: 'Space Grotesk', sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      min-height: 100vh;
-      overflow: hidden;
-      position: relative;
+      font-family:'Space Grotesk',sans-serif;
+      background:var(--background);
+      color:var(--text);
+      min-height:100vh;
+      overflow:hidden;
+      position:relative;
     }
-
-    .stars {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 200%;
-      pointer-events: none;
-      animation: float 50s linear infinite;
-      background: transparent;
-    }
-
-    .star {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      background: white;
-      border-radius: 50%;
-    }
-
+    .stars{position:fixed;top:0;left:0;width:100%;height:200%;pointer-events:none;animation:float 50s linear infinite;}
+    .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;}
+    @keyframes float{from{transform:translateY(0);}to{transform:translateY(-2000px);}}
+    @keyframes twinkle{0%{opacity:0.3;}50%{opacity:1;}100%{opacity:0.3;}}
     .container {
-      position: relative;
-      z-index: 1;
-      background-color: var(--card-bg);
-      padding: 2.5rem;
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      width: 90%;
-      max-width: 480px;
-      margin: 2rem auto;
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      position:relative;z-index:1;
+      background:var(--card-bg);
+      padding:2.5rem;
+      border-radius:15px;
+      max-width:480px;
+      margin:2rem auto;
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,0.1);
     }
-
     h1 {
-      font-family: 'Orbitron', sans-serif;
-      color: var(--primary);
-      margin-bottom: 1.5rem;
-      font-size: 2.2rem;
-      text-shadow: 0 0 10px rgba(197, 17, 17, 0.5);
-      text-align: center;
-      position: relative;
+      font-family:'Orbitron',sans-serif;
+      color:var(--primary);
+      text-align:center;
+      margin-bottom:1.5rem;
+      text-shadow:0 0 10px rgba(197,17,17,0.5);
     }
-
     h1::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      content:'';
+      position:absolute;
+      bottom:-10px; left:50%; transform:translateX(-50%);
+      width:60%; height:2px;
+      background:linear-gradient(90deg,transparent,var(--primary),transparent);
     }
-
-    p {
-      margin-bottom: 1.5rem;
-      line-height: 1.6;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .button-group {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-
+    p { text-align:center; margin-bottom:1.5rem; color:rgba(255,255,255,0.9); }
+    .button-group { display:flex; gap:1rem; flex-wrap:wrap; }
     button {
-      flex: 1;
-      min-width: 160px;
-      background: linear-gradient(135deg, var(--secondary), #1e40af);
-      border: none;
-      color: var(--text);
-      padding: 1rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      position: relative;
-      overflow: hidden;
+      flex:1; min-width:160px;
+      background:linear-gradient(135deg,var(--secondary),#1e40af);
+      border:none; color:var(--text);
+      padding:1rem; border-radius:8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-weight:600; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:0.5rem;
+      position:relative; overflow:hidden;
+      transition:all .3s ease;
     }
-
-    button:hover {
-      background: linear-gradient(135deg, var(--success), #15803d);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(17, 127, 45, 0.3);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button.loading {
-      pointer-events: none;
-      opacity: 0.8;
-    }
-
+    button:hover { background:linear-gradient(135deg,var(--success),#15803d); transform:translateY(-2px); }
+    button:active { transform:translateY(0); }
+    button.loading { pointer-events:none; opacity:.8; }
     button.loading::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border: 2px solid transparent;
-      border-top-color: var(--text);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+      content:''; position:absolute;
+      width:20px;height:20px;
+      border:2px solid transparent;
+      border-top-color:var(--text);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
+    @keyframes spin{to{transform:rotate(360deg);}}
     .key-container {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 1.5rem;
-      border-radius: 8px;
-      margin: 1.5rem 0;
-      text-align: center;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.3s ease;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      opacity:0; transform:translateY(10px);
+      transition:all .3s ease;
+      background:rgba(255,255,255,.05);
+      padding:1.5rem; border-radius:8px;
+      margin:1.5rem 0; border:1px solid rgba(255,255,255,.1);
     }
-
-    .key-container.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .key-value {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.2rem;
-      color: var(--warning);
-      word-break: break-all;
-      text-shadow: 0 0 5px rgba(241, 196, 15, 0.3);
-    }
-
+    .key-container.visible { opacity:1; transform:translateY(0); }
+    .key-value { font-family:'Orbitron',sans-serif; font-size:1.2rem; color:var(--warning); word-break:break-all; }
     .message {
-      text-align: center;
-      color: var(--error);
-      margin: 1rem 0;
-      padding: 0.75rem;
-      border-radius: 6px;
-      background: rgba(231, 76, 60, 0.1);
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.3s ease;
+      opacity:0; transform:translateY(10px);
+      transition:all .3s ease;
+      text-align:center; color:var(--error);
+      margin:1rem 0; padding:.75rem; border-radius:6px;
+      background:rgba(231,76,60,.1);
     }
-
-    .message.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .keys-list {
-      margin-top: 2rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 1.5rem;
-    }
-
+    .message.visible { opacity:1; transform:translateY(0); }
+    .keys-list { margin-top:2rem; border-top:1px solid rgba(255,255,255,.1); padding-top:1.5rem; }
     .keys-list h2 {
-      font-family: 'Orbitron', sans-serif;
-      color: var(--warning);
-      margin-bottom: 1rem;
-      font-size: 1.4rem;
-      text-shadow: 0 0 5px rgba(241, 196, 15, 0.3);
+      font-family:'Orbitron',sans-serif; color:var(--warning);
+      margin-bottom:1rem; text-shadow:0 0 5px rgba(241,196,15,.3);
     }
-
-    .keys-list ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
+    .keys-list ul { list-style:none; display:flex; flex-direction:column; gap:.5rem; }
     .keys-list li {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      font-family: 'Space Grotesk', monospace;
-      color: rgba(255, 255, 255, 0.9);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.3s ease;
+      background:rgba(255,255,255,.05); padding:.75rem 1rem; border-radius:6px;
+      font-family:'Space Grotesk',monospace; display:flex; align-items:center; gap:.5rem;
+      border:1px solid rgba(255,255,255,.1); transition:all .3s ease;
     }
-
-    .keys-list li:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateX(5px);
-    }
-
-    .keys-list li::before {
-      content: '🔑';
-      font-size: 1.1rem;
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 1.5rem;
-        width: 95%;
-        margin: 1rem auto;
-      }
-
-      h1 {
-        font-size: 1.8rem;
-      }
-
-      .button-group {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
-    }
+    .keys-list li:hover { background:rgba(255,255,255,.1); transform:translateX(5px); }
+    .keys-list li::before { content:'🔑'; margin-right:.5rem; }
+    @media(max-width:480px){ .container{width:95%;margin:1rem auto;} h1{font-size:1.8rem;} .button-group{flex-direction:column;} button{width:100%;} }
   </style>
 </head>
 <body>
   <div id="stars" class="stars"></div>
   <div class="container">
     <h1>Gerador de Chaves</h1>
-    <p>Clique no botão abaixo para gerar sua chave única do Among Us.</p>
-    
+    <p>Clique para gerar sua chave única do Among Us.</p>
     <div class="button-group">
-      <button onclick="generateKey()" id="generateBtn">
-        🎮 Gerar Chave
-      </button>
-      <button onclick="fetchUserKeys()" id="viewKeysBtn">
-        📜 Ver Minhas Chaves
-      </button>
+      <button id="generateBtn" onclick="generateKey()">🎮 Gerar Chave</button>
+      <button id="viewKeysBtn" onclick="fetchUserKeys()">📜 Ver Minhas Chaves</button>
     </div>
-
     <div class="key-container" id="keyContainer">
       <div class="key-value" id="keyValue"></div>
     </div>
-
     <div class="message" id="message"></div>
-
-    <div class="keys-list" id="keysList">
+    <div class="keys-list">
       <h2>Suas Chaves</h2>
       <ul id="keysList"></ul>
     </div>
   </div>
 
   <script>
-    // Create starfield
+    // estrela flutuante
     function createStarfield() {
       const stars = document.getElementById('stars');
-      const numberOfStars = 200;
-      
-      for (let i = 0; i < numberOfStars; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        
-        // Random position
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        
-        // Random size
-        const size = Math.random() * 2 + 1;
-        star.style.width = `${size}px`;
-        star.style.height = `${size}px`;
-        
-        // Random twinkle animation
-        star.style.animation = `twinkle ${Math.random() * 3 + 2}s infinite`;
-        
-        stars.appendChild(star);
+      for (let i = 0; i < 200; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        s.style.left = `${Math.random()*100}%`;
+        s.style.top  = `${Math.random()*100}%`;
+        const size = Math.random()*2+1;
+        s.style.width = s.style.height = size+'px';
+        s.style.animation = `twinkle ${Math.random()*3+2}s infinite`;
+        stars.appendChild(s);
       }
     }
-
-    // Initialize starfield
     createStarfield();
 
-    const generateBtn = document.getElementById('generateBtn');
-    const viewKeysBtn = document.getElementById('viewKeysBtn');
-    const keyContainer = document.getElementById('keyContainer');
-    const keyValue = document.getElementById('keyValue');
-    const message = document.getElementById('message');
-    const keysList = document.getElementById('keysList');
-
-    let currentKey = '';
+    const btnGen = document.getElementById('generateBtn');
+    const btnView= document.getElementById('viewKeysBtn');
+    const keyCont = document.getElementById('keyContainer');
+    const keyVal  = document.getElementById('keyValue');
+    const msg     = document.getElementById('message');
     let userKeys = [];
 
-    function setLoading(isLoading) {
-      generateBtn.classList.toggle('loading', isLoading);
-      viewKeysBtn.classList.toggle('loading', isLoading);
+    function setLoading(v) {
+      btnGen.classList.toggle('loading', v);
+      btnView.classList.toggle('loading', v);
     }
-
-    function showMessage(text) {
-      message.textContent = text;
-      message.className = 'message visible';
-      setTimeout(() => {
-        message.className = 'message';
-      }, 5000);
+    function showMessage(txt) {
+      msg.textContent=txt;
+      msg.className='message visible';
+      setTimeout(()=>msg.className='message',5000);
     }
-
-    function renderKeysList() {
-      const list = document.getElementById('keysList');
-      list.innerHTML = '';
-
-      if (userKeys.length === 0) {
-        list.innerHTML = '<li>Nenhuma chave gerada ainda.</li>';
+    function renderKeysList(){
+      const ul=document.getElementById('keysList');
+      ul.innerHTML='';
+      if(!userKeys.length){
+        ul.innerHTML='<li>Nenhuma chave gerada.</li>';
         return;
       }
-
-      userKeys.forEach(key => {
-        const li = document.createElement('li');
-        li.textContent = key;
-        list.appendChild(li);
+      userKeys.forEach(k=>{
+        const li=document.createElement('li');
+        li.textContent=k;
+        ul.appendChild(li);
       });
     }
 
-    async function generateKey() {
+    async function generateKey(){
       setLoading(true);
-      keyContainer.className = 'key-container';
-      message.className = 'message';
-      
+      keyCont.className='key-container';
+      msg.className='message';
       try {
-        const response = await fetch('https://keygenx-ce8h.onrender.com/generate_key', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          mode: 'cors'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status === 'success' && data.keys?.length > 0) {
-          currentKey = data.keys[0];
-          keyValue.textContent = `🔐 ${currentKey}`;
-          keyContainer.className = 'key-container visible';
+        const res=await fetch('https://keygenx-ce8h.onrender.com/generate_key');
+        if(!res.ok) throw new Error(res.status);
+        const data=await res.json();
+        if(data.status==='success' && data.key){
+          keyVal.textContent=`🔐 ${data.key}`;
+          keyCont.className='key-container visible';
           await fetchUserKeys();
         } else {
-          showMessage(data.message || 'Erro ao gerar chave.');
+          showMessage(data.message||'Erro ao gerar chave.');
         }
-      } catch (error) {
-        console.error('Error generating key:', error);
-        showMessage('Erro ao conectar com o servidor. Tente novamente mais tarde.');
-      } finally {
-        setLoading(false);
-      }
+      } catch(e){
+        console.error(e);
+        showMessage('Erro de conexão.');
+      } finally { setLoading(false); }
     }
 
-    async function fetchUserKeys() {
+    async function fetchUserKeys(){
       setLoading(true);
-      
       try {
-        const response = await fetch('https://keygenx-ce8h.onrender.com/user_keys', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          mode: 'cors'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-          userKeys = data.keys || [];
+        const res=await fetch('https://keygenx-ce8h.onrender.com/user_keys');
+        if(!res.ok) throw new Error(res.status);
+        const data=await res.json();
+        if(data.status==='success'){
+          userKeys=data.keys||[];
           renderKeysList();
         } else {
-          showMessage(data.message || 'Erro ao buscar chaves.');
+          showMessage(data.message||'Erro ao buscar chaves.');
         }
-      } catch (error) {
-        console.error('Error fetching keys:', error);
-        showMessage('Erro de conexão ao buscar suas chaves.');
-      } finally {
-        setLoading(false);
-      }
+      } catch(e){
+        console.error(e);
+        showMessage('Erro de conexão.');
+      } finally { setLoading(false); }
     }
 
-    // Initial load of keys
     document.addEventListener('DOMContentLoaded', fetchUserKeys);
   </script>
 </body>

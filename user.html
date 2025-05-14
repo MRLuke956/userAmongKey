@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerador de Chaves - Among Us</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #0d0d0d;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-image: url('https://i.imgur.com/3ZQ3ZQ3.png'); /* Substitua por uma imagem de fundo temática do Among Us */
+      background-size: cover;
+      background-position: center;
+    }
+    .container {
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px;
+    }
+    h1 {
+      color: #c51111;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #132ed1;
+      border: none;
+      color: #fff;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #117f2d;
+    }
+    #keyDisplay {
+      margin-top: 20px;
+      font-size: 1.5em;
+      color: #f1c40f;
+    }
+    #message {
+      margin-top: 10px;
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gerador de Chaves</h1>
+    <p>Clique no botão abaixo para gerar sua chave única.</p>
+    <button onclick="generateKey()">Gerar Chave</button>
+    <div id="keyDisplay"></div>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    async function generateKey() {
+      const keyDisplay = document.getElementById('keyDisplay');
+      const message = document.getElementById('message');
+      keyDisplay.textContent = '';
+      message.textContent = '';
+
+      try {
+        const response = await fetch('https://keygenx-ce8h.onrender.com/generate_key');
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          keyDisplay.textContent = data.key;
+        } else {
+          message.textContent = data.message;
+        }
+      } catch (error) {
+        message.textContent = 'Erro ao conectar com o servidor.';
+      }
+    }
+  </script>
+</body>
+</html>

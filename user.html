@@ -3,560 +3,307 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Gerador de Chaves para Among Us - Crie chaves únicas para seu jogo" />
-  <title>Gerador de Chaves - Among Us</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Improved Among Us Key Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --red: #e74c3c;
-      --blue: #3498db;
-      --green: #2ecc71;
-      --yellow: #f1c40f;
-      --orange: #e67e22;
-      --purple: #9b59b6;
-      --black: #0d0d0d;
-      --dark-glass: rgba(13, 13, 13, 0.85);
-      --light-glass: rgba(255, 255, 255, 0.1);
-      --animation-duration: 0.3s;
+      --primary: #c51111;
+      --secondary: #132ed1;
+      --success: #117f2d;
+      --warning: #f1c40f;
+      --error: #e74c3c;
+      --background: #0d0d0d;
+      --card-bg: rgba(0, 0, 0, 0.85);
+      --text: #ffffff;
     }
-    
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
-      font-family: 'Orbitron', sans-serif;
-      background-color: var(--black);
-      color: #fff;
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
       min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('https://i.imgur.com/3ZQ3ZQ3.png');
+      background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                        url('https://images.pexels.com/photos/7130555/pexels-photo-7130555.jpeg');
       background-size: cover;
       background-position: center;
-      filter: brightness(0.7) contrast(1.2);
-      z-index: -2;
+      background-attachment: fixed;
+      padding: 20px;
+      display: grid;
+      place-items: center;
     }
-    
-    body::after {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at center, transparent 0%, rgba(13, 13, 13, 0.8) 100%);
-      z-index: -1;
-    }
-    
-    .space-characters {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: -1;
-    }
-    
-    .character {
-      position: absolute;
-      width: 40px;
-      height: 50px;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      opacity: 0.7;
-      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
-      animation: float 15s linear infinite;
-    }
-    
-    @keyframes float {
-      0% {
-        transform: translateY(100vh) rotate(0deg);
-        opacity: 0;
-      }
-      10% {
-        opacity: 0.7;
-      }
-      90% {
-        opacity: 0.7;
-      }
-      100% {
-        transform: translateY(-100px) rotate(360deg);
-        opacity: 0;
-      }
-    }
-    
+
     .container {
-      background-color: var(--dark-glass);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 40px 30px;
-      max-width: 480px;
-      width: 100%;
+      background-color: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 15px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--light-glass);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      transition: transform var(--animation-duration), box-shadow var(--animation-duration);
+      width: 100%;
+      max-width: 480px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    
-    .container::before {
-      content: "";
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle at center, transparent 0%, rgba(13, 13, 13, 0.9) 70%);
-      z-index: -1;
-    }
-    
-    .title-container {
-      position: relative;
-      margin-bottom: 30px;
-    }
-    
+
     h1 {
-      color: var(--red);
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin-bottom: 5px;
-      text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
-      letter-spacing: 1px;
-    }
-    
-    .subtitle {
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 1rem;
-      margin-bottom: 30px;
-    }
-    
-    .button-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-    
-    @media (min-width: 480px) {
-      .button-container {
-        flex-direction: row;
-        justify-content: center;
-      }
-    }
-    
-    button {
       font-family: 'Orbitron', sans-serif;
-      font-weight: 500;
-      font-size: 1rem;
-      padding: 15px 20px;
-      border-radius: 8px;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      font-size: 2.2rem;
+      text-shadow: 0 0 10px rgba(197, 17, 17, 0.3);
+      text-align: center;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      min-width: 160px;
+      background-color: var(--secondary);
       border: none;
-      color: white;
+      color: var(--text);
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      transition: transform var(--animation-duration), background-color var(--animation-duration), box-shadow var(--animation-duration);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 160px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      gap: 0.5rem;
       position: relative;
       overflow: hidden;
     }
-    
-    button::after {
+
+    button:hover {
+      background-color: var(--success);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(17, 127, 45, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.loading {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    button.loading::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), transparent);
-      opacity: 0;
-      transition: opacity var(--animation-duration);
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
-    
-    button:hover::after {
-      opacity: 1;
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
-    
-    button:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    }
-    
-    .generate-btn {
-      background-color: var(--blue);
-    }
-    
-    .generate-btn:hover {
-      background-color: #2980b9;
-    }
-    
-    .view-btn {
-      background-color: var(--purple);
-    }
-    
-    .view-btn:hover {
-      background-color: #8e44ad;
-    }
-    
-    .icon {
-      font-size: 1.2rem;
-    }
-    
+
     .key-container {
-      margin-top: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+      text-align: center;
       opacity: 0;
-      transform: translateY(20px);
-      transition: opacity var(--animation-duration), transform var(--animation-duration);
+      transform: translateY(10px);
+      transition: all 0.3s ease;
     }
-    
+
     .key-container.visible {
       opacity: 1;
       transform: translateY(0);
     }
-    
-    .key-display {
-      background-color: var(--light-glass);
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
+
     .key-value {
-      font-family: 'Roboto Mono', monospace;
-      color: var(--yellow);
-      font-size: 1.1rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--warning);
       word-break: break-all;
-      text-align: left;
-      flex-grow: 1;
-      margin-right: 10px;
     }
-    
-    .copy-btn {
-      font-size: 0.8rem;
-      padding: 8px;
-      background-color: var(--green);
-      border-radius: 6px;
-      cursor: pointer;
-      flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-      transition: background-color var(--animation-duration);
-    }
-    
-    .copy-btn:hover {
-      background-color: #27ae60;
-    }
-    
-    .copy-btn:active {
-      transform: translateY(1px);
-    }
-    
+
     .message {
-      color: var(--red);
-      font-size: 0.9rem;
-      margin: 15px 0;
-      min-height: 20px;
+      text-align: center;
+      color: var(--error);
+      margin: 1rem 0;
+      padding: 0.75rem;
+      border-radius: 6px;
+      background: rgba(231, 76, 60, 0.1);
       opacity: 0;
       transform: translateY(10px);
-      transition: opacity var(--animation-duration), transform var(--animation-duration);
+      transition: all 0.3s ease;
     }
-    
+
     .message.visible {
       opacity: 1;
       transform: translateY(0);
     }
-    
-    .message.success {
-      color: var(--green);
-    }
-    
+
     .keys-list {
+      margin-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1.5rem;
+    }
+
+    .keys-list h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--warning);
+      margin-bottom: 1rem;
+      font-size: 1.4rem;
+    }
+
+    .keys-list ul {
       list-style: none;
       padding: 0;
-      margin-top: 20px;
-      text-align: left;
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.5s ease-in-out;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
-    
-    .keys-list.visible {
-      max-height: 300px;
-      overflow-y: auto;
-    }
-    
-    .keys-list::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    .keys-list::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 4px;
-    }
-    
-    .keys-list::-webkit-scrollbar-thumb {
-      background: var(--blue);
-      border-radius: 4px;
-    }
-    
-    .key-item {
-      background-color: var(--light-glass);
-      border-radius: 8px;
-      padding: 12px 15px;
-      margin-bottom: 8px;
-      font-family: 'Roboto Mono', monospace;
-      color: var(--orange);
-      font-size: 0.9rem;
-      position: relative;
-      cursor: pointer;
+
+    .keys-list li {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-family: 'Space Grotesk', monospace;
+      color: rgba(255, 255, 255, 0.9);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      transition: background-color var(--animation-duration);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 0.5rem;
     }
-    
-    .key-item:hover {
-      background-color: rgba(255, 255, 255, 0.15);
+
+    .keys-list li::before {
+      content: '🔑';
+      font-size: 1.1rem;
     }
-    
-    .key-item-text {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 90%;
-    }
-    
-    .copy-icon {
-      opacity: 0.5;
-      transition: opacity var(--animation-duration);
-    }
-    
-    .key-item:hover .copy-icon {
-      opacity: 1;
-    }
-    
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s linear infinite;
-      margin-right: 10px;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem;
       }
-      70% {
-        box-shadow: 0 0 0 15px rgba(231, 76, 60, 0);
+
+      h1 {
+        font-size: 1.8rem;
       }
-      100% {
-        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+
+      .button-group {
+        flex-direction: column;
       }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .imposter-icon {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 50px;
-      height: 50px;
-      background-image: url('https://i.imgur.com/3fWnaTa.png');
-      background-size: contain;
-      background-repeat: no-repeat;
-      opacity: 0.8;
-      transform: rotate(10deg);
-    }
-    
-    .attribution {
-      margin-top: 20px;
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.5);
+
+      button {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="space-characters" id="spaceCharacters"></div>
-  
   <div class="container">
-    <div class="imposter-icon"></div>
+    <h1>Gerador de Chaves</h1>
+    <p>Clique no botão abaixo para gerar sua chave única do Among Us.</p>
     
-    <div class="title-container">
-      <h1>Gerador de Chaves</h1>
-      <p class="subtitle">Gere chaves únicas para Among Us</p>
-    </div>
-    
-    <div class="button-container">
-      <button class="generate-btn" id="generateBtn" onclick="generateKey()">
-        <span class="icon">🎮</span>
-        <span>Gerar Chave</span>
+    <div class="button-group">
+      <button onclick="generateKey()" id="generateBtn">
+        🎮 Gerar Chave
       </button>
-      
-      <button class="view-btn" id="viewBtn" onclick="toggleKeys()">
-        <span class="icon">📜</span>
-        <span>Minhas Chaves</span>
+      <button onclick="fetchUserKeys()" id="viewKeysBtn">
+        📜 Ver Minhas Chaves
       </button>
     </div>
-    
+
     <div class="key-container" id="keyContainer">
-      <div class="key-display">
-        <div class="key-value" id="keyValue"></div>
-        <button class="copy-btn" id="copyBtn" onclick="copyCurrentKey()" title="Copiar chave">
-          <span class="icon">📋</span>
-        </button>
-      </div>
+      <div class="key-value" id="keyValue"></div>
     </div>
-    
+
     <div class="message" id="message"></div>
-    
-    <ul class="keys-list" id="keysList"></ul>
-    
-    <p class="attribution">Among Us é uma marca registrada da InnerSloth LLC</p>
+
+    <div class="keys-list" id="keysList">
+      <h2>Suas Chaves</h2>
+      <ul id="keysList"></ul>
+    </div>
   </div>
 
   <script>
-    // Character animation setup
-    function setupCharacters() {
-      const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#9b59b6'];
-      const container = document.getElementById('spaceCharacters');
-      
-      // Clear existing characters
-      container.innerHTML = '';
-      
-      // Create floating characters
-      for (let i = 0; i < 12; i++) {
-        const character = document.createElement('div');
-        character.className = 'character';
-        character.style.backgroundImage = 'url("https://i.imgur.com/3fWnaTa.png")';
-        character.style.left = `${Math.random() * 100}%`;
-        character.style.animationDuration = `${15 + Math.random() * 20}s`;
-        character.style.animationDelay = `${Math.random() * 10}s`;
-        character.style.transform = `scale(${0.5 + Math.random() * 0.5})`;
-        character.style.filter = `hue-rotate(${Math.random() * 360}deg) drop-shadow(0 0 10px ${colors[Math.floor(Math.random() * colors.length)]})`;
-        
-        container.appendChild(character);
-      }
-    }
-
-    // Global state
-    let currentKey = '';
-    let userKeys = [];
-    let keysVisible = false;
-    
-    // DOM elements
+    const generateBtn = document.getElementById('generateBtn');
+    const viewKeysBtn = document.getElementById('viewKeysBtn');
     const keyContainer = document.getElementById('keyContainer');
     const keyValue = document.getElementById('keyValue');
     const message = document.getElementById('message');
     const keysList = document.getElementById('keysList');
-    const generateBtn = document.getElementById('generateBtn');
-    const viewBtn = document.getElementById('viewBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    
-    // Initialize
-    setupCharacters();
-    
-    // Set loading state
+
+    let currentKey = '';
+    let userKeys = [];
+
     function setLoading(isLoading) {
-      if (isLoading) {
-        generateBtn.innerHTML = `<span class="loading"></span> Gerando...`;
-        generateBtn.disabled = true;
-      } else {
-        generateBtn.innerHTML = `<span class="icon">🎮</span> <span>Gerar Chave</span>`;
-        generateBtn.disabled = false;
-      }
+      generateBtn.classList.toggle('loading', isLoading);
+      viewKeysBtn.classList.toggle('loading', isLoading);
     }
-    
-    // Show message
-    function showMessage(text, isError = true, duration = 4000) {
+
+    function showMessage(text) {
       message.textContent = text;
       message.className = 'message visible';
-      
-      if (!isError) {
-        message.classList.add('success');
-      }
-      
-      if (duration) {
-        setTimeout(() => {
-          message.className = 'message';
-        }, duration);
-      }
+      setTimeout(() => {
+        message.className = 'message';
+      }, 5000);
     }
-    
-    // Generate key
+
+    function renderKeysList() {
+      const list = document.getElementById('keysList');
+      list.innerHTML = '';
+
+      if (userKeys.length === 0) {
+        list.innerHTML = '<li>Nenhuma chave gerada ainda.</li>';
+        return;
+      }
+
+      userKeys.forEach(key => {
+        const li = document.createElement('li');
+        li.textContent = key;
+        list.appendChild(li);
+      });
+    }
+
     async function generateKey() {
       setLoading(true);
       keyContainer.className = 'key-container';
       message.className = 'message';
       
       try {
-        // Add random delay for security reasons
-        const randomDelay = Math.random() * 500 + 500;
-        await new Promise(resolve => setTimeout(resolve, randomDelay));
-        
         const response = await fetch('https://keygenx-ce8h.onrender.com/generate_key', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
           },
-          // Adding credentials for any potential auth cookies
-          credentials: 'include'
+          mode: 'cors'
         });
         
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
@@ -565,9 +312,7 @@
           currentKey = data.keys[0];
           keyValue.textContent = `🔐 ${currentKey}`;
           keyContainer.className = 'key-container visible';
-          
-          // Refresh the keys list
-          fetchUserKeys();
+          await fetchUserKeys();
         } else {
           showMessage(data.message || 'Erro ao gerar chave.');
         }
@@ -578,9 +323,10 @@
         setLoading(false);
       }
     }
-    
-    // Fetch user keys
+
     async function fetchUserKeys() {
+      setLoading(true);
+      
       try {
         const response = await fetch('https://keygenx-ce8h.onrender.com/user_keys', {
           method: 'GET',
@@ -588,11 +334,11 @@
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
           },
-          credentials: 'include'
+          mode: 'cors'
         });
         
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
@@ -606,92 +352,13 @@
       } catch (error) {
         console.error('Error fetching keys:', error);
         showMessage('Erro de conexão ao buscar suas chaves.');
+      } finally {
+        setLoading(false);
       }
     }
-    
-    // Render keys list
-    function renderKeysList() {
-      keysList.innerHTML = '';
-      
-      if (userKeys.length === 0) {
-        const emptyItem = document.createElement('li');
-        emptyItem.className = 'key-item fade-in';
-        emptyItem.textContent = 'Nenhuma chave gerada ainda.';
-        keysList.appendChild(emptyItem);
-        return;
-      }
-      
-      userKeys.forEach((key, index) => {
-        const keyItem = document.createElement('li');
-        keyItem.className = 'key-item fade-in';
-        keyItem.style.animationDelay = `${index * 0.1}s`;
-        
-        const keyText = document.createElement('span');
-        keyText.className = 'key-item-text';
-        keyText.textContent = key;
-        keyItem.appendChild(keyText);
-        
-        const copyIcon = document.createElement('span');
-        copyIcon.className = 'copy-icon';
-        copyIcon.textContent = '📋';
-        copyIcon.title = 'Copiar chave';
-        keyItem.appendChild(copyIcon);
-        
-        keyItem.addEventListener('click', () => copyKeyToClipboard(key));
-        
-        keysList.appendChild(keyItem);
-      });
-    }
-    
-    // Toggle keys list visibility
-    function toggleKeys() {
-      keysVisible = !keysVisible;
-      
-      if (keysVisible) {
-        fetchUserKeys();
-        keysList.className = 'keys-list visible';
-        viewBtn.innerHTML = '<span class="icon">❌</span> <span>Esconder</span>';
-      } else {
-        keysList.className = 'keys-list';
-        viewBtn.innerHTML = '<span class="icon">📜</span> <span>Minhas Chaves</span>';
-      }
-    }
-    
-    // Copy current key to clipboard
-    function copyCurrentKey() {
-      if (currentKey) {
-        copyKeyToClipboard(currentKey);
-      }
-    }
-    
-    // Copy key to clipboard
-    function copyKeyToClipboard(key) {
-      navigator.clipboard.writeText(key)
-        .then(() => {
-          showMessage('Chave copiada para a área de transferência!', false, 2000);
-          
-          // Flash animation
-          copyBtn.classList.add('pulse');
-          setTimeout(() => {
-            copyBtn.classList.remove('pulse');
-          }, 2000);
-        })
-        .catch(err => {
-          console.error('Failed to copy: ', err);
-          showMessage('Falha ao copiar a chave.', true);
-        });
-    }
-    
-    // Security enhancement: Add event listener for visibility changes
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        // Refresh keys when tab becomes visible again
-        fetchUserKeys();
-      }
-    });
-    
-    // Initial keys fetch
-    fetchUserKeys();
+
+    // Initial load of keys
+    document.addEventListener('DOMContentLoaded', fetchUserKeys);
   </script>
 </body>
 </html>

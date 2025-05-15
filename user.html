@@ -583,58 +583,37 @@
       }, 1500); 
     }
 
-    function checkAndProcessShortenerReturn() {
-      console.log('[checkAndProcessShortenerReturn] Função chamada. URL Atual:', window.location.href);
-      const urlParams = new URLSearchParams(window.location.search);
-      const action = urlParams.get(RETURN_ACTION_PARAM);
-      const status = urlParams.get(RETURN_STATUS_PARAM);
-      const storedToken = localStorage.getItem(SHORTENER_TOKEN_KEY);
+function checkAndProcessShortenerReturn() {
+  console.log('[checkAndProcessShortenerReturn] Função chamada. URL Atual:', window.location.href);
+  const urlParams = new URLSearchParams(window.location.search);
+  const action = urlParams.get('action');
+  const status = urlParams.get('status');
 
-      console.log('[checkAndProcessShortenerReturn] Parâmetros da URL: action =', action, ', status =', status);
-      console.log('[checkAndProcessShortenerReturn] Token do localStorage:', storedToken);
+  console.log('[checkAndProcessShortenerReturn] Parâmetros da URL: action =', action, ', status =', status);
 
-      const actionMatches = action === RETURN_ACTION_VALUE;
-      const tokenIsValid = !!storedToken; 
-      const statusMatches = !RETURN_STATUS_PARAM || status === RETURN_STATUS_VALUE;
+  const actionMatches = action === 'generate_from_shortener';
+  const statusMatches = status === 'completed';
 
-      console.log('[checkAndProcessShortenerReturn] Condição (actionMatches):', actionMatches);
-      console.log('[checkAndProcessShortenerReturn] Condição (tokenIsValid):', tokenIsValid);
-      console.log('[checkAndProcessShortenerReturn] Condição (statusMatches):', statusMatches);
-      
-      if (actionMatches && tokenIsValid && statusMatches) {
-        console.log('[checkAndProcessShortenerReturn] CONDIÇÕES ATENDIDAS! Processando geração de chave.');
-        showUIMessage('✅ Verificação completa! Solicitando ID de Tripulante...', 'success', 4000);
-        
-        localStorage.removeItem(SHORTENER_TOKEN_KEY);
-        console.log('[checkAndProcessShortenerReturn] Token removido do localStorage.');
+  console.log('[checkAndProcessShortenerReturn] Condição (actionMatches):', actionMatches);
+  console.log('[checkAndProcessShortenerReturn] Condição (statusMatches):', statusMatches);
 
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.delete(RETURN_ACTION_PARAM);
-        if (RETURN_STATUS_PARAM) {
-            currentUrl.searchParams.delete(RETURN_STATUS_PARAM);
-        }
-        // Reconstroi a URL sem os parâmetros, mantendo o hash se existir
-        let cleanUrl = currentUrl.pathname;
-        if (currentUrl.search && currentUrl.search !== '?') { // Adiciona search params restantes, se houver
-             cleanUrl += currentUrl.search;
-        }
-        if (currentUrl.hash) { // Adiciona hash, se houver
-            cleanUrl += currentUrl.hash;
-        }
-        window.history.replaceState({}, document.title, cleanUrl);
-        console.log('[checkAndProcessShortenerReturn] URL limpa para:', cleanUrl);
+  if (actionMatches && statusMatches) {
+    console.log('[checkAndProcessShortenerReturn] CONDIÇÕES ATENDIDAS! Gerando nova chave...');
+    showUIMessage('✅ Verificação concluída! Solicitando ID de Tripulante...', 'success', 4000);
 
-        generateNewKey(); 
-      } else {
-        console.log('[checkAndProcessShortenerReturn] Condições NÃO atendidas. Carregamento normal da página ou falha na verificação.');
-        if (!actionMatches && storedToken) { 
-            console.log('[checkAndProcessShortenerReturn] Token (localStorage) existe, mas parâmetros da URL não batem. Removendo token.');
-            localStorage.removeItem(SHORTENER_TOKEN_KEY);
-        }
-        fetchUserKeyList(); 
-        keyContainerEl.classList.remove('visible'); 
-      }
-    }
+    // Limpar parâmetros da URL
+    const cleanUrl = window.location.origin + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+    console.log('[checkAndProcessShortenerReturn] URL limpa para:', cleanUrl);
+
+    generateNewKey();
+  } else {
+    console.log('[checkAndProcessShortenerReturn] Condições NÃO atendidas. Carregamento normal.');
+    fetchUserKeyList();
+    keyContainerEl.classList.remove('visible');
+  }
+}
+
 
     // Event Listeners
     btnGen.addEventListener('click', initiateShortenerRedirect); 

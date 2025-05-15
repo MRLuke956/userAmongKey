@@ -7,38 +7,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background-color: #0c0c0f; /* Preto espacial um pouco mais suave */
+      --background-color: #0c0c0f;
       --panel-bg-color: #1e2a3e; 
       --panel-border-color: #3a506b; 
       --panel-highlight-color: #5bc0de; 
-      
       --text-color-light: #f0f4f8; 
       --text-color-medium: #adb5bd; 
       --text-color-dark: #6c757d;
-      
       --crewmate-yellow: #ffc107; 
       --crewmate-yellow-darker: #d9a406;
       --crewmate-yellow-text: #121212; 
-
       --impostor-red: #dc3545;
       --impostor-red-darker: #b02a37;
-
       --emergency-blue: #007bff;
       --emergency-blue-darker: #0056b3;
       --emergency-text: #ffffff;
-
-      --key-id-color: #00f9a0; /* Verde mais vibrante, tipo holograma */
+      --key-id-color: #00f9a0;
       --success-color: #28a745; 
       --error-color: var(--impostor-red); 
       --info-color: var(--emergency-blue);
-
       --font-title: 'Orbitron', sans-serif;
       --font-body: 'Space Grotesk', sans-serif;
-      --font-monospace: 'Space Grotesk', monospace; /* Usando Space Grotesk como mono também */
+      --font-monospace: 'Space Grotesk', monospace;
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: var(--font-body);
       background-color: var(--background-color);
@@ -51,8 +43,6 @@
       flex-direction: column; 
       align-items: center; 
     }
-
-    /* --- Efeito de Estrelas --- */
     #starfield {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: -1; overflow: hidden;
@@ -64,8 +54,7 @@
     .star-layer1 { animation-duration: 320s; animation-name: moveStarsDiagonal, twinkle; } 
     .star-layer2 { animation-duration: 220s; animation-name: moveStarsDiagonal, twinkle; }
     .star-layer3 { animation-duration: 120s; animation-name: moveStarsDiagonal, twinkle; } 
-
-    @keyframes moveStarsDiagonal { /* Movimento mais aleatório e diagonal */
+    @keyframes moveStarsDiagonal {
       0% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
       25% { transform: translate(-50px, 25px) rotate(90deg); opacity: 0.8; }
       50% { transform: translate(20px, -60px) rotate(180deg); opacity: 1; }
@@ -76,131 +65,79 @@
       0%, 100% { opacity: var(--star-opacity, 0.2); transform: scale(0.7); }
       50% { opacity: var(--star-opacity-twinkle, 0.9); transform: scale(1); }
     }
-    
-    /* --- Scanline Overlay --- */
     .scanline-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 2; /* Sobre o painel, mas atrás de modais se houver */
-        opacity: 0.07; /* Bem sutil */
-        background: repeating-linear-gradient(
-            transparent,
-            transparent 2px,
-            rgba(0, 255, 255, 0.2) 3px, /* Ciano sutil */
-            rgba(0, 255, 255, 0.2) 4px
-        );
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none; z-index: 2; opacity: 0.07;
+        background: repeating-linear-gradient(transparent, transparent 2px, rgba(0, 255, 255, 0.2) 3px, rgba(0, 255, 255, 0.2) 4px);
         animation: scanlineAnim 20s linear infinite;
     }
     @keyframes scanlineAnim {
         0% { background-position: 0 0; }
-        100% { background-position: 0 100px; } /* Ajuste a velocidade aqui */
+        100% { background-position: 0 100px; }
     }
-
-
-    /* --- Container Principal (Painel Among Us) --- */
     .container {
-      position: relative; 
-      z-index: 1;
-      background-color: var(--panel-bg-color);
-      padding: clamp(1.5rem, 5vw, 2.5rem); 
-      border-radius: 16px; 
-      max-width: 580px; 
-      width: 95%;
-      margin: auto; 
+      position: relative; z-index: 1; background-color: var(--panel-bg-color);
+      padding: clamp(1.5rem, 5vw, 2.5rem); border-radius: 16px; 
+      max-width: 580px; width: 95%; margin: auto; 
       border: 3px solid var(--panel-border-color);
-      box-shadow: 0 0 35px rgba(58, 80, 107, 0.45), 
-                  inset 0 0 18px rgba(58, 80, 107, 0.3); 
+      box-shadow: 0 0 35px rgba(58, 80, 107, 0.45), inset 0 0 18px rgba(58, 80, 107, 0.3); 
       text-align: center;
     }
-
     header { margin-bottom: 1.5rem; }
     header h1 {
-      font-family: var(--font-title);
-      color: var(--crewmate-yellow); 
-      margin-bottom: 0.75rem;
-      font-size: clamp(1.7em, 5.5vw, 2.3em); /* Um pouco menor para caber textos maiores */
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
+      font-family: var(--font-title); color: var(--crewmate-yellow); 
+      margin-bottom: 0.75rem; font-size: clamp(1.7em, 5.5vw, 2.3em);
+      text-transform: uppercase; letter-spacing: 1.5px;
       text-shadow: 0 0 12px rgba(255, 193, 7, 0.7);
     }
     header p.subtitle {
-      color: var(--text-color-medium);
-      margin-bottom: 2.5rem;
-      font-size: clamp(0.9em, 3vw, 1.05em);
-      line-height: 1.6;
-      font-style: italic;
+      color: var(--text-color-medium); margin-bottom: 2.5rem;
+      font-size: clamp(0.9em, 3vw, 1.05em); line-height: 1.6; font-style: italic;
     }
-
     .button-group {
-      display: grid;
-      grid-template-columns: 1fr; 
-      gap: 1.2rem; /* Mais espaçamento */
-      margin-bottom: 2.5rem;
+      display: grid; grid-template-columns: 1fr; 
+      gap: 1.2rem; margin-bottom: 2.5rem;
     }
     @media (min-width: 500px) { 
       .button-group { grid-template-columns: 1fr 1fr; }
     }
-
     button {
-      font-family: var(--font-title); /* Fonte de título para botões */
-      font-weight: 700; 
+      font-family: var(--font-title); font-weight: 700; 
       font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-      padding: 1rem 1.2rem; /* Mais padding vertical */
-      border-radius: 8px; 
-      border: none;
-      cursor: pointer;
+      padding: 1rem 1.2rem; border-radius: 8px; border: none; cursor: pointer;
       transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.15s ease-out;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.7rem; /* Mais espaço para ícone */
-      position: relative; 
-      text-transform: uppercase;
-      letter-spacing: 1px; /* Mais espaçamento entre letras */
-      box-shadow: 0 5px 0px var(--shadow-color, #000), /* Sombra base */
-                  0 8px 12px rgba(0,0,0,0.3);
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.7rem; position: relative; text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 5px 0px var(--shadow-color, #000), 0 8px 12px rgba(0,0,0,0.3);
     }
-    
     #generateBtn {
-      background-color: var(--crewmate-yellow);
-      color: var(--crewmate-yellow-text);
+      background-color: var(--crewmate-yellow); color: var(--crewmate-yellow-text);
       --shadow-color: var(--crewmate-yellow-darker);
     }
     #generateBtn:hover:not([disabled]) {
-      background-color: #ffd100; /* Amarelo mais brilhante */
-      transform: translateY(-3px);
+      background-color: #ffd100; transform: translateY(-3px);
       box-shadow: 0 8px 0px var(--crewmate-yellow-darker), 0 10px 15px rgba(0,0,0,0.25);
     }
     #generateBtn:active:not([disabled]) {
       transform: translateY(1px);
       box-shadow: 0 3px 0px var(--crewmate-yellow-darker), 0 6px 10px rgba(0,0,0,0.3);
     }
-
     #viewKeysBtn {
-      background-color: var(--emergency-blue);
-      color: var(--emergency-text);
+      background-color: var(--emergency-blue); color: var(--emergency-text);
       --shadow-color: var(--emergency-blue-darker);
     }
      #viewKeysBtn:hover:not([disabled]) {
-      background-color: #2095f3; /* Azul mais claro */
-      transform: translateY(-3px);
+      background-color: #2095f3; transform: translateY(-3px);
       box-shadow: 0 8px 0px var(--emergency-blue-darker), 0 10px 15px rgba(0,0,0,0.25);
     }
     #viewKeysBtn:active:not([disabled]) {
       transform: translateY(1px);
       box-shadow: 0 3px 0px var(--emergency-blue-darker), 0 6px 10px rgba(0,0,0,0.3);
     }
-
     button[disabled] {
-      opacity: 0.5;
-      cursor: not-allowed;
+      opacity: 0.5; cursor: not-allowed;
       box-shadow: 0 2px 0px rgba(0,0,0,0.4) !important;
     }
-
     button .spinner {
       display: none; width: 20px; height: 20px;
       border: 3px solid rgba(255, 255, 255, 0.2); 
@@ -208,24 +145,16 @@
     }
     #generateBtn.loading .spinner { border-top-color: var(--crewmate-yellow-text); } 
     #viewKeysBtn.loading .spinner { border-top-color: var(--emergency-text); }
-
     button.loading .spinner { display: inline-block; }
     button.loading .button-text { display: none; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .key-display-area {
       background-color: rgba(0,0,0, 0.45); 
-      border: 2px solid var(--panel-highlight-color); /* Borda mais destacada */
-      padding: 1.8rem 1.5rem;
-      border-radius: 12px;
-      margin: 2.5rem auto; 
-      max-width: 95%; 
-      min-height: 100px; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      border: 2px solid var(--panel-highlight-color);
+      padding: 1.8rem 1.5rem; border-radius: 12px;
+      margin: 2.5rem auto; max-width: 95%; min-height: 100px; 
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       box-shadow: inset 0 0 15px rgba(91, 192, 222, 0.25), 0 0 10px rgba(91, 192, 222, 0.1);
     }
     .key-container { 
@@ -234,101 +163,66 @@
       width: 100%; 
     }
     .key-container.visible { opacity: 1; transform: translateY(0) scale(1); }
-
     .key-value-label {
-        font-family: var(--font-monospace);
-        font-size: clamp(0.8em, 2.5vw, 0.9em);
-        color: var(--text-color-medium);
-        margin-bottom: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 1.5px; /* Mais espaçado */
-        font-weight: 500;
+        font-family: var(--font-monospace); font-size: clamp(0.8em, 2.5vw, 0.9em);
+        color: var(--text-color-medium); margin-bottom: 0.8rem;
+        text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500;
     }
     .key-value {
-      font-family: var(--font-monospace); 
-      font-size: clamp(1.3em, 5vw, 1.8em); 
-      font-weight: 700;
-      color: var(--key-id-color);
-      word-break: break-all;
-      letter-spacing: 2px; 
-      text-shadow: 0 0 15px var(--key-id-color), 0 0 20px var(--key-id-color); /* Efeito neon mais forte */
-      padding: 0.3rem;
-      line-height: 1.4;
+      font-family: var(--font-monospace); font-size: clamp(1.3em, 5vw, 1.8em); 
+      font-weight: 700; color: var(--key-id-color);
+      word-break: break-all; letter-spacing: 2px; 
+      text-shadow: 0 0 15px var(--key-id-color), 0 0 20px var(--key-id-color);
+      padding: 0.3rem; line-height: 1.4;
     }
     .key-value.processing {
-        color: var(--text-color-medium);
-        font-style: italic;
-        text-shadow: none;
-        animation: pulseProcessing 1.5s infinite ease-in-out;
+        color: var(--text-color-medium); font-style: italic;
+        text-shadow: none; animation: pulseProcessing 1.5s infinite ease-in-out;
     }
     @keyframes pulseProcessing {
         0%, 100% { opacity: 0.7; }
         50% { opacity: 1; }
     }
-
-
     .message-area {
-      min-height: 3.2em; 
-      margin: 1.8rem 0 1.2rem 0;
-      display: flex; 
-      align-items: center;
-      justify-content: center;
+      min-height: 3.2em; margin: 1.8rem 0 1.2rem 0;
+      display: flex; align-items: center; justify-content: center;
     }
     .message {
       opacity: 0; transform: scale(0.9);
       transition: opacity .3s ease, transform .3s ease;
-      padding: .9rem 1.3rem;
-      border-radius: 8px;
-      font-size: clamp(0.85em, 3vw, 0.95em);
-      font-weight: 500;
-      width: 100%; 
-      max-width: 420px; 
-      border-left-width: 6px; /* Borda mais grossa */
-      border-left-style: solid;
+      padding: .9rem 1.3rem; border-radius: 8px;
+      font-size: clamp(0.85em, 3vw, 0.95em); font-weight: 500;
+      width: 100%; max-width: 420px; 
+      border-left-width: 6px; border-left-style: solid;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .message.visible { opacity: 1; transform: scale(1); }
     .message.error   { background-color: rgba(220, 53, 69, 0.1); border-left-color: var(--error-color); color: var(--error-color); }
     .message.success { background-color: rgba(40, 167, 69, 0.1); border-left-color: var(--success-color); color: var(--success-color); }
     .message.info    { background-color: rgba(0, 123, 255, 0.1); border-left-color: var(--info-color); color: var(--info-color); }
-
     .keys-list-section {
-      margin-top: 3rem;
-      padding-top: 2rem;
-      border-top: 3px double var(--panel-border-color); /* Borda dupla */
+      margin-top: 3rem; padding-top: 2rem;
+      border-top: 3px double var(--panel-border-color);
     }
     .keys-list-section h2 {
-      font-family: var(--font-title);
-      color: var(--panel-highlight-color); /* Azul para o título da lista */
-      font-size: clamp(1.3em, 4vw, 1.6em);
-      margin-bottom: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      font-family: var(--font-title); color: var(--panel-highlight-color);
+      font-size: clamp(1.3em, 4vw, 1.6em); margin-bottom: 1.5rem;
+      text-transform: uppercase; letter-spacing: 1px;
       text-shadow: 0 0 8px rgba(91, 192, 222, 0.4);
     }
     .keys-list-section ul {
-      list-style: none;
-      max-height: 240px; 
-      overflow-y: auto;   
-      padding-right: 12px; 
-      border: 2px solid var(--panel-border-color); 
-      border-radius: 8px;
-      padding: 1rem; /* Padding interno na lista */
-      background-color: rgba(0,0,0,0.2);
+      list-style: none; max-height: 240px; overflow-y: auto;   
+      padding-right: 12px; border: 2px solid var(--panel-border-color); 
+      border-radius: 8px; padding: 1rem; background-color: rgba(0,0,0,0.2);
     }
     .keys-list-section li {
       background-color: rgba(44, 62, 80, 0.3);
-      padding: 0.9rem 1.2rem;
-      border-radius: 6px;
-      margin-bottom: 0.7rem;
-      font-family: var(--font-monospace); /* Fonte mono para as chaves */
-      font-size: clamp(0.9em, 3vw, 1em);
+      padding: 0.9rem 1.2rem; border-radius: 6px; margin-bottom: 0.7rem;
+      font-family: var(--font-monospace); font-size: clamp(0.9em, 3vw, 1em);
       color: var(--text-color-light);
       border-left: 5px solid var(--panel-highlight-color);
       transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-      word-break: break-all;
-      display: flex; /* Para alinhar ícone e texto */
-      align-items: center;
+      word-break: break-all; display: flex; align-items: center;
     }
     .keys-list-section li:last-child { margin-bottom: 0; }
     .keys-list-section li:hover {
@@ -341,34 +235,24 @@
         border-left-color: var(--text-color-dark); justify-content: center;
         background-color: transparent;
     }
-    .keys-list-section li::before { /* Ícone de ID */
-        content: '🆔'; 
-        margin-right: 0.8em;
-        font-size: 1.1em;
-        opacity: 0.8;
+    .keys-list-section li::before { 
+        content: '🆔'; margin-right: 0.8em;
+        font-size: 1.1em; opacity: 0.8;
     }
     .keys-list-section li.no-keys::before { content: '🚫'; }
-
-
-    /* Custom Scrollbar (WebKit) */
     .keys-list-section ul::-webkit-scrollbar { width: 12px; }
     .keys-list-section ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.25); border-radius: 6px; border: 1px solid var(--panel-border-color);}
     .keys-list-section ul::-webkit-scrollbar-thumb { background: var(--panel-highlight-color); border-radius: 6px; border: 2px solid rgba(0,0,0,0.25); }
     .keys-list-section ul::-webkit-scrollbar-thumb:hover { background: var(--crewmate-yellow); }
-
-    /* Para Firefox (Scrollbar mais simples) */
     .keys-list-section ul {
       scrollbar-width: auto; 
       scrollbar-color: var(--panel-highlight-color) rgba(0,0,0,0.25); 
     }
-
     @media (max-width: 520px) {
       body { padding: 1.5rem 0.5rem; } 
       .container { 
-        width: 98%; 
-        padding: clamp(1.2rem, 4vw, 1.8rem);
-        margin-top: 1rem; 
-        margin-bottom: 1rem; 
+        width: 98%; padding: clamp(1.2rem, 4vw, 1.8rem);
+        margin-top: 1rem; margin-bottom: 1rem; 
       }
       header h1 { font-size: clamp(1.6em, 5vw, 1.9em); }
       .key-value { font-size: clamp(1.1em, 4vw, 1.4em); }
@@ -418,7 +302,7 @@
   <script>
     const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
     const SHORTENER_URL = 'https://link-target.net/63830/among-us-modmenu-key1'; 
-    const SHORTENER_TOKEN_KEY = 'miraHqShortenerTokenPending'; // Usaremos localStorage
+    const BACKEND_VERIFICATION_TOKEN_KEY = 'miraHqBackendVerificationToken'; 
     const RETURN_ACTION_PARAM = 'action';
     const RETURN_ACTION_VALUE = 'generate_from_shortener';
     const RETURN_STATUS_PARAM = 'status';
@@ -443,7 +327,6 @@
             { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
             { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
         ];
-
         starLayersData.forEach(layer => {
             for (let i = 0; i < layer.count; i++) {
                 const star = document.createElement('div');
@@ -497,39 +380,57 @@
     }
 
     async function generateNewKey() {
-      console.log('[generateNewKey] Função chamada.');
+      // console.log('[Frontend] generateNewKey: Função chamada.');
       setButtonLoading(btnGen, true); 
       keyContainerEl.classList.remove('visible'); 
       keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
       keyValueEl.classList.add('processing');
+      
+      const verificationToken = localStorage.getItem(BACKEND_VERIFICATION_TOKEN_KEY);
+      if (!verificationToken) {
+        showUIMessage('❌ Falha na verificação de segurança. Tente o processo novamente.', 'error', 6000);
+        setButtonLoading(btnGen, false);
+        keyValueEl.textContent = ''; // Limpa o texto de processamento
+        keyValueEl.classList.remove('processing');
+        return;
+      }
+
       if (!messageEl.classList.contains('success')) {
          showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/generate_key`);
+        const response = await fetch(`${API_BASE_URL}/generate_key`, {
+          headers: {
+            'X-Verification-Token': verificationToken
+          }
+        });
+        
         const data = await response.json(); 
         keyValueEl.classList.remove('processing');
+        localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY); 
 
         if (response.ok && data.status === 'success' && data.key) {
-          console.log('[generateNewKey] Sucesso ao buscar chave:', data.key);
+          // console.log('[Frontend] generateNewKey: Sucesso ao buscar chave:', data.key);
           keyValueEl.textContent = data.key;
           keyContainerEl.classList.add('visible');
           showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
           await fetchUserKeyList(); 
         } else {
-          console.error('[generateNewKey] Erro da API:', response.status, data);
-          const errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
-          if (response.status === 429 || (data.message && data.message.toLowerCase().includes("limite"))) {
-             showUIMessage('⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.', 'error', 6000);
-          } else {
-            showUIMessage(`❌ ${errorMessage}`, 'error');
+          // console.error('[Frontend] generateNewKey: Erro da API:', response.status, data);
+          let errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
+          if (response.status === 403) { 
+            errorMessage = `❌ Falha na verificação: ${data.message || 'Tente o processo novamente.'}`;
+          } else if (response.status === 429) {
+             errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
           }
+          showUIMessage(errorMessage, 'error', 6000);
           keyContainerEl.classList.remove('visible');
         }
       } catch (error) {
         keyValueEl.classList.remove('processing');
-        console.error('[generateNewKey] Falha crítica de comunicação:', error);
+        localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY);
+        // console.error('[Frontend] generateNewKey: Falha crítica de comunicação:', error);
         showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
         keyContainerEl.classList.remove('visible');
       } finally {
@@ -538,7 +439,7 @@
     }
 
     async function fetchUserKeyList() {
-      console.log('[fetchUserKeyList] Função chamada.');
+      // console.log('[Frontend] fetchUserKeyList: Função chamada.');
       setButtonLoading(btnView, true);
       if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa")) {
           showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
@@ -549,79 +450,92 @@
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
-          console.log('[fetchUserKeyList] Chaves recebidas:', data.keys);
+          // console.log('[Frontend] fetchUserKeyList: Chaves recebidas:', data.keys);
           userKeys = data.keys || [];
           renderKeysList();
           if (btnView.classList.contains('loading')) { 
             showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
           }
         } else {
-          console.error('[fetchUserKeyList] Erro da API:', response.status, data);
+          // console.error('[Frontend] fetchUserKeyList: Erro da API:', response.status, data);
           const errorMessage = data.message || `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
           showUIMessage(`❌ ${errorMessage}`, 'error');
         }
       } catch (error) {
-        console.error('[fetchUserKeyList] Falha de comunicação:', error);
+        // console.error('[Frontend] fetchUserKeyList: Falha de comunicação:', error);
         showUIMessage('🚫 ALERTA: Comunicação com o banco de dados de IDs interrompida.', 'error', 6000);
       } finally {
         setButtonLoading(btnView, false);
       }
     }
 
-    function initiateShortenerRedirect() {
-      console.log('[initiateShortenerRedirect] Função chamada.');
+    async function initiateShortenerRedirect() {
+      // console.log('[Frontend] initiateShortenerRedirect: Função chamada.');
       setButtonLoading(btnGen, true);
-      showUIMessage('⏳ Preparando redirecionamento para verificação...', 'info', 5000);
+      showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
 
-      const tokenValue = 'pending-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10);
-      localStorage.setItem(SHORTENER_TOKEN_KEY, tokenValue);
-      console.log('[initiateShortenerRedirect] Token salvo no localStorage:', localStorage.getItem(SHORTENER_TOKEN_KEY));
-      
-      setTimeout(() => {
-          console.log('[initiateShortenerRedirect] Redirecionando para:', SHORTENER_URL);
-          window.location.href = SHORTENER_URL;
-      }, 1500); 
+      try {
+        const response = await fetch(`${API_BASE_URL}/initiate-verification`);
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success' && data.verification_token) {
+          localStorage.setItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
+          // console.log('[Frontend] initiateShortenerRedirect: Token de verificação do backend recebido e salvo:', data.verification_token);
+          showUIMessage('⏳ Preparando redirecionamento para o portal...', 'info', 5000);
+          
+          setTimeout(() => {
+              // console.log('[Frontend] initiateShortenerRedirect: Redirecionando para:', SHORTENER_URL);
+              window.location.href = SHORTENER_URL;
+          }, 1500);
+        } else {
+          // console.error('[Frontend] initiateShortenerRedirect: Erro ao obter token de verificação:', data);
+          showUIMessage(`❌ Falha ao iniciar verificação: ${data.message || 'Erro desconhecido.'}`, 'error', 6000);
+          setButtonLoading(btnGen, false);
+        }
+      } catch (error) {
+        // console.error('[Frontend] initiateShortenerRedirect: Erro de rede ao obter token de verificação:', error);
+        showUIMessage('🚫 Falha de comunicação ao iniciar verificação. Tente novamente.', 'error', 6000);
+        setButtonLoading(btnGen, false);
+      }
     }
 
-function checkAndProcessShortenerReturn() {
-  console.log('[checkAndProcessShortenerReturn] Função chamada. URL Atual:', window.location.href);
-  const urlParams = new URLSearchParams(window.location.search);
-  const action = urlParams.get('action');
-  const status = urlParams.get('status');
+    function checkAndProcessShortenerReturn() {
+      // console.log('[Frontend] checkAndProcessShortenerReturn: Função chamada. URL Atual:', window.location.href);
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get(RETURN_ACTION_PARAM);
+      const status = urlParams.get(RETURN_STATUS_PARAM);
 
-  console.log('[checkAndProcessShortenerReturn] Parâmetros da URL: action =', action, ', status =', status);
+      const actionMatches = action === RETURN_ACTION_VALUE;
+      const statusMatches = status === RETURN_STATUS_VALUE;
+      const backendTokenExists = !!localStorage.getItem(BACKEND_VERIFICATION_TOKEN_KEY); 
 
-  const actionMatches = action === 'generate_from_shortener';
-  const statusMatches = status === 'completed';
+      // console.log('[Frontend] checkAndProcessShortenerReturn: Condições: actionMatches=', actionMatches, ', statusMatches=', statusMatches, ', backendTokenExists=', backendTokenExists);
 
-  console.log('[checkAndProcessShortenerReturn] Condição (actionMatches):', actionMatches);
-  console.log('[checkAndProcessShortenerReturn] Condição (statusMatches):', statusMatches);
+      if (actionMatches && statusMatches && backendTokenExists) {
+        // console.log('[Frontend] checkAndProcessShortenerReturn: CONDIÇÕES ATENDIDAS! Processando geração de chave...');
+        showUIMessage('✅ Verificação do portal completa! Solicitando ID de Tripulante...', 'success', 4000);
+        
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+        // console.log('[Frontend] checkAndProcessShortenerReturn: URL limpa para:', cleanUrl);
 
-  if (actionMatches && statusMatches) {
-    console.log('[checkAndProcessShortenerReturn] CONDIÇÕES ATENDIDAS! Gerando nova chave...');
-    showUIMessage('✅ Verificação concluída! Solicitando ID de Tripulante...', 'success', 4000);
+        generateNewKey();
+      } else {
+        // console.log('[Frontend] checkAndProcessShortenerReturn: Condições NÃO atendidas. Carregamento normal ou falha na verificação.');
+        if (backendTokenExists && (!actionMatches || !statusMatches) ) {
+            localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY);
+            // console.log('[Frontend] checkAndProcessShortenerReturn: Token do backend removido pois os parâmetros da URL não correspondem.');
+        }
+        fetchUserKeyList();
+        keyContainerEl.classList.remove('visible');
+      }
+    }
 
-    // Limpar parâmetros da URL
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, cleanUrl);
-    console.log('[checkAndProcessShortenerReturn] URL limpa para:', cleanUrl);
-
-    generateNewKey();
-  } else {
-    console.log('[checkAndProcessShortenerReturn] Condições NÃO atendidas. Carregamento normal.');
-    fetchUserKeyList();
-    keyContainerEl.classList.remove('visible');
-  }
-}
-
-
-    // Event Listeners
     btnGen.addEventListener('click', initiateShortenerRedirect); 
     btnView.addEventListener('click', fetchUserKeyList);
 
-    // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('[DOMContentLoaded] Página carregada.');
+        // console.log('[Frontend] DOMContentLoaded: Página carregada.');
         createStars();
         checkAndProcessShortenerReturn(); 
     });
@@ -631,7 +545,6 @@ function checkAndProcessShortenerReturn() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(createStars, 400); 
     });
-
   </script>
 </body>
 </html>

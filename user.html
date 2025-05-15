@@ -417,17 +417,12 @@
 
   <script>
     const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
-    // IMPORTANT: This is the URL you will redirect TO.
     const SHORTENER_URL = 'https://link-target.net/63830/among-us-modmenu-key1'; 
-    // This is a unique key for sessionStorage to prevent trivial bypass.
     const SHORTENER_SESSION_TOKEN_KEY = 'miraHqShortenerTokenPending'; 
-    // These are the query parameters your shortener should redirect back with.
-    // e.g., https://yourpage.com/terminal.html?action=generate_from_shortener&status=completed
     const RETURN_ACTION_PARAM = 'action';
     const RETURN_ACTION_VALUE = 'generate_from_shortener';
-    const RETURN_STATUS_PARAM = 'status'; // Optional, but good for clarity
+    const RETURN_STATUS_PARAM = 'status';
     const RETURN_STATUS_VALUE = 'completed';
-
 
     const btnGen = document.getElementById('generateBtn');
     const btnView = document.getElementById('viewKeysBtn');
@@ -501,14 +496,13 @@
       });
     }
 
-    // This function NOW ONLY fetches the key. The redirection logic is separate.
     async function generateNewKey() {
-      setButtonLoading(btnGen, true); // Keep generate button loading during API call
+      console.log('[generateNewKey] Função chamada.'); // DIAGNÓSTICO
+      setButtonLoading(btnGen, true); 
       keyContainerEl.classList.remove('visible'); 
       keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
       keyValueEl.classList.add('processing');
-      // Don't overwrite a success message from shortener verification immediately
-      if (!messageEl.classList.contains('success')) {
+      if (!messageEl.classList.contains('success')) { // Evita sobrescrever msg de sucesso da verificação
          showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
       }
 
@@ -518,11 +512,13 @@
         keyValueEl.classList.remove('processing');
 
         if (response.ok && data.status === 'success' && data.key) {
+          console.log('[generateNewKey] Sucesso ao buscar chave:', data.key); // DIAGNÓSTICO
           keyValueEl.textContent = data.key;
           keyContainerEl.classList.add('visible');
           showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
           await fetchUserKeyList(); 
         } else {
+          console.error('[generateNewKey] Erro da API:', data); // DIAGNÓSTICO
           const errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
           if (response.status === 429 || (data.message && data.message.toLowerCase().includes("limite"))) {
              showUIMessage('⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.', 'error', 6000);
@@ -533,7 +529,7 @@
         }
       } catch (error) {
         keyValueEl.classList.remove('processing');
-        console.error('Falha crítica de comunicação com MIRA HQ:', error);
+        console.error('[generateNewKey] Falha crítica de comunicação:', error); // DIAGNÓSTICO
         showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
         keyContainerEl.classList.remove('visible');
       } finally {
@@ -542,8 +538,10 @@
     }
 
     async function fetchUserKeyList() {
+      console.log('[fetchUserKeyList] Função chamada.'); // DIAGNÓSTICO
       setButtonLoading(btnView, true);
-      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando")) {
+      // Não sobrescreve msg de erro/sucesso recente ou msg de redirecionamento
+      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa")) {
           showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
       }
 
@@ -552,82 +550,98 @@
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
+          console.log('[fetchUserKeyList] Chaves recebidas:', data.keys); // DIAGNÓSTICO
           userKeys = data.keys || [];
           renderKeysList();
+          // Apenas mostra mensagem de "Relatório carregado" se o botão de visualização foi o que iniciou o loading
           if (btnView.classList.contains('loading')) { 
             showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
           }
         } else {
+          console.error('[fetchUserKeyList] Erro da API:', data); // DIAGNÓSTICO
           const errorMessage = data.message || `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
           showUIMessage(`❌ ${errorMessage}`, 'error');
         }
       } catch (error) {
-        console.error('Falha de comunicação ao buscar logs:', error);
+        console.error('[fetchUserKeyList] Falha de comunicação:', error); // DIAGNÓSTICO
         showUIMessage('🚫 ALERTA: Comunicação com o banco de dados de IDs interrompida.', 'error', 6000);
       } finally {
         setButtonLoading(btnView, false);
       }
     }
 
-    // NEW FUNCTION: Called when "Gerar Key" button is clicked
     function initiateShortenerRedirect() {
+      console.log('[initiateShortenerRedirect] Função chamada.'); // DIAGNÓSTICO
       setButtonLoading(btnGen, true);
-      showUIMessage('⏳ Preparando redirecionamento para verificação...', 'info', 5000); // Message visible longer
+      showUIMessage('⏳ Preparando redirecionamento para verificação...', 'info', 5000);
 
-      // 1. Set a token in sessionStorage. This indicates intent.
-      // The value can be simple, its existence is what matters for this client-side check.
-      const tokenValue = 'pending-' + Date.now();
+      const tokenValue = 'pending-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10); // Adiciona aleatoriedade
       sessionStorage.setItem(SHORTENER_SESSION_TOKEN_KEY, tokenValue);
+      console.log('[initiateShortenerRedirect] Token salvo no sessionStorage:', sessionStorage.getItem(SHORTENER_SESSION_TOKEN_KEY)); // DIAGNÓSTICO
       
-      // 2. Redirect to the shortener URL.
-      // User will be redirected for a few seconds to let them read the message.
       setTimeout(() => {
+          console.log('[initiateShortenerRedirect] Redirecionando para:', SHORTENER_URL); // DIAGNÓSTICO
           window.location.href = SHORTENER_URL;
-      }, 1500); // Adjust delay as needed
+      }, 1500); 
     }
 
-    // NEW FUNCTION: Called on page load to check if we returned from the shortener
     function checkAndProcessShortenerReturn() {
+      console.log('[checkAndProcessShortenerReturn] Função chamada. URL Atual:', window.location.href); // DIAGNÓSTICO
       const urlParams = new URLSearchParams(window.location.search);
       const action = urlParams.get(RETURN_ACTION_PARAM);
-      const status = urlParams.get(RETURN_STATUS_PARAM); // Optional check
+      const status = urlParams.get(RETURN_STATUS_PARAM);
       const storedToken = sessionStorage.getItem(SHORTENER_SESSION_TOKEN_KEY);
 
-      // Check if the expected URL parameters are present AND our session token exists
-      if (action === RETURN_ACTION_VALUE && storedToken && (status === RETURN_STATUS_VALUE || !RETURN_STATUS_PARAM)) {
+      console.log('[checkAndProcessShortenerReturn] Parâmetros da URL: action =', action, ', status =', status); // DIAGNÓSTICO
+      console.log('[checkAndProcessShortenerReturn] Token do sessionStorage:', storedToken); // DIAGNÓSTICO
+
+      const actionMatches = action === RETURN_ACTION_VALUE;
+      const tokenIsValid = !!storedToken; 
+      // Considera statusMatches como true se RETURN_STATUS_PARAM não for definido ou se o valor corresponder.
+      const statusMatches = !RETURN_STATUS_PARAM || status === RETURN_STATUS_VALUE;
+
+
+      console.log('[checkAndProcessShortenerReturn] Condição (actionMatches):', actionMatches); // DIAGNÓSTICO
+      console.log('[checkAndProcessShortenerReturn] Condição (tokenIsValid):', tokenIsValid); // DIAGNÓSTICO
+      console.log('[checkAndProcessShortenerReturn] Condição (statusMatches):', statusMatches); // DIAGNÓSTICO
+      
+      if (actionMatches && tokenIsValid && statusMatches) {
+        console.log('[checkAndProcessShortenerReturn] CONDIÇÕES ATENDIDAS! Processando geração de chave.'); // DIAGNÓSTICO
         showUIMessage('✅ Verificação completa! Solicitando ID de Tripulante...', 'success', 4000);
         
-        // Consume the token: remove it from sessionStorage so this doesn't run again on refresh
         sessionStorage.removeItem(SHORTENER_SESSION_TOKEN_KEY);
+        console.log('[checkAndProcessShortenerReturn] Token removido do sessionStorage.'); // DIAGNÓSTICO
 
-        // Clean up the URL (remove the query parameters)
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete(RETURN_ACTION_PARAM);
-        if (RETURN_STATUS_PARAM) newUrl.searchParams.delete(RETURN_STATUS_PARAM);
-        window.history.replaceState({}, document.title, newUrl.toString());
+        // Limpa os parâmetros da URL para evitar reativação no refresh
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(RETURN_ACTION_PARAM);
+        if (RETURN_STATUS_PARAM) { // Só deleta se RETURN_STATUS_PARAM tiver um valor
+            currentUrl.searchParams.delete(RETURN_STATUS_PARAM);
+        }
+        window.history.replaceState({}, document.title, currentUrl.pathname + currentUrl.search + currentUrl.hash); // Mantém hash se houver
+        console.log('[checkAndProcessShortenerReturn] URL limpa para:', currentUrl.pathname + currentUrl.search + currentUrl.hash); // DIAGNÓSTICO
 
-        // Now, trigger the actual key generation
-        generateNewKey(); // This will call your API
+        generateNewKey(); 
       } else {
-        // This is a normal page load, not a return from the shortener, or token is missing (bypass attempt/old tab)
-        // If there was a token but no matching URL params, it might be an old tab, clear it.
-        if (storedToken && !(action === RETURN_ACTION_VALUE)) {
+        console.log('[checkAndProcessShortenerReturn] Condições NÃO atendidas. Carregamento normal da página ou falha na verificação.'); // DIAGNÓSTICO
+        if (!actionMatches && storedToken) { // Se voltou sem os parâmetros mas tinha token (ex: usuário navegou de volta)
+            console.log('[checkAndProcessShortenerReturn] Token existe, mas parâmetros da URL não batem. Removendo token (possível aba antiga / navegação manual).'); // DIAGNÓSTICO
             sessionStorage.removeItem(SHORTENER_SESSION_TOKEN_KEY);
         }
-        fetchUserKeyList(); // Load existing keys as usual
-        keyContainerEl.classList.remove('visible');
+        fetchUserKeyList(); // Carrega a lista de chaves normalmente
+        keyContainerEl.classList.remove('visible'); // Garante que a área da chave não apareça indevidamente
       }
     }
 
     // Event Listeners
-    btnGen.addEventListener('click', initiateShortenerRedirect); // MODIFIED
+    btnGen.addEventListener('click', initiateShortenerRedirect); 
     btnView.addEventListener('click', fetchUserKeyList);
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('[DOMContentLoaded] Página carregada.'); // DIAGNÓSTICO
         createStars();
-        // Check if this page load is a return from the shortener
-        checkAndProcessShortenerReturn(); // NEW CALL
+        checkAndProcessShortenerReturn(); 
     });
 
     let resizeTimeout;

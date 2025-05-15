@@ -3,225 +3,554 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Improved Among Us Key Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <title>Among Us - Gerador de IDs da Nave</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #c51111;
-      --secondary: #132ed1;
-      --success: #117f2d;
-      --warning: #f1c40f;
-      --error: #e74c3c;
-      --background: #0d0d0d;
-      --card-bg: rgba(13, 13, 13, 0.95);
-      --text: #ffffff;
+      /* Paleta Among Us Inspirada */
+      --background-color: #000000; 
+      --panel-bg-color: #141b2b; /* Azul bem escuro, quase preto */
+      --panel-border-color: #2c3e50; /* Azul acinzentado para bordas */
+      --panel-highlight-color: #3498db; /* Azul mais claro para destaques sutis */
+      
+      --text-color-light: #ecf0f1; 
+      --text-color-medium: #bdc3c7; 
+      --text-color-dark: #7f8c8d;
+      
+      --crewmate-yellow: #f1c40f; 
+      --crewmate-yellow-darker: #c8a20e;
+      --crewmate-yellow-text: #1c1c1c; 
+
+      --impostor-red: #e74c3c;
+      --impostor-red-darker: #c0392b;
+
+      --emergency-blue: #3498db;
+      --emergency-blue-darker: #2980b9;
+      --emergency-text: #ffffff;
+
+      --key-id-color: #2ecc71; /* Verde para a ID gerada */
+      --success-color: #27ae60; 
+      --error-color: var(--impostor-red); 
+      --info-color: var(--emergency-blue);
+
+      --font-title: 'Orbitron', sans-serif;
+      --font-body: 'Space Grotesk', sans-serif;
     }
-    *{margin:0;padding:0;box-sizing:border-box;}
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family:'Space Grotesk',sans-serif;
-      background:var(--background);
-      color:var(--text);
-      min-height:100vh;
-      overflow:hidden;
-      position:relative;
+      font-family: var(--font-body);
+      background-color: var(--background-color);
+      color: var(--text-color-light);
+      min-height: 100vh;
+      padding: 2rem 1rem; /* Espaço para scroll da página inteira */
+      overflow-x: hidden; 
+      position: relative;
+      display: flex; /* Para centralizar o container se ele não preencher a altura */
+      flex-direction: column; /* Empilha elementos no body */
+      align-items: center; /* Centraliza o .container horizontalmente */
     }
-    .stars{position:fixed;top:0;left:0;width:100%;height:200%;pointer-events:none;animation:float 50s linear infinite;}
-    .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;}
-    @keyframes float{from{transform:translateY(0);}to{transform:translateY(-2000px);}}
-    @keyframes twinkle{0%{opacity:0.3;}50%{opacity:1;}100%{opacity:0.3;}}
+
+    /* --- Efeito de Estrelas --- */
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1; /* Ainda mais para trás */
+      overflow: hidden; /* Garante que as estrelas não causem scroll */
+    }
+
+    .star {
+      position: absolute;
+      background-color: #ffffff;
+      border-radius: 50%;
+      animation-name: twinkle;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+    }
+    
+    .star-layer1 { animation-duration: 300s; animation-name: moveStars, twinkle; } 
+    .star-layer2 { animation-duration: 200s; animation-name: moveStars, twinkle; }
+    .star-layer3 { animation-duration: 100s; animation-name: moveStars, twinkle; } 
+
+    @keyframes moveStars {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(-100px, 50px) rotate(180deg); }
+      100% { transform: translate(0, 0) rotate(360deg); } /* Volta para criar um loop mais suave */
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 0.9; transform: scale(1.1); }
+    }
+    
+    /* --- Container Principal (Painel Among Us) --- */
     .container {
-      position:relative;z-index:1;
-      background:var(--card-bg);
-      padding:2.5rem;
-      border-radius:15px;
-      max-width:480px;
-      margin:2rem auto;
-      backdrop-filter:blur(8px);
-      border:1px solid rgba(255,255,255,0.1);
+      position: relative; /* Para z-index funcionar sobre o starfield */
+      z-index: 1;
+      background-color: var(--panel-bg-color);
+      padding: clamp(1.5rem, 5vw, 2.5rem); /* Padding responsivo */
+      border-radius: 15px; 
+      max-width: 550px; /* Um pouco maior para conforto */
+      width: 95%;
+      margin: auto; /* Centraliza se o body não for flex completo */
+      border: 3px solid var(--panel-border-color);
+      box-shadow: 0 0 30px rgba(44, 62, 80, 0.4), 
+                  inset 0 0 15px rgba(44, 62, 80, 0.25); 
+      text-align: center;
     }
-    h1 {
-      font-family:'Orbitron',sans-serif;
-      color:var(--primary);
-      text-align:center;
-      margin-bottom:1.5rem;
-      text-shadow:0 0 10px rgba(197,17,17,0.5);
+
+    header h1 {
+      font-family: var(--font-title);
+      color: var(--crewmate-yellow); 
+      margin-bottom: 0.75rem;
+      font-size: clamp(1.8em, 6vw, 2.4em);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
     }
-    h1::after {
-      content:'';
-      position:absolute;
-      bottom:-10px; left:50%; transform:translateX(-50%);
-      width:60%; height:2px;
-      background:linear-gradient(90deg,transparent,var(--primary),transparent);
+    header p.subtitle {
+      color: var(--text-color-medium);
+      margin-bottom: 2rem;
+      font-size: clamp(0.85em, 3vw, 1em);
+      line-height: 1.5;
     }
-    p { text-align:center; margin-bottom:1.5rem; color:rgba(255,255,255,0.9); }
-    .button-group { display:flex; gap:1rem; flex-wrap:wrap; }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr; 
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    @media (min-width: 500px) { 
+      .button-group { grid-template-columns: 1fr 1fr; }
+    }
+
     button {
-      flex:1; min-width:160px;
-      background:linear-gradient(135deg,var(--secondary),#1e40af);
-      border:none; color:var(--text);
-      padding:1rem; border-radius:8px;
-      font-family:'Space Grotesk',sans-serif;
-      font-weight:600; cursor:pointer;
-      display:flex; align-items:center; justify-content:center; gap:0.5rem;
-      position:relative; overflow:hidden;
-      transition:all .3s ease;
+      font-family: var(--font-body);
+      font-weight: 700; 
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      padding: 0.9rem 1.1rem;
+      border-radius: 8px; 
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.15s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      position: relative; 
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    button:hover { background:linear-gradient(135deg,var(--success),#15803d); transform:translateY(-2px); }
-    button:active { transform:translateY(0); }
-    button.loading { pointer-events:none; opacity:.8; }
-    button.loading::after {
-      content:''; position:absolute;
-      width:20px;height:20px;
-      border:2px solid transparent;
-      border-top-color:var(--text);
-      border-radius:50%;
-      animation:spin 1s linear infinite;
+    
+    #generateBtn {
+      background-color: var(--crewmate-yellow);
+      color: var(--crewmate-yellow-text);
+      border-bottom: 4px solid var(--crewmate-yellow-darker);
     }
-    @keyframes spin{to{transform:rotate(360deg);}}
-    .key-container {
-      opacity:0; transform:translateY(10px);
-      transition:all .3s ease;
-      background:rgba(255,255,255,.05);
-      padding:1.5rem; border-radius:8px;
-      margin:1.5rem 0; border:1px solid rgba(255,255,255,.1);
+    #generateBtn:hover:not([disabled]) {
+      background-color: #fdd835; /* Amarelo um pouco mais claro */
+      transform: translateY(-2px);
+      border-bottom-width: 6px;
     }
-    .key-container.visible { opacity:1; transform:translateY(0); }
-    .key-value { font-family:'Orbitron',sans-serif; font-size:1.2rem; color:var(--warning); word-break:break-all; }
+    #generateBtn:active:not([disabled]) {
+      transform: translateY(0px);
+      border-bottom-width: 4px;
+    }
+
+    #viewKeysBtn {
+      background-color: var(--emergency-blue);
+      color: var(--emergency-text);
+      border-bottom: 4px solid var(--emergency-blue-darker);
+    }
+     #viewKeysBtn:hover:not([disabled]) {
+      background-color: #4ba3e0;
+      transform: translateY(-2px);
+      border-bottom-width: 6px;
+    }
+    #viewKeysBtn:active:not([disabled]) {
+      transform: translateY(0px);
+      border-bottom-width: 4px;
+    }
+
+    button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-bottom-width: 2px !important;
+    }
+
+    button .spinner {
+      display: none;
+      width: 20px; height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.2); /* Cor base do spinner */
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    /* Cor do traço do spinner */
+    #generateBtn.loading .spinner { border-top-color: var(--crewmate-yellow-text); } 
+    #viewKeysBtn.loading .spinner { border-top-color: var(--emergency-text); }
+
+    button.loading .spinner { display: inline-block; }
+    button.loading .button-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .key-display-area {
+      background-color: rgba(0,0,0, 0.35); 
+      border: 2px solid var(--panel-border-color);
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin: 2rem auto; /* Centraliza horizontalmente */
+      max-width: 90%; /* Limita a largura */
+      min-height: 90px; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+    }
+    .key-container { 
+      opacity: 0;
+      transform: translateY(10px) scale(0.95);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      width: 100%; /* Ocupa a largura da key-display-area */
+    }
+    .key-container.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .key-value-label {
+        font-size: clamp(0.8em, 2.5vw, 0.9em);
+        color: var(--text-color-medium);
+        margin-bottom: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .key-value {
+      font-family: var(--font-body); 
+      font-size: clamp(1.2em, 5vw, 1.6em); 
+      font-weight: 700;
+      color: var(--key-id-color);
+      word-break: break-all;
+      letter-spacing: 1.5px; 
+      text-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
+      padding: 0.25rem;
+    }
+    .key-value.processing {
+        color: var(--text-color-medium);
+        font-style: italic;
+        text-shadow: none;
+    }
+
+    .message-area {
+      min-height: 3em; 
+      margin: 1.5rem 0 1rem 0;
+      display: flex; /* Para centralizar a mensagem se ela for curta */
+      align-items: center;
+      justify-content: center;
+    }
     .message {
-      opacity:0; transform:translateY(10px);
-      transition:all .3s ease;
-      text-align:center; color:var(--error);
-      margin:1rem 0; padding:.75rem; border-radius:6px;
-      background:rgba(231,76,60,.1);
+      opacity: 0;
+      transform: scale(0.9);
+      transition: opacity .3s ease, transform .3s ease;
+      padding: .8rem 1.2rem;
+      border-radius: 8px;
+      font-size: clamp(0.85em, 3vw, 0.95em);
+      font-weight: 500;
+      width: 100%; /* Ocupa a largura da message-area */
+      max-width: 400px; /* Limita a largura da mensagem */
     }
-    .message.visible { opacity:1; transform:translateY(0); }
-    .keys-list { margin-top:2rem; border-top:1px solid rgba(255,255,255,.1); padding-top:1.5rem; }
-    .keys-list h2 {
-      font-family:'Orbitron',sans-serif; color:var(--warning);
-      margin-bottom:1rem; text-shadow:0 0 5px rgba(241,196,15,.3);
+    .message.visible { opacity: 1; transform: scale(1); }
+    .message.error   { background-color: rgba(231, 76, 60, 0.15); border-left: 5px solid var(--error-color); color: var(--error-color); }
+    .message.success { background-color: rgba(39, 174, 96, 0.15); border-left: 5px solid var(--success-color); color: var(--success-color); }
+    .message.info    { background-color: rgba(52, 152, 219, 0.15); border-left: 5px solid var(--info-color); color: var(--info-color); }
+
+    .keys-list-section {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid var(--panel-border-color);
     }
-    .keys-list ul { list-style:none; display:flex; flex-direction:column; gap:.5rem; }
-    .keys-list li {
-      background:rgba(255,255,255,.05); padding:.75rem 1rem; border-radius:6px;
-      font-family:'Space Grotesk',monospace; display:flex; align-items:center; gap:.5rem;
-      border:1px solid rgba(255,255,255,.1); transition:all .3s ease;
+    .keys-list-section h2 {
+      font-family: var(--font-title);
+      color: var(--text-color-light);
+      font-size: clamp(1.2em, 4vw, 1.5em);
+      margin-bottom: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    .keys-list li:hover { background:rgba(255,255,255,.1); transform:translateX(5px); }
-    .keys-list li::before { content:'🔑'; margin-right:.5rem; }
-    @media(max-width:480px){ .container{width:95%;margin:1rem auto;} h1{font-size:1.8rem;} .button-group{flex-direction:column;} button{width:100%;} }
+    .keys-list-section ul {
+      list-style: none;
+      max-height: 220px; /* Aumentado para melhor visibilidade */
+      overflow-y: auto;   
+      padding-right: 10px; /* Espaço para scrollbar */
+      border: 1px solid rgba(44, 62, 80, 0.5); /* Borda sutil na lista */
+      border-radius: 6px;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .keys-list-section li {
+      background-color: rgba(0,0,0, 0.25);
+      padding: 0.8rem 1rem;
+      border-radius: 4px;
+      margin-bottom: 0.6rem;
+      font-family: var(--font-body);
+      font-size: clamp(0.9em, 3vw, 1em);
+      color: var(--text-color-medium);
+      border-left: 4px solid var(--emergency-blue);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      word-break: break-all;
+    }
+    .keys-list-section li:last-child {
+        margin-bottom: 0;
+    }
+    .keys-list-section li:hover {
+      background-color: rgba(44, 62, 80, 0.4);
+      border-left-color: var(--crewmate-yellow);
+      color: var(--text-color-light);
+    }
+    .keys-list-section li.no-keys { /* Estilo para "Nenhuma ID" */
+        text-align: center;
+        font-style: italic;
+        color: var(--text-color-dark);
+        border-left-color: var(--text-color-dark);
+    }
+
+
+    /* Custom Scrollbar (WebKit) */
+    .keys-list-section ul::-webkit-scrollbar { width: 10px; }
+    .keys-list-section ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 5px; }
+    .keys-list-section ul::-webkit-scrollbar-thumb { background: var(--panel-border-color); border-radius: 5px; border: 2px solid rgba(0,0,0,0.2); }
+    .keys-list-section ul::-webkit-scrollbar-thumb:hover { background: var(--emergency-blue); }
+
+    /* Para Firefox (Scrollbar mais simples) */
+    .keys-list-section ul {
+      scrollbar-width: thin; 
+      scrollbar-color: var(--panel-border-color) rgba(0,0,0,0.2); 
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 1rem 0.5rem; } /* Menos padding no body em mobile */
+      .container { 
+        width: 95%; 
+        padding: clamp(1rem, 4vw, 1.5rem);
+        margin-top: 1rem; 
+        margin-bottom: 1rem; 
+      }
+      header h1 { font-size: clamp(1.5em, 5vw, 1.8em); }
+      .key-value { font-size: clamp(1em, 4vw, 1.3em); }
+      .keys-list-section ul {
+        max-height: 180px; 
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="stars" class="stars"></div>
-  <div class="container">
-    <h1>Gerador de Chaves</h1>
-    <p>Clique para gerar sua chave única do Among Us.</p>
+  <div id="starfield"></div> <!-- Para o efeito de estrelas -->
+  
+  <main class="container">
+    <header>
+      <h1>Sistema de IDs da Nave</h1>
+      <p class="subtitle">🧑‍🚀 Tripulante, obtenha sua Identificação de Acesso para as tarefas ou visualize suas IDs do dia.</p>
+    </header>
+    
     <div class="button-group">
-      <button id="generateBtn" onclick="generateKey()">🎮 Gerar Chave</button>
-      <button id="viewKeysBtn" onclick="fetchUserKeys()">📜 Ver Minhas Chaves</button>
+      <button id="generateBtn" title="Obter uma nova ID de acesso">
+        <span class="button-text">⚠️ Gerar ID</span>
+        <span class="spinner"></span>
+      </button>
+      <button id="viewKeysBtn" title="Verificar suas IDs ativas hoje">
+        <span class="button-text">🆔 Minhas IDs</span>
+        <span class="spinner"></span>
+      </button>
     </div>
-    <div class="key-container" id="keyContainer">
-      <div class="key-value" id="keyValue"></div>
-    </div>
-    <div class="message" id="message"></div>
-    <div class="keys-list">
-      <h2>Suas Chaves</h2>
-      <ul id="keysList"></ul>
-    </div>
-  </div>
+    
+    <section class="key-display-area">
+      <div class="key-container" id="keyContainer"> 
+        <div class="key-value-label">Nova ID Registrada:</div>
+        <div class="key-value" id="keyValue"></div>
+      </div>
+    </section>
+    
+    <section class="message-area">
+      <div class="message" id="message"></div>
+    </section>
+    
+    <section class="keys-list-section">
+      <h2>Log de IDs Diário</h2>
+      <ul id="keysList" aria-live="polite">
+        <!-- As chaves serão inseridas aqui pelo JavaScript -->
+      </ul>
+    </section>
+  </main>
 
   <script>
-    // estrela flutuante
-    function createStarfield() {
-      const stars = document.getElementById('stars');
-      for (let i = 0; i < 200; i++) {
-        const s = document.createElement('div');
-        s.className = 'star';
-        s.style.left = `${Math.random()*100}%`;
-        s.style.top  = `${Math.random()*100}%`;
-        const size = Math.random()*2+1;
-        s.style.width = s.style.height = size+'px';
-        s.style.animation = `twinkle ${Math.random()*3+2}s infinite`;
-        stars.appendChild(s);
-      }
-    }
-    createStarfield();
+    const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
 
     const btnGen = document.getElementById('generateBtn');
-    const btnView= document.getElementById('viewKeysBtn');
-    const keyCont = document.getElementById('keyContainer');
-    const keyVal  = document.getElementById('keyValue');
-    const msg     = document.getElementById('message');
-    let userKeys = [];
+    const btnView = document.getElementById('viewKeysBtn');
+    const keyContainerEl = document.getElementById('keyContainer');
+    const keyValueEl = document.getElementById('keyValue');
+    const messageEl = document.getElementById('message');
+    const keysListUl = document.getElementById('keysList');
+    const starfield = document.getElementById('starfield');
+    
+    let userKeys = []; 
 
-    function setLoading(v) {
-      btnGen.classList.toggle('loading', v);
-      btnView.classList.toggle('loading', v);
+    function createStars() {
+        if (!starfield) return;
+        starfield.innerHTML = ''; // Limpa estrelas existentes se a função for chamada novamente
+        const numStarsBase = 100; 
+        const starLayersData = [
+            { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.5, animBase: 250 }, // Lentas, distantes
+            { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.8, animBase: 180 },
+            { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.2, animBase: 90 }  // Rápidas, próximas
+        ];
+
+        starLayersData.forEach(layer => {
+            for (let i = 0; i < layer.count; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star', layer.class);
+                
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.top = `${Math.random() * 100}vh`;
+                
+                const size = layer.baseSize + Math.random() * 0.8;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                const moveDuration = layer.animBase + (Math.random() * 100 - 50); // Variação na duração do movimento
+                const twinkleDuration = 2 + Math.random() * 4; // Duração do twinkle
+                
+                // A animação moveStars é definida na classe da camada. Twinkle é individual.
+                star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
+                star.style.animationDelay = `${Math.random() * moveDuration * 0.5}s, ${Math.random() * twinkleDuration}s`;
+                
+                starfield.appendChild(star);
+            }
+        });
     }
-    function showMessage(txt) {
-      msg.textContent=txt;
-      msg.className='message visible';
-      setTimeout(()=>msg.className='message',5000);
+
+    function setButtonLoading(button, isLoading) {
+      button.classList.toggle('loading', isLoading);
+      button.disabled = isLoading;
     }
+
+    function showUIMessage(text, type = 'info', duration = 4000) {
+      messageEl.textContent = text;
+      messageEl.className = `message visible ${type}`; 
+      
+      if (messageEl.timeoutId) clearTimeout(messageEl.timeoutId);
+
+      if (duration > 0) {
+        messageEl.timeoutId = setTimeout(() => {
+            messageEl.className = 'message'; 
+        }, duration);
+      }
+    }
+
     function renderKeysList(){
-      const ul=document.getElementById('keysList');
-      ul.innerHTML='';
-      if(!userKeys.length){
-        ul.innerHTML='<li>Nenhuma chave gerada.</li>';
+      keysListUl.innerHTML = ''; 
+      if (userKeys.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'Nenhuma ID registrada para este terminal hoje.';
+        li.classList.add('no-keys'); // Adiciona classe para estilização específica
+        keysListUl.appendChild(li);
         return;
       }
-      userKeys.forEach(k=>{
-        const li=document.createElement('li');
-        li.textContent=k;
-        ul.appendChild(li);
+      userKeys.forEach(key => {
+        const li = document.createElement('li');
+        li.textContent = key;
+        keysListUl.appendChild(li);
       });
     }
 
-    async function generateKey() {
-  setLoading(true);
-  keyCont.className = 'key-container';
-  msg.className = 'message';
+    async function generateNewKey() {
+      setButtonLoading(btnGen, true);
+      keyContainerEl.classList.remove('visible'); 
+      keyValueEl.textContent = 'AUTENTICANDO...'; 
+      keyValueEl.classList.add('processing');
+      showUIMessage('Estabelecendo conexão com servidor da MIRA HQ...', 'info', 0); 
 
-  try {
-    const res = await fetch('https://keygenx-ce8h.onrender.com/generate_key');
-
-    const data = await res.json(); // tentar ler o JSON mesmo em erro
-    if (res.ok && data.status === 'success' && data.key) {
-      keyVal.textContent = `🔐 ${data.key}`;
-      keyCont.className = 'key-container visible';
-      await fetchUserKeys();
-    } else {
-      showMessage(data.message || 'Erro ao gerar chave.');
-    }
-
-  } catch (e) {
-    console.error('Erro ao gerar chave:', e);
-    showMessage('Erro de conexão ao gerar chave.');
-  } finally {
-    setLoading(false);
-  }
-}
-
-
-    async function fetchUserKeys(){
-      setLoading(true);
       try {
-        const res=await fetch('https://keygenx-ce8h.onrender.com/user_keys');
-        if(!res.ok) throw new Error(res.status);
-        const data=await res.json();
-        if(data.status==='success'){
-          userKeys=data.keys||[];
-          renderKeysList();
+        const response = await fetch(`${API_BASE_URL}/generate_key`);
+        const data = await response.json(); 
+        keyValueEl.classList.remove('processing');
+
+        if (response.ok && data.status === 'success' && data.key) {
+          keyValueEl.textContent = data.key;
+          keyContainerEl.classList.add('visible');
+          showUIMessage('✅ ID de Acesso Concedida, Tripulante!', 'success');
+          await fetchUserKeyList(); 
         } else {
-          showMessage(data.message||'Erro ao buscar chaves.');
+          const errorMessage = data.message || `ERRO DE SISTEMA ${response.status}: Falha na autenticação.`;
+          showUIMessage(`❌ ${errorMessage}`, 'error');
+          keyContainerEl.classList.remove('visible');
         }
-      } catch(e){
-        console.error(e);
-        showMessage('Erro de conexão.');
-      } finally { setLoading(false); }
+      } catch (error) {
+        keyValueEl.classList.remove('processing');
+        console.error('Falha crítica de comunicação com MIRA HQ:', error);
+        showUIMessage('🚫 ALERTA: Perda de comunicação com servidor. Tente ejetar e reconectar.', 'error');
+        keyContainerEl.classList.remove('visible');
+      } finally {
+        setButtonLoading(btnGen, false);
+      }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchUserKeys);
+    async function fetchUserKeyList() {
+      setButtonLoading(btnView, true);
+      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error')) {
+          showUIMessage('Consultando registros de IDs...', 'info', 0);
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/user_keys`);
+        const data = await response.json();
+
+        if (response.ok && data.status === 'success') {
+          userKeys = data.keys || [];
+          renderKeysList();
+          if (btnView.classList.contains('loading')) { 
+            showUIMessage(userKeys.length > 0 ? 'IDs recuperadas do log.' : 'Nenhuma ID no log para hoje.', 'info', 3000);
+          }
+        } else {
+          const errorMessage = data.message || `ERRO DE SISTEMA ${response.status}: Falha ao acessar logs.`;
+          showUIMessage(`❌ ${errorMessage}`, 'error');
+        }
+      } catch (error) {
+        console.error('Falha de comunicação ao buscar logs:', error);
+        showUIMessage('🚫 ALERTA: Falha ao acessar o banco de dados de IDs.', 'error');
+      } finally {
+        setButtonLoading(btnView, false);
+      }
+    }
+
+    // Event Listeners
+    btnGen.addEventListener('click', generateNewKey);
+    btnView.addEventListener('click', fetchUserKeyList);
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+        createStars();
+        fetchUserKeyList(); 
+        keyContainerEl.classList.remove('visible'); 
+    });
+
+    // Recriar estrelas em redimensionamento para melhor distribuição (opcional e pode ter custo de performance)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(createStars, 500); // Debounce para evitar chamadas excessivas
+    });
+
   </script>
 </body>
 </html>

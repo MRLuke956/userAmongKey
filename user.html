@@ -3,131 +3,142 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Among Us - Gerador de IDs da Nave</title>
+  <title>Among Us - Terminal de Acesso MIRA HQ</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Paleta Among Us Inspirada */
-      --background-color: #000000; 
-      --panel-bg-color: #141b2b; /* Azul bem escuro, quase preto */
-      --panel-border-color: #2c3e50; /* Azul acinzentado para bordas */
-      --panel-highlight-color: #3498db; /* Azul mais claro para destaques sutis */
+      --background-color: #0c0c0f; /* Preto espacial um pouco mais suave */
+      --panel-bg-color: #1e2a3e; 
+      --panel-border-color: #3a506b; 
+      --panel-highlight-color: #5bc0de; 
       
-      --text-color-light: #ecf0f1; 
-      --text-color-medium: #bdc3c7; 
-      --text-color-dark: #7f8c8d;
+      --text-color-light: #f0f4f8; 
+      --text-color-medium: #adb5bd; 
+      --text-color-dark: #6c757d;
       
-      --crewmate-yellow: #f1c40f; 
-      --crewmate-yellow-darker: #c8a20e;
-      --crewmate-yellow-text: #1c1c1c; 
+      --crewmate-yellow: #ffc107; 
+      --crewmate-yellow-darker: #d9a406;
+      --crewmate-yellow-text: #121212; 
 
-      --impostor-red: #e74c3c;
-      --impostor-red-darker: #c0392b;
+      --impostor-red: #dc3545;
+      --impostor-red-darker: #b02a37;
 
-      --emergency-blue: #3498db;
-      --emergency-blue-darker: #2980b9;
+      --emergency-blue: #007bff;
+      --emergency-blue-darker: #0056b3;
       --emergency-text: #ffffff;
 
-      --key-id-color: #2ecc71; /* Verde para a ID gerada */
-      --success-color: #27ae60; 
+      --key-id-color: #00f9a0; /* Verde mais vibrante, tipo holograma */
+      --success-color: #28a745; 
       --error-color: var(--impostor-red); 
       --info-color: var(--emergency-blue);
 
       --font-title: 'Orbitron', sans-serif;
       --font-body: 'Space Grotesk', sans-serif;
+      --font-monospace: 'Space Grotesk', monospace; /* Usando Space Grotesk como mono também */
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: var(--font-body);
       background-color: var(--background-color);
       color: var(--text-color-light);
       min-height: 100vh;
-      padding: 2rem 1rem; /* Espaço para scroll da página inteira */
+      padding: 2rem 1rem; 
       overflow-x: hidden; 
       position: relative;
-      display: flex; /* Para centralizar o container se ele não preencher a altura */
-      flex-direction: column; /* Empilha elementos no body */
-      align-items: center; /* Centraliza o .container horizontalmente */
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
     }
 
     /* --- Efeito de Estrelas --- */
     #starfield {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1; /* Ainda mais para trás */
-      overflow: hidden; /* Garante que as estrelas não causem scroll */
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: -1; overflow: hidden;
     }
-
     .star {
-      position: absolute;
-      background-color: #ffffff;
-      border-radius: 50%;
-      animation-name: twinkle;
-      animation-timing-function: ease-in-out;
-      animation-iteration-count: infinite;
+      position: absolute; background-color: #ffffff; border-radius: 50%;
+      animation-name: twinkle; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
     }
-    
-    .star-layer1 { animation-duration: 300s; animation-name: moveStars, twinkle; } 
-    .star-layer2 { animation-duration: 200s; animation-name: moveStars, twinkle; }
-    .star-layer3 { animation-duration: 100s; animation-name: moveStars, twinkle; } 
+    .star-layer1 { animation-duration: 320s; animation-name: moveStarsDiagonal, twinkle; } 
+    .star-layer2 { animation-duration: 220s; animation-name: moveStarsDiagonal, twinkle; }
+    .star-layer3 { animation-duration: 120s; animation-name: moveStarsDiagonal, twinkle; } 
 
-    @keyframes moveStars {
-      0% { transform: translate(0, 0) rotate(0deg); }
-      50% { transform: translate(-100px, 50px) rotate(180deg); }
-      100% { transform: translate(0, 0) rotate(360deg); } /* Volta para criar um loop mais suave */
+    @keyframes moveStarsDiagonal { /* Movimento mais aleatório e diagonal */
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
+      25% { transform: translate(-50px, 25px) rotate(90deg); opacity: 0.8; }
+      50% { transform: translate(20px, -60px) rotate(180deg); opacity: 1; }
+      75% { transform: translate(40px, 40px) rotate(270deg); opacity: 0.7; }
+      100% { transform: translate(0, 0) rotate(360deg); opacity: 0.5; }
     }
-
     @keyframes twinkle {
-      0%, 100% { opacity: 0.2; transform: scale(0.8); }
-      50% { opacity: 0.9; transform: scale(1.1); }
+      0%, 100% { opacity: var(--star-opacity, 0.2); transform: scale(0.7); }
+      50% { opacity: var(--star-opacity-twinkle, 0.9); transform: scale(1); }
     }
     
+    /* --- Scanline Overlay --- */
+    .scanline-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 2; /* Sobre o painel, mas atrás de modais se houver */
+        opacity: 0.07; /* Bem sutil */
+        background: repeating-linear-gradient(
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 255, 0.2) 3px, /* Ciano sutil */
+            rgba(0, 255, 255, 0.2) 4px
+        );
+        animation: scanlineAnim 20s linear infinite;
+    }
+    @keyframes scanlineAnim {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 100px; } /* Ajuste a velocidade aqui */
+    }
+
+
     /* --- Container Principal (Painel Among Us) --- */
     .container {
-      position: relative; /* Para z-index funcionar sobre o starfield */
+      position: relative; 
       z-index: 1;
       background-color: var(--panel-bg-color);
-      padding: clamp(1.5rem, 5vw, 2.5rem); /* Padding responsivo */
-      border-radius: 15px; 
-      max-width: 550px; /* Um pouco maior para conforto */
+      padding: clamp(1.5rem, 5vw, 2.5rem); 
+      border-radius: 16px; 
+      max-width: 580px; 
       width: 95%;
-      margin: auto; /* Centraliza se o body não for flex completo */
+      margin: auto; 
       border: 3px solid var(--panel-border-color);
-      box-shadow: 0 0 30px rgba(44, 62, 80, 0.4), 
-                  inset 0 0 15px rgba(44, 62, 80, 0.25); 
+      box-shadow: 0 0 35px rgba(58, 80, 107, 0.45), 
+                  inset 0 0 18px rgba(58, 80, 107, 0.3); 
       text-align: center;
     }
 
+    header { margin-bottom: 1.5rem; }
     header h1 {
       font-family: var(--font-title);
       color: var(--crewmate-yellow); 
       margin-bottom: 0.75rem;
-      font-size: clamp(1.8em, 6vw, 2.4em);
+      font-size: clamp(1.7em, 5.5vw, 2.3em); /* Um pouco menor para caber textos maiores */
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      text-shadow: 0 0 10px rgba(241, 196, 15, 0.6);
+      text-shadow: 0 0 12px rgba(255, 193, 7, 0.7);
     }
     header p.subtitle {
       color: var(--text-color-medium);
-      margin-bottom: 2rem;
-      font-size: clamp(0.85em, 3vw, 1em);
-      line-height: 1.5;
+      margin-bottom: 2.5rem;
+      font-size: clamp(0.9em, 3vw, 1.05em);
+      line-height: 1.6;
+      font-style: italic;
     }
 
     .button-group {
       display: grid;
       grid-template-columns: 1fr; 
-      gap: 1rem;
+      gap: 1.2rem; /* Mais espaçamento */
       margin-bottom: 2.5rem;
     }
     @media (min-width: 500px) { 
@@ -135,10 +146,10 @@
     }
 
     button {
-      font-family: var(--font-body);
+      font-family: var(--font-title); /* Fonte de título para botões */
       font-weight: 700; 
-      font-size: clamp(0.9rem, 3.5vw, 1rem);
-      padding: 0.9rem 1.1rem;
+      font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+      padding: 1rem 1.2rem; /* Mais padding vertical */
       border-radius: 8px; 
       border: none;
       cursor: pointer;
@@ -146,56 +157,55 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.6rem;
+      gap: 0.7rem; /* Mais espaço para ícone */
       position: relative; 
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px; /* Mais espaçamento entre letras */
+      box-shadow: 0 5px 0px var(--shadow-color, #000), /* Sombra base */
+                  0 8px 12px rgba(0,0,0,0.3);
     }
     
     #generateBtn {
       background-color: var(--crewmate-yellow);
       color: var(--crewmate-yellow-text);
-      border-bottom: 4px solid var(--crewmate-yellow-darker);
+      --shadow-color: var(--crewmate-yellow-darker);
     }
     #generateBtn:hover:not([disabled]) {
-      background-color: #fdd835; /* Amarelo um pouco mais claro */
-      transform: translateY(-2px);
-      border-bottom-width: 6px;
+      background-color: #ffd100; /* Amarelo mais brilhante */
+      transform: translateY(-3px);
+      box-shadow: 0 8px 0px var(--crewmate-yellow-darker), 0 10px 15px rgba(0,0,0,0.25);
     }
     #generateBtn:active:not([disabled]) {
-      transform: translateY(0px);
-      border-bottom-width: 4px;
+      transform: translateY(1px);
+      box-shadow: 0 3px 0px var(--crewmate-yellow-darker), 0 6px 10px rgba(0,0,0,0.3);
     }
 
     #viewKeysBtn {
       background-color: var(--emergency-blue);
       color: var(--emergency-text);
-      border-bottom: 4px solid var(--emergency-blue-darker);
+      --shadow-color: var(--emergency-blue-darker);
     }
      #viewKeysBtn:hover:not([disabled]) {
-      background-color: #4ba3e0;
-      transform: translateY(-2px);
-      border-bottom-width: 6px;
+      background-color: #2095f3; /* Azul mais claro */
+      transform: translateY(-3px);
+      box-shadow: 0 8px 0px var(--emergency-blue-darker), 0 10px 15px rgba(0,0,0,0.25);
     }
     #viewKeysBtn:active:not([disabled]) {
-      transform: translateY(0px);
-      border-bottom-width: 4px;
+      transform: translateY(1px);
+      box-shadow: 0 3px 0px var(--emergency-blue-darker), 0 6px 10px rgba(0,0,0,0.3);
     }
 
     button[disabled] {
       opacity: 0.5;
       cursor: not-allowed;
-      border-bottom-width: 2px !important;
+      box-shadow: 0 2px 0px rgba(0,0,0,0.4) !important;
     }
 
     button .spinner {
-      display: none;
-      width: 20px; height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.2); /* Cor base do spinner */
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
+      display: none; width: 20px; height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.2); 
+      border-radius: 50%; animation: spin .7s linear infinite;
     }
-    /* Cor do traço do spinner */
     #generateBtn.loading .spinner { border-top-color: var(--crewmate-yellow-text); } 
     #viewKeysBtn.loading .spinner { border-top-color: var(--emergency-text); }
 
@@ -205,177 +215,191 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .key-display-area {
-      background-color: rgba(0,0,0, 0.35); 
-      border: 2px solid var(--panel-border-color);
-      padding: 1.5rem;
-      border-radius: 10px;
-      margin: 2rem auto; /* Centraliza horizontalmente */
-      max-width: 90%; /* Limita a largura */
-      min-height: 90px; 
+      background-color: rgba(0,0,0, 0.45); 
+      border: 2px solid var(--panel-highlight-color); /* Borda mais destacada */
+      padding: 1.8rem 1.5rem;
+      border-radius: 12px;
+      margin: 2.5rem auto; 
+      max-width: 95%; 
+      min-height: 100px; 
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+      box-shadow: inset 0 0 15px rgba(91, 192, 222, 0.25), 0 0 10px rgba(91, 192, 222, 0.1);
     }
     .key-container { 
-      opacity: 0;
-      transform: translateY(10px) scale(0.95);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      width: 100%; /* Ocupa a largura da key-display-area */
+      opacity: 0; transform: translateY(15px) scale(0.9);
+      transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      width: 100%; 
     }
-    .key-container.visible {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+    .key-container.visible { opacity: 1; transform: translateY(0) scale(1); }
+
     .key-value-label {
+        font-family: var(--font-monospace);
         font-size: clamp(0.8em, 2.5vw, 0.9em);
         color: var(--text-color-medium);
-        margin-bottom: 0.6rem;
+        margin-bottom: 0.8rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px; /* Mais espaçado */
+        font-weight: 500;
     }
     .key-value {
-      font-family: var(--font-body); 
-      font-size: clamp(1.2em, 5vw, 1.6em); 
+      font-family: var(--font-monospace); 
+      font-size: clamp(1.3em, 5vw, 1.8em); 
       font-weight: 700;
       color: var(--key-id-color);
       word-break: break-all;
-      letter-spacing: 1.5px; 
-      text-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
-      padding: 0.25rem;
+      letter-spacing: 2px; 
+      text-shadow: 0 0 15px var(--key-id-color), 0 0 20px var(--key-id-color); /* Efeito neon mais forte */
+      padding: 0.3rem;
+      line-height: 1.4;
     }
     .key-value.processing {
         color: var(--text-color-medium);
         font-style: italic;
         text-shadow: none;
+        animation: pulseProcessing 1.5s infinite ease-in-out;
+    }
+    @keyframes pulseProcessing {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
     }
 
+
     .message-area {
-      min-height: 3em; 
-      margin: 1.5rem 0 1rem 0;
-      display: flex; /* Para centralizar a mensagem se ela for curta */
+      min-height: 3.2em; 
+      margin: 1.8rem 0 1.2rem 0;
+      display: flex; 
       align-items: center;
       justify-content: center;
     }
     .message {
-      opacity: 0;
-      transform: scale(0.9);
+      opacity: 0; transform: scale(0.9);
       transition: opacity .3s ease, transform .3s ease;
-      padding: .8rem 1.2rem;
+      padding: .9rem 1.3rem;
       border-radius: 8px;
       font-size: clamp(0.85em, 3vw, 0.95em);
       font-weight: 500;
-      width: 100%; /* Ocupa a largura da message-area */
-      max-width: 400px; /* Limita a largura da mensagem */
+      width: 100%; 
+      max-width: 420px; 
+      border-left-width: 6px; /* Borda mais grossa */
+      border-left-style: solid;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .message.visible { opacity: 1; transform: scale(1); }
-    .message.error   { background-color: rgba(231, 76, 60, 0.15); border-left: 5px solid var(--error-color); color: var(--error-color); }
-    .message.success { background-color: rgba(39, 174, 96, 0.15); border-left: 5px solid var(--success-color); color: var(--success-color); }
-    .message.info    { background-color: rgba(52, 152, 219, 0.15); border-left: 5px solid var(--info-color); color: var(--info-color); }
+    .message.error   { background-color: rgba(220, 53, 69, 0.1); border-left-color: var(--error-color); color: var(--error-color); }
+    .message.success { background-color: rgba(40, 167, 69, 0.1); border-left-color: var(--success-color); color: var(--success-color); }
+    .message.info    { background-color: rgba(0, 123, 255, 0.1); border-left-color: var(--info-color); color: var(--info-color); }
 
     .keys-list-section {
-      margin-top: 2.5rem;
-      padding-top: 1.5rem;
-      border-top: 2px solid var(--panel-border-color);
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 3px double var(--panel-border-color); /* Borda dupla */
     }
     .keys-list-section h2 {
       font-family: var(--font-title);
-      color: var(--text-color-light);
-      font-size: clamp(1.2em, 4vw, 1.5em);
-      margin-bottom: 1.2rem;
+      color: var(--panel-highlight-color); /* Azul para o título da lista */
+      font-size: clamp(1.3em, 4vw, 1.6em);
+      margin-bottom: 1.5rem;
       text-transform: uppercase;
       letter-spacing: 1px;
+      text-shadow: 0 0 8px rgba(91, 192, 222, 0.4);
     }
     .keys-list-section ul {
       list-style: none;
-      max-height: 220px; /* Aumentado para melhor visibilidade */
+      max-height: 240px; 
       overflow-y: auto;   
-      padding-right: 10px; /* Espaço para scrollbar */
-      border: 1px solid rgba(44, 62, 80, 0.5); /* Borda sutil na lista */
-      border-radius: 6px;
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
+      padding-right: 12px; 
+      border: 2px solid var(--panel-border-color); 
+      border-radius: 8px;
+      padding: 1rem; /* Padding interno na lista */
+      background-color: rgba(0,0,0,0.2);
     }
     .keys-list-section li {
-      background-color: rgba(0,0,0, 0.25);
-      padding: 0.8rem 1rem;
-      border-radius: 4px;
-      margin-bottom: 0.6rem;
-      font-family: var(--font-body);
+      background-color: rgba(44, 62, 80, 0.3);
+      padding: 0.9rem 1.2rem;
+      border-radius: 6px;
+      margin-bottom: 0.7rem;
+      font-family: var(--font-monospace); /* Fonte mono para as chaves */
       font-size: clamp(0.9em, 3vw, 1em);
-      color: var(--text-color-medium);
-      border-left: 4px solid var(--emergency-blue);
-      transition: background-color 0.2s ease, border-color 0.2s ease;
-      word-break: break-all;
-    }
-    .keys-list-section li:last-child {
-        margin-bottom: 0;
-    }
-    .keys-list-section li:hover {
-      background-color: rgba(44, 62, 80, 0.4);
-      border-left-color: var(--crewmate-yellow);
       color: var(--text-color-light);
+      border-left: 5px solid var(--panel-highlight-color);
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+      word-break: break-all;
+      display: flex; /* Para alinhar ícone e texto */
+      align-items: center;
     }
-    .keys-list-section li.no-keys { /* Estilo para "Nenhuma ID" */
-        text-align: center;
-        font-style: italic;
-        color: var(--text-color-dark);
-        border-left-color: var(--text-color-dark);
+    .keys-list-section li:last-child { margin-bottom: 0; }
+    .keys-list-section li:hover {
+      background-color: rgba(58, 80, 107, 0.5);
+      border-left-color: var(--crewmate-yellow);
+      transform: translateX(5px);
     }
+    .keys-list-section li.no-keys { 
+        text-align: center; font-style: italic; color: var(--text-color-dark);
+        border-left-color: var(--text-color-dark); justify-content: center;
+        background-color: transparent;
+    }
+    .keys-list-section li::before { /* Ícone de ID */
+        content: '🆔'; 
+        margin-right: 0.8em;
+        font-size: 1.1em;
+        opacity: 0.8;
+    }
+    .keys-list-section li.no-keys::before { content: '🚫'; }
 
 
     /* Custom Scrollbar (WebKit) */
-    .keys-list-section ul::-webkit-scrollbar { width: 10px; }
-    .keys-list-section ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 5px; }
-    .keys-list-section ul::-webkit-scrollbar-thumb { background: var(--panel-border-color); border-radius: 5px; border: 2px solid rgba(0,0,0,0.2); }
-    .keys-list-section ul::-webkit-scrollbar-thumb:hover { background: var(--emergency-blue); }
+    .keys-list-section ul::-webkit-scrollbar { width: 12px; }
+    .keys-list-section ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.25); border-radius: 6px; border: 1px solid var(--panel-border-color);}
+    .keys-list-section ul::-webkit-scrollbar-thumb { background: var(--panel-highlight-color); border-radius: 6px; border: 2px solid rgba(0,0,0,0.25); }
+    .keys-list-section ul::-webkit-scrollbar-thumb:hover { background: var(--crewmate-yellow); }
 
     /* Para Firefox (Scrollbar mais simples) */
     .keys-list-section ul {
-      scrollbar-width: thin; 
-      scrollbar-color: var(--panel-border-color) rgba(0,0,0,0.2); 
+      scrollbar-width: auto; 
+      scrollbar-color: var(--panel-highlight-color) rgba(0,0,0,0.25); 
     }
 
     @media (max-width: 520px) {
-      body { padding: 1rem 0.5rem; } /* Menos padding no body em mobile */
+      body { padding: 1.5rem 0.5rem; } 
       .container { 
-        width: 95%; 
-        padding: clamp(1rem, 4vw, 1.5rem);
+        width: 98%; 
+        padding: clamp(1.2rem, 4vw, 1.8rem);
         margin-top: 1rem; 
         margin-bottom: 1rem; 
       }
-      header h1 { font-size: clamp(1.5em, 5vw, 1.8em); }
-      .key-value { font-size: clamp(1em, 4vw, 1.3em); }
-      .keys-list-section ul {
-        max-height: 180px; 
-      }
+      header h1 { font-size: clamp(1.6em, 5vw, 1.9em); }
+      .key-value { font-size: clamp(1.1em, 4vw, 1.4em); }
+      .keys-list-section ul { max-height: 160px; }
     }
   </style>
 </head>
 <body>
-  <div id="starfield"></div> <!-- Para o efeito de estrelas -->
+  <div id="starfield"></div> 
+  <div class="scanline-overlay"></div> <!-- Overlay de Scanline -->
   
   <main class="container">
     <header>
-      <h1>Sistema de IDs da Nave</h1>
-      <p class="subtitle">🧑‍🚀 Tripulante, obtenha sua Identificação de Acesso para as tarefas ou visualize suas IDs do dia.</p>
+      <h1>Terminal de Acesso - MIRA HQ</h1>
+      <p class="subtitle">🧑‍🚀 Tripulante, requisite sua Identificação de Acesso ou verifique os registros do ciclo atual. Mantenha-se alerta!</p>
     </header>
     
     <div class="button-group">
-      <button id="generateBtn" title="Obter uma nova ID de acesso">
-        <span class="button-text">⚠️ Gerar ID</span>
+      <button id="generateBtn" title="Requisitar nova ID de Acesso">
+        <span class="button-text">⚠️ INICIAR TASK: REGISTRO</span>
         <span class="spinner"></span>
       </button>
-      <button id="viewKeysBtn" title="Verificar suas IDs ativas hoje">
-        <span class="button-text">🆔 Minhas IDs</span>
+      <button id="viewKeysBtn" title="Consultar IDs de Tripulantes Ativos">
+        <span class="button-text">🛰️ LOG DE SISTEMA</span>
         <span class="spinner"></span>
       </button>
     </div>
     
     <section class="key-display-area">
       <div class="key-container" id="keyContainer"> 
-        <div class="key-value-label">Nova ID Registrada:</div>
+        <div class="key-value-label">ID de Tripulante Designada:</div>
         <div class="key-value" id="keyValue"></div>
       </div>
     </section>
@@ -385,7 +409,7 @@
     </section>
     
     <section class="keys-list-section">
-      <h2>Log de IDs Diário</h2>
+      <h2>Registros de IDs - Ciclo Atual</h2>
       <ul id="keysList" aria-live="polite">
         <!-- As chaves serão inseridas aqui pelo JavaScript -->
       </ul>
@@ -407,12 +431,12 @@
 
     function createStars() {
         if (!starfield) return;
-        starfield.innerHTML = ''; // Limpa estrelas existentes se a função for chamada novamente
-        const numStarsBase = 100; 
+        starfield.innerHTML = ''; 
+        const numStarsBase = Math.floor((window.innerWidth * window.innerHeight) / 15000); // Densidade responsiva
         const starLayersData = [
-            { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.5, animBase: 250 }, // Lentas, distantes
-            { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.8, animBase: 180 },
-            { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.2, animBase: 90 }  // Rápidas, próximas
+            { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
+            { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
+            { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
         ];
 
         starLayersData.forEach(layer => {
@@ -423,16 +447,18 @@
                 star.style.left = `${Math.random() * 100}vw`;
                 star.style.top = `${Math.random() * 100}vh`;
                 
-                const size = layer.baseSize + Math.random() * 0.8;
+                const size = layer.baseSize + Math.random() * 0.7;
                 star.style.width = `${size}px`;
                 star.style.height = `${size}px`;
                 
-                const moveDuration = layer.animBase + (Math.random() * 100 - 50); // Variação na duração do movimento
-                const twinkleDuration = 2 + Math.random() * 4; // Duração do twinkle
+                star.style.setProperty('--star-opacity', layer.baseOpacity);
+                star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
+
+                const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
+                const twinkleDuration = 2 + Math.random() * 4; 
                 
-                // A animação moveStars é definida na classe da camada. Twinkle é individual.
                 star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
-                star.style.animationDelay = `${Math.random() * moveDuration * 0.5}s, ${Math.random() * twinkleDuration}s`;
+                star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`; // Delay para ambas animações
                 
                 starfield.appendChild(star);
             }
@@ -444,7 +470,7 @@
       button.disabled = isLoading;
     }
 
-    function showUIMessage(text, type = 'info', duration = 4000) {
+    function showUIMessage(text, type = 'info', duration = 4500) {
       messageEl.textContent = text;
       messageEl.className = `message visible ${type}`; 
       
@@ -461,8 +487,8 @@
       keysListUl.innerHTML = ''; 
       if (userKeys.length === 0) {
         const li = document.createElement('li');
-        li.textContent = 'Nenhuma ID registrada para este terminal hoje.';
-        li.classList.add('no-keys'); // Adiciona classe para estilização específica
+        li.textContent = 'Nenhum registro de ID neste terminal para o ciclo atual.';
+        li.classList.add('no-keys'); 
         keysListUl.appendChild(li);
         return;
       }
@@ -476,9 +502,9 @@
     async function generateNewKey() {
       setButtonLoading(btnGen, true);
       keyContainerEl.classList.remove('visible'); 
-      keyValueEl.textContent = 'AUTENTICANDO...'; 
+      keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA...'; 
       keyValueEl.classList.add('processing');
-      showUIMessage('Estabelecendo conexão com servidor da MIRA HQ...', 'info', 0); 
+      showUIMessage('🛰️ Estabelecendo link com Servidor Central MIRA HQ...', 'info', 0); 
 
       try {
         const response = await fetch(`${API_BASE_URL}/generate_key`);
@@ -488,17 +514,22 @@
         if (response.ok && data.status === 'success' && data.key) {
           keyValueEl.textContent = data.key;
           keyContainerEl.classList.add('visible');
-          showUIMessage('✅ ID de Acesso Concedida, Tripulante!', 'success');
+          showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
           await fetchUserKeyList(); 
         } else {
-          const errorMessage = data.message || `ERRO DE SISTEMA ${response.status}: Falha na autenticação.`;
-          showUIMessage(`❌ ${errorMessage}`, 'error');
+          const errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
+          // Mensagem específica para limite de chaves
+          if (response.status === 429 || (data.message && data.message.toLowerCase().includes("limite"))) {
+             showUIMessage('⚠️ ALERTA: Limite de requisições de ID atingido para este terminal. Aguarde o próximo ciclo.', 'error', 6000);
+          } else {
+            showUIMessage(`❌ ${errorMessage}`, 'error');
+          }
           keyContainerEl.classList.remove('visible');
         }
       } catch (error) {
         keyValueEl.classList.remove('processing');
         console.error('Falha crítica de comunicação com MIRA HQ:', error);
-        showUIMessage('🚫 ALERTA: Perda de comunicação com servidor. Tente ejetar e reconectar.', 'error');
+        showUIMessage('🚫 EMERGÊNCIA: Perda total de comunicação com o servidor. Possível sabotagem nos sistemas!', 'error', 6000);
         keyContainerEl.classList.remove('visible');
       } finally {
         setButtonLoading(btnGen, false);
@@ -507,8 +538,8 @@
 
     async function fetchUserKeyList() {
       setButtonLoading(btnView, true);
-      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error')) {
-          showUIMessage('Consultando registros de IDs...', 'info', 0);
+      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error')) { // Não sobrescreve msg de erro/sucesso recente
+          showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
       }
 
       try {
@@ -519,15 +550,15 @@
           userKeys = data.keys || [];
           renderKeysList();
           if (btnView.classList.contains('loading')) { 
-            showUIMessage(userKeys.length > 0 ? 'IDs recuperadas do log.' : 'Nenhuma ID no log para hoje.', 'info', 3000);
+            showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log do ciclo atual.', 'info', 3000);
           }
         } else {
-          const errorMessage = data.message || `ERRO DE SISTEMA ${response.status}: Falha ao acessar logs.`;
+          const errorMessage = data.message || `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
           showUIMessage(`❌ ${errorMessage}`, 'error');
         }
       } catch (error) {
         console.error('Falha de comunicação ao buscar logs:', error);
-        showUIMessage('🚫 ALERTA: Falha ao acessar o banco de dados de IDs.', 'error');
+        showUIMessage('🚫 ALERTA: Comunicação com o banco de dados de IDs interrompida.', 'error', 6000);
       } finally {
         setButtonLoading(btnView, false);
       }
@@ -544,11 +575,10 @@
         keyContainerEl.classList.remove('visible'); 
     });
 
-    // Recriar estrelas em redimensionamento para melhor distribuição (opcional e pode ter custo de performance)
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(createStars, 500); // Debounce para evitar chamadas excessivas
+        resizeTimeout = setTimeout(createStars, 400); 
     });
 
   </script>

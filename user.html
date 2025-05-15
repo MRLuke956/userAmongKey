@@ -378,7 +378,7 @@
 </head>
 <body>
   <div id="starfield"></div> 
-  <div class="scanline-overlay"></div> <!-- Overlay de Scanline -->
+  <div class="scanline-overlay"></div>
   
   <main class="container">
     <header>
@@ -387,7 +387,7 @@
     </header>
     
     <div class="button-group">
-      <button id="generateBtn" title="Requisitar nova ID de Acesso">
+      <button id="generateBtn" title="Requisitar nova ID de Acesso via verificação">
         <span class="button-text">⚠️ INICIAR TASK: REGISTRO</span>
         <span class="spinner"></span>
       </button>
@@ -411,13 +411,23 @@
     <section class="keys-list-section">
       <h2>Registros de IDs - Ciclo Atual</h2>
       <ul id="keysList" aria-live="polite">
-        <!-- As chaves serão inseridas aqui pelo JavaScript -->
       </ul>
     </section>
   </main>
 
   <script>
     const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
+    // IMPORTANT: This is the URL you will redirect TO.
+    const SHORTENER_URL = 'https://link-target.net/63830/among-us-ken-gen-mod-menu'; 
+    // This is a unique key for sessionStorage to prevent trivial bypass.
+    const SHORTENER_SESSION_TOKEN_KEY = 'miraHqShortenerTokenPending'; 
+    // These are the query parameters your shortener should redirect back with.
+    // e.g., https://yourpage.com/terminal.html?action=generate_from_shortener&status=completed
+    const RETURN_ACTION_PARAM = 'action';
+    const RETURN_ACTION_VALUE = 'generate_from_shortener';
+    const RETURN_STATUS_PARAM = 'status'; // Optional, but good for clarity
+    const RETURN_STATUS_VALUE = 'completed';
+
 
     const btnGen = document.getElementById('generateBtn');
     const btnView = document.getElementById('viewKeysBtn');
@@ -432,7 +442,7 @@
     function createStars() {
         if (!starfield) return;
         starfield.innerHTML = ''; 
-        const numStarsBase = Math.floor((window.innerWidth * window.innerHeight) / 15000); // Densidade responsiva
+        const numStarsBase = Math.floor((window.innerWidth * window.innerHeight) / 15000);
         const starLayersData = [
             { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
             { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
@@ -443,23 +453,17 @@
             for (let i = 0; i < layer.count; i++) {
                 const star = document.createElement('div');
                 star.classList.add('star', layer.class);
-                
                 star.style.left = `${Math.random() * 100}vw`;
                 star.style.top = `${Math.random() * 100}vh`;
-                
                 const size = layer.baseSize + Math.random() * 0.7;
                 star.style.width = `${size}px`;
                 star.style.height = `${size}px`;
-                
                 star.style.setProperty('--star-opacity', layer.baseOpacity);
                 star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
-
                 const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
                 const twinkleDuration = 2 + Math.random() * 4; 
-                
                 star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
-                star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`; // Delay para ambas animações
-                
+                star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`;
                 starfield.appendChild(star);
             }
         });
@@ -473,9 +477,7 @@
     function showUIMessage(text, type = 'info', duration = 4500) {
       messageEl.textContent = text;
       messageEl.className = `message visible ${type}`; 
-      
       if (messageEl.timeoutId) clearTimeout(messageEl.timeoutId);
-
       if (duration > 0) {
         messageEl.timeoutId = setTimeout(() => {
             messageEl.className = 'message'; 
@@ -499,12 +501,16 @@
       });
     }
 
+    // This function NOW ONLY fetches the key. The redirection logic is separate.
     async function generateNewKey() {
-      setButtonLoading(btnGen, true);
+      setButtonLoading(btnGen, true); // Keep generate button loading during API call
       keyContainerEl.classList.remove('visible'); 
-      keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA...'; 
+      keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
       keyValueEl.classList.add('processing');
-      showUIMessage('🛰️ Estabelecendo link com Servidor Central MIRA HQ...', 'info', 0); 
+      // Don't overwrite a success message from shortener verification immediately
+      if (!messageEl.classList.contains('success')) {
+         showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
+      }
 
       try {
         const response = await fetch(`${API_BASE_URL}/generate_key`);
@@ -518,9 +524,8 @@
           await fetchUserKeyList(); 
         } else {
           const errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
-          // Mensagem específica para limite de chaves
           if (response.status === 429 || (data.message && data.message.toLowerCase().includes("limite"))) {
-             showUIMessage('⚠️ ALERTA: Limite de requisições de ID atingido para este terminal. Aguarde o próximo ciclo.', 'error', 6000);
+             showUIMessage('⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.', 'error', 6000);
           } else {
             showUIMessage(`❌ ${errorMessage}`, 'error');
           }
@@ -529,7 +534,7 @@
       } catch (error) {
         keyValueEl.classList.remove('processing');
         console.error('Falha crítica de comunicação com MIRA HQ:', error);
-        showUIMessage('🚫 EMERGÊNCIA: Perda total de comunicação com o servidor. Possível sabotagem nos sistemas!', 'error', 6000);
+        showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
         keyContainerEl.classList.remove('visible');
       } finally {
         setButtonLoading(btnGen, false);
@@ -538,7 +543,7 @@
 
     async function fetchUserKeyList() {
       setButtonLoading(btnView, true);
-      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error')) { // Não sobrescreve msg de erro/sucesso recente
+      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando")) {
           showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
       }
 
@@ -550,7 +555,7 @@
           userKeys = data.keys || [];
           renderKeysList();
           if (btnView.classList.contains('loading')) { 
-            showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log do ciclo atual.', 'info', 3000);
+            showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
           }
         } else {
           const errorMessage = data.message || `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
@@ -564,15 +569,65 @@
       }
     }
 
+    // NEW FUNCTION: Called when "Gerar Key" button is clicked
+    function initiateShortenerRedirect() {
+      setButtonLoading(btnGen, true);
+      showUIMessage('⏳ Preparando redirecionamento para verificação...', 'info', 5000); // Message visible longer
+
+      // 1. Set a token in sessionStorage. This indicates intent.
+      // The value can be simple, its existence is what matters for this client-side check.
+      const tokenValue = 'pending-' + Date.now();
+      sessionStorage.setItem(SHORTENER_SESSION_TOKEN_KEY, tokenValue);
+      
+      // 2. Redirect to the shortener URL.
+      // User will be redirected for a few seconds to let them read the message.
+      setTimeout(() => {
+          window.location.href = SHORTENER_URL;
+      }, 1500); // Adjust delay as needed
+    }
+
+    // NEW FUNCTION: Called on page load to check if we returned from the shortener
+    function checkAndProcessShortenerReturn() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get(RETURN_ACTION_PARAM);
+      const status = urlParams.get(RETURN_STATUS_PARAM); // Optional check
+      const storedToken = sessionStorage.getItem(SHORTENER_SESSION_TOKEN_KEY);
+
+      // Check if the expected URL parameters are present AND our session token exists
+      if (action === RETURN_ACTION_VALUE && storedToken && (status === RETURN_STATUS_VALUE || !RETURN_STATUS_PARAM)) {
+        showUIMessage('✅ Verificação completa! Solicitando ID de Tripulante...', 'success', 4000);
+        
+        // Consume the token: remove it from sessionStorage so this doesn't run again on refresh
+        sessionStorage.removeItem(SHORTENER_SESSION_TOKEN_KEY);
+
+        // Clean up the URL (remove the query parameters)
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete(RETURN_ACTION_PARAM);
+        if (RETURN_STATUS_PARAM) newUrl.searchParams.delete(RETURN_STATUS_PARAM);
+        window.history.replaceState({}, document.title, newUrl.toString());
+
+        // Now, trigger the actual key generation
+        generateNewKey(); // This will call your API
+      } else {
+        // This is a normal page load, not a return from the shortener, or token is missing (bypass attempt/old tab)
+        // If there was a token but no matching URL params, it might be an old tab, clear it.
+        if (storedToken && !(action === RETURN_ACTION_VALUE)) {
+            sessionStorage.removeItem(SHORTENER_SESSION_TOKEN_KEY);
+        }
+        fetchUserKeyList(); // Load existing keys as usual
+        keyContainerEl.classList.remove('visible');
+      }
+    }
+
     // Event Listeners
-    btnGen.addEventListener('click', generateNewKey);
+    btnGen.addEventListener('click', initiateShortenerRedirect); // MODIFIED
     btnView.addEventListener('click', fetchUserKeyList);
 
     // Inicialização
     document.addEventListener('DOMContentLoaded', () => {
         createStars();
-        fetchUserKeyList(); 
-        keyContainerEl.classList.remove('visible'); 
+        // Check if this page load is a return from the shortener
+        checkAndProcessShortenerReturn(); // NEW CALL
     });
 
     let resizeTimeout;

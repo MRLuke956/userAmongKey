@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -41,8 +42,17 @@
       position: relative;
       display: flex; 
       flex-direction: column; 
-      align-items: center; 
+      align-items: center;
+      opacity: 0;
+      animation: bootUp 2s ease-out forwards;
     }
+
+    @keyframes bootUp {
+      0% { opacity: 0; transform: scale(0.95); }
+      50% { opacity: 0.5; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
     #starfield {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: -1; overflow: hidden;
@@ -75,6 +85,7 @@
         0% { background-position: 0 0; }
         100% { background-position: 0 100px; }
     }
+
     .container {
       position: relative; z-index: 1; background-color: var(--panel-bg-color);
       padding: clamp(1.5rem, 5vw, 2.5rem); border-radius: 16px; 
@@ -82,7 +93,70 @@
       border: 3px solid var(--panel-border-color);
       box-shadow: 0 0 35px rgba(58, 80, 107, 0.45), inset 0 0 18px rgba(58, 80, 107, 0.3); 
       text-align: center;
+      transform: translateY(20px);
+      animation: slideIn 1s ease-out 0.5s forwards;
     }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .controls-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+
+    .sound-toggle {
+      background: none;
+      border: 2px solid var(--panel-border-color);
+      color: var(--text-color-medium);
+      padding: 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .sound-toggle:hover {
+      border-color: var(--panel-highlight-color);
+      color: var(--panel-highlight-color);
+      transform: scale(1.05);
+    }
+
+    .sound-toggle.active {
+      border-color: var(--crewmate-yellow);
+      color: var(--crewmate-yellow);
+      box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+    }
+
+    .cooldown-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .cooldown-timer {
+      background: rgba(220, 53, 69, 0.1);
+      border: 2px solid var(--impostor-red);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--impostor-red);
+      font-family: var(--font-title);
+      font-weight: 700;
+      text-align: center;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+
     header { margin-bottom: 1.5rem; }
     header h1 {
       font-family: var(--font-title); color: var(--crewmate-yellow); 
@@ -148,6 +222,7 @@
     button.loading .spinner { display: inline-block; }
     button.loading .button-text { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
     .key-display-area {
       background-color: rgba(0,0,0, 0.45); 
       border: 2px solid var(--panel-highlight-color);
@@ -156,13 +231,113 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       box-shadow: inset 0 0 15px rgba(91, 192, 222, 0.25), 0 0 10px rgba(91, 192, 222, 0.1);
+      position: relative;
     }
+
     .key-container { 
       opacity: 0; transform: translateY(15px) scale(0.9);
       transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       width: 100%; 
     }
     .key-container.visible { opacity: 1; transform: translateY(0) scale(1); }
+
+    .key-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .copy-button {
+      background: var(--success-color);
+      color: white;
+      border: none;
+      padding: 0.7rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.9rem;
+      box-shadow: 0 3px 0px #1e7e34, 0 5px 8px rgba(0,0,0,0.2);
+    }
+
+    .copy-button:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0px #1e7e34, 0 7px 12px rgba(0,0,0,0.25);
+    }
+
+    .copy-button:active {
+      transform: translateY(1px) !important;
+      box-shadow: 0 2px 0px #1e7e34, 0 4px 6px rgba(0,0,0,0.2) !important;
+    }
+
+    .copy-button.copied {
+      background: var(--crewmate-yellow);
+      color: var(--crewmate-yellow-text);
+      animation: copySuccess 0.6s ease;
+    }
+
+    @keyframes copySuccess {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--key-id-color), var(--panel-highlight-color));
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+
+    .achievement-popup {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--crewmate-yellow);
+      color: var(--crewmate-yellow-text);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+      transform: translateX(400px);
+      transition: transform 0.5s ease;
+      z-index: 1000;
+      border: 2px solid var(--crewmate-yellow-darker);
+    }
+
+    .achievement-popup.show {
+      transform: translateX(0);
+    }
+
+    .key-metadata {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: var(--text-color-medium);
+      border-left: 3px solid var(--info-color);
+    }
+
     .key-value-label {
         font-family: var(--font-monospace); font-size: clamp(0.8em, 2.5vw, 0.9em);
         color: var(--text-color-medium); margin-bottom: 0.8rem;
@@ -257,6 +432,19 @@
       header h1 { font-size: clamp(1.6em, 5vw, 1.9em); }
       .key-value { font-size: clamp(1.1em, 4vw, 1.4em); }
       .keys-list-section ul { max-height: 160px; }
+      .controls-section {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .achievement-popup {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        transform: translateY(-100px);
+      }
+      .achievement-popup.show {
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
@@ -269,6 +457,21 @@
       <h1>Terminal de Acesso - MIRA HQ</h1>
       <p class="subtitle">🧑‍🚀 Tripulante, requisite sua Identificação de Acesso ou verifique os registros do ciclo atual. Mantenha-se alerta!</p>
     </header>
+
+    <div class="controls-section">
+      <div></div>
+      <button class="sound-toggle" id="soundToggle" title="Alternar efeitos sonoros">
+        🔊
+      </button>
+    </div>
+
+    <div class="cooldown-section" id="cooldownSection" style="display: none;">
+      <div class="cooldown-timer">
+        <div>⚠️ SISTEMA EM COOLDOWN</div>
+        <div id="cooldownTime">30s</div>
+        <div style="font-size: 0.8em; margin-top: 0.5rem;">Aguarde para nova solicitação</div>
+      </div>
+    </div>
     
     <div class="button-group">
       <button id="generateBtn" title="Requisitar nova ID de Acesso via verificação">
@@ -285,6 +488,19 @@
       <div class="key-container" id="keyContainer"> 
         <div class="key-value-label">ID de Tripulante Designada:</div>
         <div class="key-value" id="keyValue"></div>
+        <div class="key-actions" id="keyActions" style="display: none;">
+          <button class="copy-button" id="copyButton">
+            📋 Copiar ID
+          </button>
+        </div>
+        <div class="key-metadata" id="keyMetadata" style="display: none;">
+          <div>📅 Gerada em: <span id="keyTimestamp"></span></div>
+          <div>🔑 Tipo: Acesso MIRA HQ</div>
+          <div>⏱️ Status: Ativa</div>
+        </div>
+        <div class="progress-bar" id="progressBar" style="display: none;">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
       </div>
     </section>
     
@@ -298,6 +514,8 @@
       </ul>
     </section>
   </main>
+
+  <div class="achievement-popup" id="achievementPopup"></div>
 
   <script>
     const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
@@ -315,8 +533,112 @@
     const messageEl = document.getElementById('message');
     const keysListUl = document.getElementById('keysList');
     const starfield = document.getElementById('starfield');
+    const soundToggle = document.getElementById('soundToggle');
+    const copyButton = document.getElementById('copyButton');
+    const keyActions = document.getElementById('keyActions');
+    const keyMetadata = document.getElementById('keyMetadata');
+    const keyTimestamp = document.getElementById('keyTimestamp');
+    const cooldownSection = document.getElementById('cooldownSection');
+    const cooldownTime = document.getElementById('cooldownTime');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const achievementPopup = document.getElementById('achievementPopup');
     
     let userKeys = []; 
+    let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+    let cooldownTimer = null;
+    let keyGenerationCount = parseInt(localStorage.getItem('keyGenerationCount') || '0');
+
+    // Audio Context para sons
+    let audioContext = null;
+    
+    function initAudioContext() {
+      if (!audioContext && soundEnabled) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(frequency, duration = 100, type = 'sine') {
+      if (!soundEnabled || !audioContext) return;
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = type;
+      
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration / 1000);
+    }
+
+    function playSoundSequence(sequence) {
+      if (!soundEnabled) return;
+      sequence.forEach((note, index) => {
+        setTimeout(() => playSound(note.freq, note.duration, note.type), index * 150);
+      });
+    }
+
+    function updateSoundToggle() {
+      soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+      soundToggle.classList.toggle('active', soundEnabled);
+      localStorage.setItem('soundEnabled', soundEnabled);
+    }
+
+    function showAchievement(text) {
+      achievementPopup.textContent = `🏆 ${text}`;
+      achievementPopup.classList.add('show');
+      setTimeout(() => {
+        achievementPopup.classList.remove('show');
+      }, 3000);
+    }
+
+    function startCooldown(seconds = 30) {
+      cooldownSection.style.display = 'block';
+      btnGen.disabled = true;
+      btnGen.style.opacity = '0.5';
+      
+      let remaining = seconds;
+      cooldownTime.textContent = `${remaining}s`;
+      
+      cooldownTimer = setInterval(() => {
+        remaining--;
+        cooldownTime.textContent = `${remaining}s`;
+        
+        if (remaining <= 0) {
+          clearInterval(cooldownTimer);
+          cooldownSection.style.display = 'none';
+          btnGen.disabled = false;
+          btnGen.style.opacity = '1';
+          
+          if (soundEnabled) {
+            playSoundSequence([
+              {freq: 440, duration: 100, type: 'sine'},
+              {freq: 554, duration: 100, type: 'sine'},
+              {freq: 659, duration: 200, type: 'sine'}
+            ]);
+          }
+          showUIMessage('✅ Sistema pronto para nova solicitação!', 'success', 3000);
+        }
+      }, 1000);
+    }
+
+    function updateProgress(percent) {
+      progressBar.style.display = 'block';
+      progressFill.style.width = `${percent}%`;
+      
+      if (percent >= 100) {
+        setTimeout(() => {
+          progressBar.style.display = 'none';
+          progressFill.style.width = '0%';
+        }, 1000);
+      }
+    }
 
     function createStars() {
         if (!starfield) return;
@@ -379,25 +701,65 @@
       });
     }
 
+    async function copyToClipboard() {
+      const keyValue = keyValueEl.textContent;
+      if (!keyValue || keyValue.includes('AUTENTICANDO')) return;
+      
+      try {
+        await navigator.clipboard.writeText(keyValue);
+        copyButton.textContent = '✅ Copiado!';
+        copyButton.classList.add('copied');
+        
+        if (soundEnabled) {
+          playSoundSequence([
+            {freq: 800, duration: 100, type: 'sine'},
+            {freq: 1000, duration: 150, type: 'sine'}
+          ]);
+        }
+        
+        setTimeout(() => {
+          copyButton.textContent = '📋 Copiar ID';
+          copyButton.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        showUIMessage('❌ Erro ao copiar. Tente selecionar manualmente.', 'error', 3000);
+        if (soundEnabled) playSound(200, 200, 'sawtooth');
+      }
+    }
+
     async function generateNewKey() {
-      // console.log('[Frontend] generateNewKey: Função chamada.');
+      initAudioContext();
+      
+      if (soundEnabled) {
+        playSoundSequence([
+          {freq: 800, duration: 100, type: 'square'},
+          {freq: 600, duration: 100, type: 'square'},
+          {freq: 400, duration: 150, type: 'square'}
+        ]);
+      }
+
       setButtonLoading(btnGen, true); 
       keyContainerEl.classList.remove('visible'); 
+      keyActions.style.display = 'none';
+      keyMetadata.style.display = 'none';
       keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
       keyValueEl.classList.add('processing');
+      updateProgress(10);
       
       const verificationToken = localStorage.getItem(BACKEND_VERIFICATION_TOKEN_KEY);
       if (!verificationToken) {
         showUIMessage('❌ Falha na verificação de segurança. Tente o processo novamente.', 'error', 6000);
         setButtonLoading(btnGen, false);
-        keyValueEl.textContent = ''; // Limpa o texto de processamento
+        keyValueEl.textContent = '';
         keyValueEl.classList.remove('processing');
+        if (soundEnabled) playSound(200, 300, 'sawtooth');
         return;
       }
 
       if (!messageEl.classList.contains('success')) {
          showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
       }
+      updateProgress(30);
 
       try {
         const response = await fetch(`${API_BASE_URL}/generate_key`, {
@@ -406,40 +768,68 @@
           }
         });
         
+        updateProgress(70);
         const data = await response.json(); 
         keyValueEl.classList.remove('processing');
         localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY); 
 
         if (response.ok && data.status === 'success' && data.key) {
-          // console.log('[Frontend] generateNewKey: Sucesso ao buscar chave:', data.key);
+          updateProgress(100);
           keyValueEl.textContent = data.key;
           keyContainerEl.classList.add('visible');
+          keyActions.style.display = 'flex';
+          keyMetadata.style.display = 'block';
+          keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+          
+          keyGenerationCount++;
+          localStorage.setItem('keyGenerationCount', keyGenerationCount);
+          
+          if (soundEnabled) {
+            playSoundSequence([
+              {freq: 523, duration: 150, type: 'sine'},
+              {freq: 659, duration: 150, type: 'sine'},
+              {freq: 784, duration: 200, type: 'sine'},
+              {freq: 1047, duration: 250, type: 'sine'}
+            ]);
+          }
+          
           showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
-          await fetchUserKeyList(); 
+          
+          // Achievements
+          if (keyGenerationCount === 1) {
+            showAchievement('Primeiro Acesso - Bem-vindo à MIRA HQ!');
+          } else if (keyGenerationCount === 5) {
+            showAchievement('Tripulante Veterano - 5 IDs geradas!');
+          } else if (keyGenerationCount === 10) {
+            showAchievement('Especialista em Segurança - 10 IDs!');
+          }
+          
+          await fetchUserKeyList();
+          startCooldown(30);
         } else {
-          // console.error('[Frontend] generateNewKey: Erro da API:', response.status, data);
           let errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
           if (response.status === 403) { 
             errorMessage = `❌ Falha na verificação: ${data.message || 'Tente o processo novamente.'}`;
           } else if (response.status === 429) {
              errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
+             startCooldown(60);
           }
           showUIMessage(errorMessage, 'error', 6000);
           keyContainerEl.classList.remove('visible');
+          if (soundEnabled) playSound(200, 500, 'sawtooth');
         }
       } catch (error) {
         keyValueEl.classList.remove('processing');
         localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY);
-        // console.error('[Frontend] generateNewKey: Falha crítica de comunicação:', error);
         showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
         keyContainerEl.classList.remove('visible');
+        if (soundEnabled) playSound(150, 800, 'sawtooth');
       } finally {
         setButtonLoading(btnGen, false);
       }
     }
 
     async function fetchUserKeyList() {
-      // console.log('[Frontend] fetchUserKeyList: Função chamada.');
       setButtonLoading(btnView, true);
       if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa")) {
           showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
@@ -450,19 +840,16 @@
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
-          // console.log('[Frontend] fetchUserKeyList: Chaves recebidas:', data.keys);
           userKeys = data.keys || [];
           renderKeysList();
           if (btnView.classList.contains('loading')) { 
             showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
           }
         } else {
-          // console.error('[Frontend] fetchUserKeyList: Erro da API:', response.status, data);
           const errorMessage = data.message || `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
           showUIMessage(`❌ ${errorMessage}`, 'error');
         }
       } catch (error) {
-        // console.error('[Frontend] fetchUserKeyList: Falha de comunicação:', error);
         showUIMessage('🚫 ALERTA: Comunicação com o banco de dados de IDs interrompida.', 'error', 6000);
       } finally {
         setButtonLoading(btnView, false);
@@ -470,7 +857,7 @@
     }
 
     async function initiateShortenerRedirect() {
-      // console.log('[Frontend] initiateShortenerRedirect: Função chamada.');
+      if (soundEnabled) playSound(600, 100, 'square');
       setButtonLoading(btnGen, true);
       showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
 
@@ -480,27 +867,22 @@
 
         if (response.ok && data.status === 'success' && data.verification_token) {
           localStorage.setItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
-          // console.log('[Frontend] initiateShortenerRedirect: Token de verificação do backend recebido e salvo:', data.verification_token);
           showUIMessage('⏳ Preparando redirecionamento para o portal...', 'info', 5000);
           
           setTimeout(() => {
-              // console.log('[Frontend] initiateShortenerRedirect: Redirecionando para:', SHORTENER_URL);
               window.location.href = SHORTENER_URL;
           }, 1500);
         } else {
-          // console.error('[Frontend] initiateShortenerRedirect: Erro ao obter token de verificação:', data);
           showUIMessage(`❌ Falha ao iniciar verificação: ${data.message || 'Erro desconhecido.'}`, 'error', 6000);
           setButtonLoading(btnGen, false);
         }
       } catch (error) {
-        // console.error('[Frontend] initiateShortenerRedirect: Erro de rede ao obter token de verificação:', error);
         showUIMessage('🚫 Falha de comunicação ao iniciar verificação. Tente novamente.', 'error', 6000);
         setButtonLoading(btnGen, false);
       }
     }
 
     function checkAndProcessShortenerReturn() {
-      // console.log('[Frontend] checkAndProcessShortenerReturn: Função chamada. URL Atual:', window.location.href);
       const urlParams = new URLSearchParams(window.location.search);
       const action = urlParams.get(RETURN_ACTION_PARAM);
       const status = urlParams.get(RETURN_STATUS_PARAM);
@@ -509,35 +891,60 @@
       const statusMatches = status === RETURN_STATUS_VALUE;
       const backendTokenExists = !!localStorage.getItem(BACKEND_VERIFICATION_TOKEN_KEY); 
 
-      // console.log('[Frontend] checkAndProcessShortenerReturn: Condições: actionMatches=', actionMatches, ', statusMatches=', statusMatches, ', backendTokenExists=', backendTokenExists);
-
       if (actionMatches && statusMatches && backendTokenExists) {
-        // console.log('[Frontend] checkAndProcessShortenerReturn: CONDIÇÕES ATENDIDAS! Processando geração de chave...');
         showUIMessage('✅ Verificação do portal completa! Solicitando ID de Tripulante...', 'success', 4000);
         
         const cleanUrl = window.location.origin + window.location.pathname;
         window.history.replaceState({}, document.title, cleanUrl);
-        // console.log('[Frontend] checkAndProcessShortenerReturn: URL limpa para:', cleanUrl);
 
         generateNewKey();
       } else {
-        // console.log('[Frontend] checkAndProcessShortenerReturn: Condições NÃO atendidas. Carregamento normal ou falha na verificação.');
         if (backendTokenExists && (!actionMatches || !statusMatches) ) {
             localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY);
-            // console.log('[Frontend] checkAndProcessShortenerReturn: Token do backend removido pois os parâmetros da URL não correspondem.');
         }
         fetchUserKeyList();
         keyContainerEl.classList.remove('visible');
       }
     }
 
+    // Event Listeners
+    soundToggle.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      updateSoundToggle();
+      initAudioContext();
+      
+      if (soundEnabled) {
+        playSoundSequence([
+          {freq: 440, duration: 100, type: 'sine'},
+          {freq: 554, duration: 100, type: 'sine'}
+        ]);
+      }
+    });
+
+    copyButton.addEventListener('click', copyToClipboard);
+
     btnGen.addEventListener('click', initiateShortenerRedirect); 
-    btnView.addEventListener('click', fetchUserKeyList);
+    btnView.addEventListener('click', () => {
+      if (soundEnabled) playSound(500, 100, 'square');
+      fetchUserKeyList();
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
-        // console.log('[Frontend] DOMContentLoaded: Página carregada.');
+        updateSoundToggle();
         createStars();
         checkAndProcessShortenerReturn(); 
+        
+        // Boot sound
+        setTimeout(() => {
+          if (soundEnabled) {
+            playSoundSequence([
+              {freq: 220, duration: 100, type: 'sine'},
+              {freq: 277, duration: 100, type: 'sine'},
+              {freq: 330, duration: 100, type: 'sine'},
+              {freq: 440, duration: 200, type: 'sine'}
+            ]);
+          }
+        }, 1000);
     });
 
     let resizeTimeout;

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -591,6 +590,7 @@
     let cooldownTimer = null;
     let keyGenerationCount = parseInt(localStorage.getItem('keyGenerationCount') || '0');
     let lastKeyGenerationTime = parseInt(localStorage.getItem('lastKeyGenerationTime') || '0');
+    let isInCooldown = false;
 
     // Audio Context para sons
     let audioContext = null;
@@ -649,15 +649,15 @@
       
       if (remainingKeys === 0) {
         keyLimitInfo.className = 'key-limit-info key-limit-full';
-        keyLimitHelper.textContent = '⚠️ Limite atingido! Use uma ID no mod Among Us para liberar espaço';
+        keyLimitHelper.textContent = '⚠️ Limite atingido! Use suas IDs ativas no mod Among Us para validar e liberar espaço para novas IDs';
         keyLimitSection.style.display = 'block';
       } else if (remainingKeys <= 2) {
         keyLimitInfo.className = 'key-limit-info key-limit-warning';
-        keyLimitHelper.textContent = `⚡ ${remainingKeys} slot${remainingKeys !== 1 ? 's' : ''} restante${remainingKeys !== 1 ? 's' : ''}! Use suas IDs no mod Among Us para liberar espaço`;
+        keyLimitHelper.textContent = `⚡ ${remainingKeys} slot${remainingKeys !== 1 ? 's' : ''} restante${remainingKeys !== 1 ? 's' : ''}! Use suas IDs no mod Among Us para validar e liberar espaço`;
         keyLimitSection.style.display = 'block';
       } else if (remainingKeys < 5) {
         keyLimitInfo.className = 'key-limit-info';
-        keyLimitHelper.textContent = `✅ ${remainingKeys} slots disponíveis - Use suas IDs no mod Among Us para validar e liberar espaço`;
+        keyLimitHelper.textContent = `✅ ${remainingKeys} slots disponíveis - Use suas IDs no mod Among Us para validar e liberar espaço automaticamente`;
         keyLimitSection.style.display = 'block';
       } else {
         keyLimitSection.style.display = 'none';
@@ -676,9 +676,11 @@
     }
 
     function startCooldown(seconds = 30) {
+      isInCooldown = true;
       cooldownSection.style.display = 'block';
       btnGen.disabled = true;
       btnGen.style.opacity = '0.5';
+      btnGen.style.cursor = 'not-allowed';
       
       let remaining = seconds;
       cooldownTime.textContent = `${remaining}s`;
@@ -691,9 +693,11 @@
         
         if (remaining <= 0) {
           clearInterval(cooldownTimer);
+          isInCooldown = false;
           cooldownSection.style.display = 'none';
           btnGen.disabled = false;
           btnGen.style.opacity = '1';
+          btnGen.style.cursor = 'pointer';
           
           if (soundEnabled) {
             playSoundSequence([
@@ -807,9 +811,6 @@
     }
 
     async function generateNewKey() {
-      // Esta função só será chamada após o retorno do shortener, então não precisa verificar limite novamente
-      // pois já foi verificado em initiateShortenerRedirect()
-      
       initAudioContext();
       
       if (soundEnabled) {
@@ -944,6 +945,13 @@
     }
 
     async function initiateShortenerRedirect() {
+      // Verificar cooldown PRIMEIRO
+      if (isInCooldown || btnGen.disabled) {
+        showUIMessage('⏱️ AGUARDE: Sistema em cooldown. Aguarde o tempo restante antes de fazer nova solicitação.', 'error', 4000);
+        if (soundEnabled) playSound(200, 300, 'sawtooth');
+        return;
+      }
+
       // Verificar se já atingiu o limite antes de iniciar o processo
       if (userKeys.length >= 5) {
         showUIMessage('⚠️ LIMITE ATINGIDO: Você possui o máximo de 5 IDs. Use uma ID no mod Among Us para liberar espaço antes de gerar nova.', 'error', 6000);

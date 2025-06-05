@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1016,11 +1017,11 @@
           throw new Error('URL do servidor não é confiável');
         }
 
+        // Corrigir método e cabeçalho de acordo com o backend
         const response = await fetch(`${API_BASE_URL}/generate_key`, {
-          method: 'POST',
+          method: 'GET',  // Mudado para GET
           headers: {
-            'X-Verification-Token': verificationToken,
-            'Content-Type': 'application/json'
+            'X-Verification-Token': verificationToken
           }
         });
         
@@ -1127,7 +1128,7 @@
     }
 
     async function initiateShortenerRedirect() {
-      // Verificações de segurança PRIMEIRO
+      // Verificações de segurança PRIMEIRO - incluindo cooldown
       if (isInCooldown || (btnGen && btnGen.disabled) || isProcessing) {
         showUIMessage('⏱️ AGUARDE: Sistema em cooldown. Aguarde o tempo restante antes de fazer nova solicitação.', 'error', 4000);
         if (soundEnabled) playSound(200, 300, 'sawtooth');
@@ -1156,11 +1157,9 @@
           throw new Error('URL do servidor não é confiável');
         }
 
+        // Corrigir método de acordo com o backend
         const response = await fetch(`${API_BASE_URL}/initiate-verification`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          method: 'GET'  // Mudado para GET
         });
         const data = await response.json();
 

@@ -157,6 +157,34 @@
       50% { opacity: 1; }
     }
 
+    .key-limit-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .key-limit-info {
+      background: rgba(0, 123, 255, 0.1);
+      border: 2px solid var(--info-color);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--info-color);
+      font-family: var(--font-title);
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .key-limit-warning {
+      background: rgba(255, 193, 7, 0.1);
+      border: 2px solid var(--crewmate-yellow);
+      color: var(--crewmate-yellow);
+    }
+
+    .key-limit-full {
+      background: rgba(220, 53, 69, 0.1);
+      border: 2px solid var(--impostor-red);
+      color: var(--impostor-red);
+    }
+
     header { margin-bottom: 1.5rem; }
     header h1 {
       font-family: var(--font-title); color: var(--crewmate-yellow); 
@@ -445,6 +473,9 @@
       .achievement-popup.show {
         transform: translateY(0);
       }
+      .key-limit-info {
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
@@ -470,6 +501,13 @@
         <div>⚠️ SISTEMA EM COOLDOWN</div>
         <div id="cooldownTime">30s</div>
         <div style="font-size: 0.8em; margin-top: 0.5rem;">Aguarde para nova solicitação</div>
+      </div>
+    </div>
+
+    <div class="key-limit-section" id="keyLimitSection" style="display: none;">
+      <div class="key-limit-info" id="keyLimitInfo">
+        <div id="keyLimitText">Você possui 0 IDs ativas (máximo: 5 por tripulante)</div>
+        <div style="font-size: 0.85em; margin-top: 0.5rem;" id="keyLimitHelper">💡 Use suas IDs no mod Among Us para liberar espaço</div>
       </div>
     </div>
     
@@ -543,11 +581,16 @@
     const progressBar = document.getElementById('progressBar');
     const progressFill = document.getElementById('progressFill');
     const achievementPopup = document.getElementById('achievementPopup');
+    const keyLimitSection = document.getElementById('keyLimitSection');
+    const keyLimitInfo = document.getElementById('keyLimitInfo');
+    const keyLimitText = document.getElementById('keyLimitText');
+    const keyLimitHelper = document.getElementById('keyLimitHelper');
     
     let userKeys = []; 
     let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
     let cooldownTimer = null;
     let keyGenerationCount = parseInt(localStorage.getItem('keyGenerationCount') || '0');
+    let lastKeyGenerationTime = parseInt(localStorage.getItem('lastKeyGenerationTime') || '0');
 
     // Audio Context para sons
     let audioContext = null;
@@ -598,6 +641,40 @@
       }, 3000);
     }
 
+    function updateKeyLimitDisplay() {
+      const keysUsed = userKeys.length;
+      const remainingKeys = 5 - keysUsed;
+      
+      keyLimitText.textContent = `Você possui ${keysUsed} ID${keysUsed !== 1 ? 's' : ''} ativa${keysUsed !== 1 ? 's' : ''} (máximo: 5 por tripulante)`;
+      
+      if (remainingKeys === 0) {
+        keyLimitInfo.className = 'key-limit-info key-limit-full';
+        keyLimitHelper.textContent = '⚠️ Limite atingido! Use uma ID no mod Among Us para liberar espaço';
+        keyLimitSection.style.display = 'block';
+      } else if (remainingKeys <= 2) {
+        keyLimitInfo.className = 'key-limit-info key-limit-warning';
+        keyLimitHelper.textContent = `⚡ ${remainingKeys} slot${remainingKeys !== 1 ? 's' : ''} restante${remainingKeys !== 1 ? 's' : ''}! Use suas IDs no mod Among Us para liberar espaço`;
+        keyLimitSection.style.display = 'block';
+      } else if (remainingKeys < 5) {
+        keyLimitInfo.className = 'key-limit-info';
+        keyLimitHelper.textContent = `✅ ${remainingKeys} slots disponíveis - Use suas IDs no mod Among Us para validar e liberar espaço`;
+        keyLimitSection.style.display = 'block';
+      } else {
+        keyLimitSection.style.display = 'none';
+      }
+    }
+
+    function checkCooldownOnLoad() {
+      const now = Date.now();
+      const timeSinceLastGeneration = now - lastKeyGenerationTime;
+      const cooldownDuration = 30000; // 30 segundos
+
+      if (timeSinceLastGeneration < cooldownDuration) {
+        const remainingCooldown = Math.ceil((cooldownDuration - timeSinceLastGeneration) / 1000);
+        startCooldown(remainingCooldown);
+      }
+    }
+
     function startCooldown(seconds = 30) {
       cooldownSection.style.display = 'block';
       btnGen.disabled = true;
@@ -605,6 +682,8 @@
       
       let remaining = seconds;
       cooldownTime.textContent = `${remaining}s`;
+      
+      if (cooldownTimer) clearInterval(cooldownTimer);
       
       cooldownTimer = setInterval(() => {
         remaining--;
@@ -728,6 +807,9 @@
     }
 
     async function generateNewKey() {
+      // Esta função só será chamada após o retorno do shortener, então não precisa verificar limite novamente
+      // pois já foi verificado em initiateShortenerRedirect()
+      
       initAudioContext();
       
       if (soundEnabled) {
@@ -782,7 +864,9 @@
           keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
           
           keyGenerationCount++;
+          lastKeyGenerationTime = Date.now();
           localStorage.setItem('keyGenerationCount', keyGenerationCount);
+          localStorage.setItem('lastKeyGenerationTime', lastKeyGenerationTime);
           
           if (soundEnabled) {
             playSoundSequence([
@@ -812,7 +896,9 @@
             errorMessage = `❌ Falha na verificação: ${data.message || 'Tente o processo novamente.'}`;
           } else if (response.status === 429) {
              errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
-             startCooldown(60);
+             if (data.message && data.message.includes('5 chaves')) {
+               startCooldown(60);
+             }
           }
           showUIMessage(errorMessage, 'error', 6000);
           keyContainerEl.classList.remove('visible');
@@ -842,6 +928,7 @@
         if (response.ok && data.status === 'success') {
           userKeys = data.keys || [];
           renderKeysList();
+          updateKeyLimitDisplay();
           if (btnView.classList.contains('loading')) { 
             showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
           }
@@ -850,13 +937,20 @@
           showUIMessage(`❌ ${errorMessage}`, 'error');
         }
       } catch (error) {
-        showUIMessage('🚫 ALERTA: Comunicação com o banco de dados de IDs interrompida.', 'error', 6000);
+        showUIMessage('🚫 Falha de comunicação ao acessar registros. Tente novamente.', 'error', 6000);
       } finally {
         setButtonLoading(btnView, false);
       }
     }
 
     async function initiateShortenerRedirect() {
+      // Verificar se já atingiu o limite antes de iniciar o processo
+      if (userKeys.length >= 5) {
+        showUIMessage('⚠️ LIMITE ATINGIDO: Você possui o máximo de 5 IDs. Use uma ID no mod Among Us para liberar espaço antes de gerar nova.', 'error', 6000);
+        if (soundEnabled) playSound(200, 500, 'sawtooth');
+        return;
+      }
+
       if (soundEnabled) playSound(600, 100, 'square');
       setButtonLoading(btnGen, true);
       showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
@@ -932,6 +1026,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateSoundToggle();
         createStars();
+        checkCooldownOnLoad();
         checkAndProcessShortenerReturn(); 
         
         // Boot sound

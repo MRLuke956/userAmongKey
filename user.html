@@ -349,6 +349,8 @@
       transition: transform 0.5s ease;
       z-index: 1000;
       border: 2px solid var(--crewmate-yellow-darker);
+      max-width: 300px;
+      word-wrap: break-word;
     }
 
     .achievement-popup.show {
@@ -555,14 +557,30 @@
   <div class="achievement-popup" id="achievementPopup"></div>
 
   <script>
+    // Configurações de segurança
+    const SECURITY_CONFIG = {
+      MAX_KEY_LIMIT: 5,
+      COOLDOWN_DURATION: 30000,
+      MAX_RETRIES: 3,
+      ALLOWED_DOMAINS: ['keygenx-ce8h.onrender.com', 'link-target.net'],
+      VALIDATION_PATTERNS: {
+        token: /^[a-zA-Z0-9\-_]{20,}$/,
+        key: /^[A-Z0-9\-]{8,32}$/
+      }
+    };
+
+    // URLs seguras
     const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
-    const SHORTENER_URL = 'https://link-target.net/63830/among-us-modmenu-key1'; 
-    const BACKEND_VERIFICATION_TOKEN_KEY = 'miraHqBackendVerificationToken'; 
+    const SHORTENER_URL = 'https://link-target.net/63830/among-us-modmenu-key1';
+    
+    // Constantes
+    const BACKEND_VERIFICATION_TOKEN_KEY = 'miraHqBackendVerificationToken';
     const RETURN_ACTION_PARAM = 'action';
     const RETURN_ACTION_VALUE = 'generate_from_shortener';
     const RETURN_STATUS_PARAM = 'status';
     const RETURN_STATUS_VALUE = 'completed';
 
+    // Elementos DOM
     const btnGen = document.getElementById('generateBtn');
     const btnView = document.getElementById('viewKeysBtn');
     const keyContainerEl = document.getElementById('keyContainer');
@@ -585,56 +603,160 @@
     const keyLimitText = document.getElementById('keyLimitText');
     const keyLimitHelper = document.getElementById('keyLimitHelper');
     
-    let userKeys = []; 
-    let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+    // Estado da aplicação
+    let userKeys = [];
+    let soundEnabled = false;
     let cooldownTimer = null;
-    let keyGenerationCount = parseInt(localStorage.getItem('keyGenerationCount') || '0');
-    let lastKeyGenerationTime = parseInt(localStorage.getItem('lastKeyGenerationTime') || '0');
+    let keyGenerationCount = 0;
+    let lastKeyGenerationTime = 0;
     let isInCooldown = false;
-
-    // Audio Context para sons
     let audioContext = null;
-    
+    let isProcessing = false;
+
+    // Funções de segurança e validação
+    function sanitizeInput(input) {
+      if (typeof input !== 'string') return '';
+      return input.replace(/[<>'"&]/g, function(match) {
+        const entityMap = {
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+          '&': '&amp;'
+        };
+        return entityMap[match];
+      });
+    }
+
+    function validateURL(url) {
+      try {
+        const urlObj = new URL(url);
+        return SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => 
+          urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
+        );
+      } catch {
+        return false;
+      }
+    }
+
+    function validateToken(token) {
+      return typeof token === 'string' && 
+             SECURITY_CONFIG.VALIDATION_PATTERNS.token.test(token) &&
+             token.length >= 20 && token.length <= 200;
+    }
+
+    function validateKey(key) {
+      return typeof key === 'string' && 
+             SECURITY_CONFIG.VALIDATION_PATTERNS.key.test(key) &&
+             key.length >= 8 && key.length <= 32;
+    }
+
+    // Gerenciamento seguro do localStorage
+    function secureGetItem(key) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? sanitizeInput(item) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function secureSetItem(key, value) {
+      try {
+        if (typeof value === 'string' && value.length < 1000) {
+          localStorage.setItem(key, value);
+          return true;
+        }
+      } catch {}
+      return false;
+    }
+
+    function secureRemoveItem(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch {}
+    }
+
+    // Inicialização segura
+    function initializeApp() {
+      try {
+        soundEnabled = secureGetItem('soundEnabled') !== 'false';
+        keyGenerationCount = Math.max(0, parseInt(secureGetItem('keyGenerationCount') || '0'));
+        lastKeyGenerationTime = Math.max(0, parseInt(secureGetItem('lastKeyGenerationTime') || '0'));
+        
+        // Limitar valores máximos para prevenir overflow
+        if (keyGenerationCount > 10000) keyGenerationCount = 0;
+        if (lastKeyGenerationTime > Date.now() + 86400000) lastKeyGenerationTime = 0;
+      } catch {
+        // Valores padrão em caso de erro
+        soundEnabled = false;
+        keyGenerationCount = 0;
+        lastKeyGenerationTime = 0;
+      }
+    }
+
+    // Limpeza de recursos
+    function cleanup() {
+      if (cooldownTimer) {
+        clearInterval(cooldownTimer);
+        cooldownTimer = null;
+      }
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().catch(() => {});
+        audioContext = null;
+      }
+    }
+
+    // Audio Context com tratamento de erro
     function initAudioContext() {
       if (!audioContext && soundEnabled) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        try {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch {}
       }
     }
 
     function playSound(frequency, duration = 100, type = 'sine') {
-      if (!soundEnabled || !audioContext) return;
+      if (!soundEnabled || !audioContext || frequency < 80 || frequency > 2000) return;
       
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = frequency;
-      oscillator.type = type;
-      
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration / 1000);
+      try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = Math.max(80, Math.min(2000, frequency));
+        oscillator.type = ['sine', 'square', 'sawtooth', 'triangle'].includes(type) ? type : 'sine';
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + Math.min(1000, duration) / 1000);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + Math.min(1000, duration) / 1000);
+      } catch {}
     }
 
     function playSoundSequence(sequence) {
-      if (!soundEnabled) return;
-      sequence.forEach((note, index) => {
-        setTimeout(() => playSound(note.freq, note.duration, note.type), index * 150);
+      if (!soundEnabled || !Array.isArray(sequence)) return;
+      sequence.slice(0, 10).forEach((note, index) => {
+        if (note && typeof note.freq === 'number') {
+          setTimeout(() => playSound(note.freq, note.duration, note.type), index * 150);
+        }
       });
     }
 
     function updateSoundToggle() {
-      soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
-      soundToggle.classList.toggle('active', soundEnabled);
-      localStorage.setItem('soundEnabled', soundEnabled);
+      if (soundToggle) {
+        soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+        soundToggle.classList.toggle('active', soundEnabled);
+        secureSetItem('soundEnabled', soundEnabled.toString());
+      }
     }
 
     function showAchievement(text) {
-      achievementPopup.textContent = `🏆 ${text}`;
+      if (!achievementPopup || typeof text !== 'string') return;
+      achievementPopup.textContent = `🏆 ${sanitizeInput(text.slice(0, 100))}`;
       achievementPopup.classList.add('show');
       setTimeout(() => {
         achievementPopup.classList.remove('show');
@@ -642,10 +764,12 @@
     }
 
     function updateKeyLimitDisplay() {
-      const keysUsed = userKeys.length;
-      const remainingKeys = 5 - keysUsed;
+      if (!keyLimitSection || !keyLimitText || !keyLimitHelper) return;
       
-      keyLimitText.textContent = `Você possui ${keysUsed} ID${keysUsed !== 1 ? 's' : ''} ativa${keysUsed !== 1 ? 's' : ''} (máximo: 5 por tripulante)`;
+      const keysUsed = Math.max(0, Math.min(SECURITY_CONFIG.MAX_KEY_LIMIT, userKeys.length));
+      const remainingKeys = SECURITY_CONFIG.MAX_KEY_LIMIT - keysUsed;
+      
+      keyLimitText.textContent = `Você possui ${keysUsed} ID${keysUsed !== 1 ? 's' : ''} ativa${keysUsed !== 1 ? 's' : ''} (máximo: ${SECURITY_CONFIG.MAX_KEY_LIMIT} por tripulante)`;
       
       if (remainingKeys === 0) {
         keyLimitInfo.className = 'key-limit-info key-limit-full';
@@ -655,7 +779,7 @@
         keyLimitInfo.className = 'key-limit-info key-limit-warning';
         keyLimitHelper.textContent = `⚡ ${remainingKeys} slot${remainingKeys !== 1 ? 's' : ''} restante${remainingKeys !== 1 ? 's' : ''}! Use suas IDs no mod Among Us para validar e liberar espaço`;
         keyLimitSection.style.display = 'block';
-      } else if (remainingKeys < 5) {
+      } else if (remainingKeys < SECURITY_CONFIG.MAX_KEY_LIMIT) {
         keyLimitInfo.className = 'key-limit-info';
         keyLimitHelper.textContent = `✅ ${remainingKeys} slots disponíveis - Use suas IDs no mod Among Us para validar e liberar espaço automaticamente`;
         keyLimitSection.style.display = 'block';
@@ -667,37 +791,44 @@
     function checkCooldownOnLoad() {
       const now = Date.now();
       const timeSinceLastGeneration = now - lastKeyGenerationTime;
-      const cooldownDuration = 30000; // 30 segundos
 
-      if (timeSinceLastGeneration < cooldownDuration) {
-        const remainingCooldown = Math.ceil((cooldownDuration - timeSinceLastGeneration) / 1000);
-        startCooldown(remainingCooldown);
+      if (timeSinceLastGeneration < SECURITY_CONFIG.COOLDOWN_DURATION && timeSinceLastGeneration > 0) {
+        const remainingCooldown = Math.ceil((SECURITY_CONFIG.COOLDOWN_DURATION - timeSinceLastGeneration) / 1000);
+        if (remainingCooldown > 0 && remainingCooldown <= 30) {
+          startCooldown(remainingCooldown);
+        }
       }
     }
 
     function startCooldown(seconds = 30) {
+      cleanup(); // Limpar timer anterior
+      
       isInCooldown = true;
-      cooldownSection.style.display = 'block';
-      btnGen.disabled = true;
-      btnGen.style.opacity = '0.5';
-      btnGen.style.cursor = 'not-allowed';
+      if (cooldownSection) cooldownSection.style.display = 'block';
+      if (btnGen) {
+        btnGen.disabled = true;
+        btnGen.style.opacity = '0.5';
+        btnGen.style.cursor = 'not-allowed';
+      }
       
-      let remaining = seconds;
-      cooldownTime.textContent = `${remaining}s`;
-      
-      if (cooldownTimer) clearInterval(cooldownTimer);
+      let remaining = Math.max(0, Math.min(60, Math.floor(seconds))); // Limitar entre 0-60 segundos
+      if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
       
       cooldownTimer = setInterval(() => {
         remaining--;
-        cooldownTime.textContent = `${remaining}s`;
+        if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
         
         if (remaining <= 0) {
           clearInterval(cooldownTimer);
+          cooldownTimer = null;
           isInCooldown = false;
-          cooldownSection.style.display = 'none';
-          btnGen.disabled = false;
-          btnGen.style.opacity = '1';
-          btnGen.style.cursor = 'pointer';
+          
+          if (cooldownSection) cooldownSection.style.display = 'none';
+          if (btnGen) {
+            btnGen.disabled = false;
+            btnGen.style.opacity = '1';
+            btnGen.style.cursor = 'pointer';
+          }
           
           if (soundEnabled) {
             playSoundSequence([
@@ -712,86 +843,114 @@
     }
 
     function updateProgress(percent) {
-      progressBar.style.display = 'block';
-      progressFill.style.width = `${percent}%`;
+      if (!progressBar || !progressFill) return;
       
-      if (percent >= 100) {
+      const safePercent = Math.max(0, Math.min(100, percent));
+      progressBar.style.display = 'block';
+      progressFill.style.width = `${safePercent}%`;
+      
+      if (safePercent >= 100) {
         setTimeout(() => {
-          progressBar.style.display = 'none';
-          progressFill.style.width = '0%';
+          if (progressBar && progressFill) {
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+          }
         }, 1000);
       }
     }
 
     function createStars() {
-        if (!starfield) return;
-        starfield.innerHTML = ''; 
-        const numStarsBase = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+      if (!starfield) return;
+      
+      // Limpar estrelas existentes
+      starfield.innerHTML = '';
+      
+      try {
+        const numStarsBase = Math.min(200, Math.floor((window.innerWidth * window.innerHeight) / 15000));
         const starLayersData = [
-            { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
-            { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
-            { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
+          { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
+          { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
+          { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
         ];
+        
         starLayersData.forEach(layer => {
-            for (let i = 0; i < layer.count; i++) {
-                const star = document.createElement('div');
-                star.classList.add('star', layer.class);
-                star.style.left = `${Math.random() * 100}vw`;
-                star.style.top = `${Math.random() * 100}vh`;
-                const size = layer.baseSize + Math.random() * 0.7;
-                star.style.width = `${size}px`;
-                star.style.height = `${size}px`;
-                star.style.setProperty('--star-opacity', layer.baseOpacity);
-                star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
-                const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
-                const twinkleDuration = 2 + Math.random() * 4; 
-                star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
-                star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`;
-                starfield.appendChild(star);
-            }
+          for (let i = 0; i < layer.count; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star', layer.class);
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            const size = layer.baseSize + Math.random() * 0.7;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.setProperty('--star-opacity', layer.baseOpacity);
+            star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
+            
+            const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
+            const twinkleDuration = 2 + Math.random() * 4; 
+            star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
+            star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`;
+            
+            starfield.appendChild(star);
+          }
         });
+      } catch {}
     }
 
     function setButtonLoading(button, isLoading) {
+      if (!button) return;
       button.classList.toggle('loading', isLoading);
       button.disabled = isLoading;
     }
 
     function showUIMessage(text, type = 'info', duration = 4500) {
-      messageEl.textContent = text;
-      messageEl.className = `message visible ${type}`; 
+      if (!messageEl || typeof text !== 'string') return;
+      
+      messageEl.textContent = sanitizeInput(text.slice(0, 200));
+      messageEl.className = `message visible ${['info', 'success', 'error'].includes(type) ? type : 'info'}`; 
+      
       if (messageEl.timeoutId) clearTimeout(messageEl.timeoutId);
       if (duration > 0) {
         messageEl.timeoutId = setTimeout(() => {
-            messageEl.className = 'message'; 
-        }, duration);
+          if (messageEl) messageEl.className = 'message'; 
+        }, Math.min(10000, duration));
       }
     }
 
-    function renderKeysList(){
+    function renderKeysList() {
+      if (!keysListUl) return;
+      
       keysListUl.innerHTML = ''; 
-      if (userKeys.length === 0) {
+      
+      if (!Array.isArray(userKeys) || userKeys.length === 0) {
         const li = document.createElement('li');
         li.textContent = 'Nenhum registro de ID neste terminal para o ciclo atual.';
         li.classList.add('no-keys'); 
         keysListUl.appendChild(li);
         return;
       }
-      userKeys.forEach(key => {
-        const li = document.createElement('li');
-        li.textContent = key;
-        keysListUl.appendChild(li);
+      
+      userKeys.slice(0, SECURITY_CONFIG.MAX_KEY_LIMIT).forEach(key => {
+        if (validateKey(key)) {
+          const li = document.createElement('li');
+          li.textContent = sanitizeInput(key);
+          keysListUl.appendChild(li);
+        }
       });
     }
 
     async function copyToClipboard() {
+      if (!keyValueEl) return;
+      
       const keyValue = keyValueEl.textContent;
-      if (!keyValue || keyValue.includes('AUTENTICANDO')) return;
+      if (!keyValue || keyValue.includes('AUTENTICANDO') || !validateKey(keyValue)) return;
       
       try {
         await navigator.clipboard.writeText(keyValue);
-        copyButton.textContent = '✅ Copiado!';
-        copyButton.classList.add('copied');
+        if (copyButton) {
+          copyButton.textContent = '✅ Copiado!';
+          copyButton.classList.add('copied');
+        }
         
         if (soundEnabled) {
           playSoundSequence([
@@ -801,8 +960,10 @@
         }
         
         setTimeout(() => {
-          copyButton.textContent = '📋 Copiar ID';
-          copyButton.classList.remove('copied');
+          if (copyButton) {
+            copyButton.textContent = '📋 Copiar ID';
+            copyButton.classList.remove('copied');
+          }
         }, 2000);
       } catch (err) {
         showUIMessage('❌ Erro ao copiar. Tente selecionar manualmente.', 'error', 3000);
@@ -811,63 +972,75 @@
     }
 
     async function generateNewKey() {
-      initAudioContext();
+      if (isProcessing) return;
+      isProcessing = true;
       
-      if (soundEnabled) {
-        playSoundSequence([
-          {freq: 800, duration: 100, type: 'square'},
-          {freq: 600, duration: 100, type: 'square'},
-          {freq: 400, duration: 150, type: 'square'}
-        ]);
-      }
-
-      setButtonLoading(btnGen, true); 
-      keyContainerEl.classList.remove('visible'); 
-      keyActions.style.display = 'none';
-      keyMetadata.style.display = 'none';
-      keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
-      keyValueEl.classList.add('processing');
-      updateProgress(10);
-      
-      const verificationToken = localStorage.getItem(BACKEND_VERIFICATION_TOKEN_KEY);
-      if (!verificationToken) {
-        showUIMessage('❌ Falha na verificação de segurança. Tente o processo novamente.', 'error', 6000);
-        setButtonLoading(btnGen, false);
-        keyValueEl.textContent = '';
-        keyValueEl.classList.remove('processing');
-        if (soundEnabled) playSound(200, 300, 'sawtooth');
-        return;
-      }
-
-      if (!messageEl.classList.contains('success')) {
-         showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
-      }
-      updateProgress(30);
-
       try {
+        initAudioContext();
+        
+        if (soundEnabled) {
+          playSoundSequence([
+            {freq: 800, duration: 100, type: 'square'},
+            {freq: 600, duration: 100, type: 'square'},
+            {freq: 400, duration: 150, type: 'square'}
+          ]);
+        }
+
+        setButtonLoading(btnGen, true); 
+        if (keyContainerEl) keyContainerEl.classList.remove('visible'); 
+        if (keyActions) keyActions.style.display = 'none';
+        if (keyMetadata) keyMetadata.style.display = 'none';
+        if (keyValueEl) {
+          keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
+          keyValueEl.classList.add('processing');
+        }
+        updateProgress(10);
+        
+        const verificationToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
+        if (!verificationToken || !validateToken(verificationToken)) {
+          showUIMessage('❌ Falha na verificação de segurança. Tente o processo novamente.', 'error', 6000);
+          if (keyValueEl) {
+            keyValueEl.textContent = '';
+            keyValueEl.classList.remove('processing');
+          }
+          if (soundEnabled) playSound(200, 300, 'sawtooth');
+          return;
+        }
+
+        if (!messageEl || !messageEl.classList.contains('success')) {
+          showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
+        }
+        updateProgress(30);
+
+        if (!validateURL(API_BASE_URL)) {
+          throw new Error('URL do servidor não é confiável');
+        }
+
         const response = await fetch(`${API_BASE_URL}/generate_key`, {
+          method: 'POST',
           headers: {
-            'X-Verification-Token': verificationToken
+            'X-Verification-Token': verificationToken,
+            'Content-Type': 'application/json'
           }
         });
         
         updateProgress(70);
         const data = await response.json(); 
-        keyValueEl.classList.remove('processing');
-        localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY); 
+        if (keyValueEl) keyValueEl.classList.remove('processing');
+        secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY); 
 
-        if (response.ok && data.status === 'success' && data.key) {
+        if (response.ok && data.status === 'success' && data.key && validateKey(data.key)) {
           updateProgress(100);
-          keyValueEl.textContent = data.key;
-          keyContainerEl.classList.add('visible');
-          keyActions.style.display = 'flex';
-          keyMetadata.style.display = 'block';
-          keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+          if (keyValueEl) keyValueEl.textContent = sanitizeInput(data.key);
+          if (keyContainerEl) keyContainerEl.classList.add('visible');
+          if (keyActions) keyActions.style.display = 'flex';
+          if (keyMetadata) keyMetadata.style.display = 'block';
+          if (keyTimestamp) keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
           
           keyGenerationCount++;
           lastKeyGenerationTime = Date.now();
-          localStorage.setItem('keyGenerationCount', keyGenerationCount);
-          localStorage.setItem('lastKeyGenerationTime', lastKeyGenerationTime);
+          secureSetItem('keyGenerationCount', keyGenerationCount.toString());
+          secureSetItem('lastKeyGenerationTime', lastKeyGenerationTime.toString());
           
           if (soundEnabled) {
             playSoundSequence([
@@ -880,7 +1053,7 @@
           
           showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
           
-          // Achievements
+          // Achievements seguros
           if (keyGenerationCount === 1) {
             showAchievement('Primeiro Acesso - Bem-vindo à MIRA HQ!');
           } else if (keyGenerationCount === 5) {
@@ -892,49 +1065,58 @@
           await fetchUserKeyList();
           startCooldown(30);
         } else {
-          let errorMessage = data.message || `ERRO DE PROTOCOLO ${response.status}: Solicitação de ID Negada.`;
+          let errorMessage = 'ERRO DE PROTOCOLO: Solicitação de ID Negada.';
+          if (data && typeof data.message === 'string') {
+            errorMessage = sanitizeInput(data.message.slice(0, 100));
+          }
+          
           if (response.status === 403) { 
-            errorMessage = `❌ Falha na verificação: ${data.message || 'Tente o processo novamente.'}`;
+            errorMessage = `❌ Falha na verificação: ${errorMessage}`;
           } else if (response.status === 429) {
-             errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
-             if (data.message && data.message.includes('5 chaves')) {
-               startCooldown(60);
-             }
+            errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
+            if (data.message && data.message.includes('5 chaves')) {
+              startCooldown(60);
+            }
           }
           showUIMessage(errorMessage, 'error', 6000);
-          keyContainerEl.classList.remove('visible');
+          if (keyContainerEl) keyContainerEl.classList.remove('visible');
           if (soundEnabled) playSound(200, 500, 'sawtooth');
         }
       } catch (error) {
-        keyValueEl.classList.remove('processing');
-        localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY);
+        if (keyValueEl) keyValueEl.classList.remove('processing');
+        secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
         showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
-        keyContainerEl.classList.remove('visible');
+        if (keyContainerEl) keyContainerEl.classList.remove('visible');
         if (soundEnabled) playSound(150, 800, 'sawtooth');
       } finally {
         setButtonLoading(btnGen, false);
+        isProcessing = false;
       }
     }
 
     async function fetchUserKeyList() {
-      setButtonLoading(btnView, true);
-      if (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa")) {
-          showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
-      }
-
       try {
+        setButtonLoading(btnView, true);
+        if (!messageEl || (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa"))) {
+          showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
+        }
+
+        if (!validateURL(API_BASE_URL)) {
+          throw new Error('URL do servidor não é confiável');
+        }
+
         const response = await fetch(`${API_BASE_URL}/user_keys`);
         const data = await response.json();
 
         if (response.ok && data.status === 'success') {
-          userKeys = data.keys || [];
+          userKeys = Array.isArray(data.keys) ? data.keys.filter(key => validateKey(key)).slice(0, SECURITY_CONFIG.MAX_KEY_LIMIT) : [];
           renderKeysList();
           updateKeyLimitDisplay();
-          if (btnView.classList.contains('loading')) { 
+          if (btnView && btnView.classList.contains('loading')) { 
             showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
           }
         } else {
-          const errorMessage = data.message || `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
+          const errorMessage = (data && typeof data.message === 'string') ? sanitizeInput(data.message.slice(0, 100)) : `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
           showUIMessage(`❌ ${errorMessage}`, 'error');
         }
       } catch (error) {
@@ -945,115 +1127,158 @@
     }
 
     async function initiateShortenerRedirect() {
-      // Verificar cooldown PRIMEIRO
-      if (isInCooldown || btnGen.disabled) {
+      // Verificações de segurança PRIMEIRO
+      if (isInCooldown || (btnGen && btnGen.disabled) || isProcessing) {
         showUIMessage('⏱️ AGUARDE: Sistema em cooldown. Aguarde o tempo restante antes de fazer nova solicitação.', 'error', 4000);
         if (soundEnabled) playSound(200, 300, 'sawtooth');
         return;
       }
 
-      // Verificar se já atingiu o limite antes de iniciar o processo
-      if (userKeys.length >= 5) {
+      if (userKeys.length >= SECURITY_CONFIG.MAX_KEY_LIMIT) {
         showUIMessage('⚠️ LIMITE ATINGIDO: Você possui o máximo de 5 IDs. Use uma ID no mod Among Us para liberar espaço antes de gerar nova.', 'error', 6000);
         if (soundEnabled) playSound(200, 500, 'sawtooth');
         return;
       }
 
-      if (soundEnabled) playSound(600, 100, 'square');
-      setButtonLoading(btnGen, true);
-      showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
+      if (!validateURL(SHORTENER_URL)) {
+        showUIMessage('🚫 ERRO DE SEGURANÇA: URL de verificação não confiável.', 'error', 6000);
+        return;
+      }
 
+      isProcessing = true;
+      
       try {
-        const response = await fetch(`${API_BASE_URL}/initiate-verification`);
+        if (soundEnabled) playSound(600, 100, 'square');
+        setButtonLoading(btnGen, true);
+        showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
+
+        if (!validateURL(API_BASE_URL)) {
+          throw new Error('URL do servidor não é confiável');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/initiate-verification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         const data = await response.json();
 
-        if (response.ok && data.status === 'success' && data.verification_token) {
-          localStorage.setItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
+        if (response.ok && data.status === 'success' && data.verification_token && validateToken(data.verification_token)) {
+          secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
           showUIMessage('⏳ Preparando redirecionamento para o portal...', 'info', 5000);
           
           setTimeout(() => {
-              window.location.href = SHORTENER_URL;
+            window.location.href = SHORTENER_URL;
           }, 1500);
         } else {
-          showUIMessage(`❌ Falha ao iniciar verificação: ${data.message || 'Erro desconhecido.'}`, 'error', 6000);
+          const errorMessage = (data && typeof data.message === 'string') ? sanitizeInput(data.message.slice(0, 100)) : 'Erro desconhecido.';
+          showUIMessage(`❌ Falha ao iniciar verificação: ${errorMessage}`, 'error', 6000);
           setButtonLoading(btnGen, false);
+          isProcessing = false;
         }
       } catch (error) {
         showUIMessage('🚫 Falha de comunicação ao iniciar verificação. Tente novamente.', 'error', 6000);
         setButtonLoading(btnGen, false);
+        isProcessing = false;
       }
     }
 
     function checkAndProcessShortenerReturn() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const action = urlParams.get(RETURN_ACTION_PARAM);
-      const status = urlParams.get(RETURN_STATUS_PARAM);
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = sanitizeInput(urlParams.get(RETURN_ACTION_PARAM) || '');
+        const status = sanitizeInput(urlParams.get(RETURN_STATUS_PARAM) || '');
 
-      const actionMatches = action === RETURN_ACTION_VALUE;
-      const statusMatches = status === RETURN_STATUS_VALUE;
-      const backendTokenExists = !!localStorage.getItem(BACKEND_VERIFICATION_TOKEN_KEY); 
+        const actionMatches = action === RETURN_ACTION_VALUE;
+        const statusMatches = status === RETURN_STATUS_VALUE;
+        const backendToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
+        const backendTokenExists = backendToken && validateToken(backendToken);
 
-      if (actionMatches && statusMatches && backendTokenExists) {
-        showUIMessage('✅ Verificação do portal completa! Solicitando ID de Tripulante...', 'success', 4000);
-        
-        const cleanUrl = window.location.origin + window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
+        if (actionMatches && statusMatches && backendTokenExists) {
+          showUIMessage('✅ Verificação do portal completa! Solicitando ID de Tripulante...', 'success', 4000);
+          
+          // Limpar URL de parâmetros sensíveis
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
 
-        generateNewKey();
-      } else {
-        if (backendTokenExists && (!actionMatches || !statusMatches) ) {
-            localStorage.removeItem(BACKEND_VERIFICATION_TOKEN_KEY);
+          generateNewKey();
+        } else {
+          if (backendToken && (!actionMatches || !statusMatches)) {
+            secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
+          }
+          fetchUserKeyList();
+          if (keyContainerEl) keyContainerEl.classList.remove('visible');
         }
+      } catch {
         fetchUserKeyList();
-        keyContainerEl.classList.remove('visible');
+        if (keyContainerEl) keyContainerEl.classList.remove('visible');
       }
     }
 
-    // Event Listeners
-    soundToggle.addEventListener('click', () => {
-      soundEnabled = !soundEnabled;
-      updateSoundToggle();
-      initAudioContext();
-      
-      if (soundEnabled) {
-        playSoundSequence([
-          {freq: 440, duration: 100, type: 'sine'},
-          {freq: 554, duration: 100, type: 'sine'}
-        ]);
-      }
-    });
-
-    copyButton.addEventListener('click', copyToClipboard);
-
-    btnGen.addEventListener('click', initiateShortenerRedirect); 
-    btnView.addEventListener('click', () => {
-      if (soundEnabled) playSound(500, 100, 'square');
-      fetchUserKeyList();
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        updateSoundToggle();
-        createStars();
-        checkCooldownOnLoad();
-        checkAndProcessShortenerReturn(); 
-        
-        // Boot sound
-        setTimeout(() => {
+    // Event Listeners seguros
+    function setupEventListeners() {
+      if (soundToggle) {
+        soundToggle.addEventListener('click', () => {
+          soundEnabled = !soundEnabled;
+          updateSoundToggle();
+          initAudioContext();
+          
           if (soundEnabled) {
             playSoundSequence([
-              {freq: 220, duration: 100, type: 'sine'},
-              {freq: 277, duration: 100, type: 'sine'},
-              {freq: 330, duration: 100, type: 'sine'},
-              {freq: 440, duration: 200, type: 'sine'}
+              {freq: 440, duration: 100, type: 'sine'},
+              {freq: 554, duration: 100, type: 'sine'}
             ]);
           }
-        }, 1000);
-    });
+        });
+      }
 
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
+      if (copyButton) {
+        copyButton.addEventListener('click', copyToClipboard);
+      }
+
+      if (btnGen) {
+        btnGen.addEventListener('click', initiateShortenerRedirect); 
+      }
+
+      if (btnView) {
+        btnView.addEventListener('click', () => {
+          if (soundEnabled) playSound(500, 100, 'square');
+          fetchUserKeyList();
+        });
+      }
+
+      // Limpeza na saída da página
+      window.addEventListener('beforeunload', cleanup);
+      
+      // Redimensionamento otimizado
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(createStars, 400); 
+      });
+    }
+
+    // Inicialização da aplicação
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeApp();
+      updateSoundToggle();
+      createStars();
+      checkCooldownOnLoad();
+      setupEventListeners();
+      checkAndProcessShortenerReturn(); 
+      
+      // Som de inicialização
+      setTimeout(() => {
+        if (soundEnabled) {
+          playSoundSequence([
+            {freq: 220, duration: 100, type: 'sine'},
+            {freq: 277, duration: 100, type: 'sine'},
+            {freq: 330, duration: 100, type: 'sine'},
+            {freq: 440, duration: 200, type: 'sine'}
+          ]);
+        }
+      }, 1000);
     });
   </script>
 </body>

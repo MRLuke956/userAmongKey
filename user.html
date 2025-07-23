@@ -608,21 +608,20 @@
     let audioContext = null;
     let isProcessing = false;
 
-    // >>>>>>>>>>>>>> FUNÇÃO CORRIGIDA <<<<<<<<<<<<<<<<
-    // Esta é a versão que funciona e não causa erros de sintaxe.
-    function sanitizeInput(input) {
-      if (typeof input !== 'string') return '';
-      const entityMap = {
-          '&': '&',
-          '<': '<',
-          '>': '>',
-          '"': '"',
-          "'": ''',
-          '/': '/'
-      };
-      return input.replace(/[&<>"'/]/g, (s) => entityMap[s]);
-    }
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+function sanitizeInput(input) {
+  if (typeof input !== 'string') return '';
+  const entityMap = {
+    '&': '&',
+    '<': '<',
+    '>': '>',
+    '"': '"',
+    "'": ''',
+    '/': '/'
+  };
+  return input.replace(/[&<>"'/]/g, function (s) {
+    return entityMap[s];
+  });
+}
 
     function validateURL(url) {
       try {

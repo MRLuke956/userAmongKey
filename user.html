@@ -906,33 +906,122 @@ function sanitizeInput(input) {
       }
     }
 
-    function checkAndProcessShortenerReturn() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const returnToken = sanitizeInput(urlParams.get('return_token') || '');
+   function checkAndProcessShortenerReturn() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnToken = sanitizeInput(urlParams.get('return_token') || '');
 
-        if (returnToken && validateToken(returnToken)) {
-          showUIMessage('✅ Verificação do portal completa! Solicitando ID...', 'success', 4000);
-          
-          secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, returnToken);
-          window.history.replaceState({}, document.title, `${window.location.pathname}`);
-          generateNewKey();
-        } else {
-          // Caso o encurtador não retorne o parâmetro, mas o token já esteja salvo
-          const storedToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
-          if (storedToken && validateToken(storedToken)) {
-            showUIMessage('ℹ️ Continuando com token salvo. Solicitando ID...', 'info', 4000);
-            generateNewKey();
-          } else {
-            fetchUserKeyList();
-          }
-        }
-      } catch (e) {
-        console.error("Erro ao processar retorno do encurtador:", e);
-        fetchUserKeyList();
-      }
+    if (returnToken && validateToken(returnToken)) {
+      // Token válido recebido do encurtador
+      showUIMessage('✅ Verificação do portal completa! Aguarde...', 'success', 0);
+      
+      // Salvar o token e limpar a URL
+      secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, returnToken);
+      window.history.replaceState({}, document.title, `${window.location.pathname}`);
+      
+      // Aguardar mais tempo para evitar conflito de IP
+      setTimeout(() => {
+        generateNewKeyWithRetry();
+      }, 3000); // Aumentado para 3 segundos
+      
+    } else {
+      // Carregar lista normal se não há token
+      fetchUserKeyList();
+    }
+  } catch (e) {
+    console.error("Erro ao processar retorno do encurtador:", e);
+    showUIMessage('⚠️ Erro ao processar retorno. Carregando dados...', 'error', 3000);
+    fetchUserKeyList();
+  }
+}
+async function generateNewKeyWithRetry(retryCount = 0) {
+  if (isProcessing) return;
+  isProcessing = true;
+  setButtonLoading(btnGen, true);
+  
+  try {
+    keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA...';
+    keyValueEl.classList.add('processing');
+    keyContainerEl.classList.add('visible');
+
+    const verificationToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
+    if (!verificationToken || !validateToken(verificationToken)) {
+      throw new Error("Token de verificação inválido. Por favor, reinicie o processo.");
+    }
+    
+    showUIMessage('🛰️ Conectando ao servidor MIRA HQ...', 'info', 0);
+
+    // Adicionar delay progressivo para evitar conflito de IP
+    if (retryCount > 0) {
+      const delay = Math.min(5000, 1000 * Math.pow(2, retryCount)); // Backoff exponencial
+      showUIMessage(`⏳ Aguardando ${delay/1000}s para evitar conflito...`, 'info', 0);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
 
+    const response = await fetch(`${API_BASE_URL}/generate_key`, {
+      method: 'GET',
+      headers: { 
+        'X-Verification-Token': verificationToken,
+        'X-Retry-Count': retryCount.toString()
+      }
+    });
+    
+    const data = await response.json(); 
+
+    if (!response.ok) {
+      // Verificar se é erro de conflito de IP
+      if (data.message && data.message.toLowerCase().includes('ip') && retryCount < SECURITY_CONFIG.MAX_RETRIES) {
+        showUIMessage(`⚠️ Conflito detectado. Tentativa ${retryCount + 1}/${SECURITY_CONFIG.MAX_RETRIES + 1}...`, 'info', 0);
+        isProcessing = false;
+        return generateNewKeyWithRetry(retryCount + 1);
+      }
+      throw new Error(data.message || `Erro do servidor: ${response.status}`);
+    }
+    
+    // Remover token apenas após sucesso
+    secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
+    
+    if (!data.key || !validateKey(data.key)) {
+      throw new Error("Resposta do servidor inválida: chave ausente ou mal formatada.");
+    }
+
+    keyValueEl.textContent = sanitizeInput(data.key);
+    if(keyTimestamp) keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+    if(keyActions) keyActions.style.display = 'flex';
+    if(keyMetadata) keyMetadata.style.display = 'block';
+    showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas.', 'success');
+    
+    lastKeyGenerationTime = Date.now();
+    secureSetItem('lastKeyGenerationTime', lastKeyGenerationTime.toString());
+    await fetchUserKeyList();
+    startCooldown(30);
+
+  } catch (error) {
+    const errorMsg = error.message;
+    
+    // Se é conflito de IP e ainda temos tentativas
+    if (errorMsg.toLowerCase().includes('ip') && retryCount < SECURITY_CONFIG.MAX_RETRIES) {
+      showUIMessage(`⚠️ Conflito de IP. Tentando novamente em alguns segundos...`, 'info', 0);
+      isProcessing = false;
+      setTimeout(() => generateNewKeyWithRetry(retryCount + 1), 3000);
+      return;
+    }
+    
+    showUIMessage(`🚫 Erro: ${sanitizeInput(errorMsg)}`, 'error', 6000);
+    keyContainerEl.classList.remove('visible');
+    
+    // Se falhou definitivamente, remover o token
+    secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
+  } finally {
+    if (keyValueEl) keyValueEl.classList.remove('processing');
+    setButtonLoading(btnGen, false);
+    isProcessing = false;
+  }
+}
+    // Atualizar a função generateNewKey original para usar a nova versão
+async function generateNewKey() {
+  return generateNewKeyWithRetry(0);
+}
     function updateProgress(percent) {
       if (!progressBar || !progressFill) return;
       

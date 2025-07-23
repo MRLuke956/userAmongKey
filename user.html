@@ -611,13 +611,19 @@
 function sanitizeInput(input) {
   if (typeof input !== 'string') return '';
   const entityMap = {
-    '&': '&',
-    '<': '<',
-    '>': '>',
-    '"': '"',
-    "'": ''',
-    '/': '/'
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',  // corrigido aqui
+    '/': '&#x2F;'
   };
+
+  return input.replace(/[&<>"'/]/g, function (char) {
+    return entityMap[char];
+  });
+}
+
   return input.replace(/[&<>"'/]/g, function (s) {
     return entityMap[s];
   });

@@ -925,17 +925,90 @@ function sanitizeInput(input) {
       }
     }
 
+    function updateProgress(percent) {
+      if (!progressBar || !progressFill) return;
+      
+      const safePercent = Math.max(0, Math.min(100, percent));
+      progressBar.style.display = 'block';
+      progressFill.style.width = `${safePercent}%`;
+      
+      if (safePercent >= 100) {
+        setTimeout(() => {
+          if (progressBar && progressFill) {
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+          }
+        }, 1000);
+      }
+    }
+
+    function createStars() {
+      if (!starfield) return;
+      
+      // Limpar estrelas existentes
+      starfield.innerHTML = '';
+      
+      try {
+        const numStarsBase = Math.min(200, Math.floor((window.innerWidth * window.innerHeight) / 15000));
+        const starLayersData = [
+          { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
+          { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
+          { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
+        ];
+        
+        starLayersData.forEach(layer => {
+          for (let i = 0; i < layer.count; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star', layer.class);
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.top = `${Math.random() * 100}vh`;
+            
+            const size = layer.baseSize + Math.random() * 0.7;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.setProperty('--star-opacity', layer.baseOpacity);
+            star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
+            
+            const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
+            const twinkleDuration = 2 + Math.random() * 4; 
+            star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
+            star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`;
+            
+            starfield.appendChild(star);
+          }
+        });
+      } catch {}
+    }
+
     function setupEventListeners() {
-      soundToggle.addEventListener('click', () => {
-        soundEnabled = !soundEnabled;
-        updateSoundToggle();
-        initAudioContext();
-        if (soundEnabled) playSoundSequence([{freq: 440, duration: 100}, {freq: 554, duration: 100}]);
-      });
-      copyButton.addEventListener('click', copyToClipboard);
-      btnGen.addEventListener('click', initiateShortenerRedirect);
-      btnView.addEventListener('click', fetchUserKeyList);
+      const generateBtn = document.getElementById('generateBtn');
+      const viewKeysBtn = document.getElementById('viewKeysBtn');
+      const soundToggleEl = document.getElementById('soundToggle');
+      const copyButtonEl = document.getElementById('copyButton');
+      
+      if (soundToggleEl) {
+        soundToggleEl.addEventListener('click', () => {
+          soundEnabled = !soundEnabled;
+          updateSoundToggle();
+          initAudioContext();
+          if (soundEnabled) playSoundSequence([{freq: 440, duration: 100}, {freq: 554, duration: 100}]);
+        });
+      }
+      
+      if (copyButtonEl) {
+        copyButtonEl.addEventListener('click', copyToClipboard);
+      }
+      
+      if (generateBtn) {
+        generateBtn.addEventListener('click', initiateShortenerRedirect);
+      }
+      
+      if (viewKeysBtn) {
+        viewKeysBtn.addEventListener('click', fetchUserKeyList);
+      }
+      
       window.addEventListener('beforeunload', cleanup);
+      
       let resizeTimeout;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);

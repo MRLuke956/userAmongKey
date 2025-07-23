@@ -917,7 +917,14 @@ function sanitizeInput(input) {
           window.history.replaceState({}, document.title, `${window.location.pathname}`);
           generateNewKey();
         } else {
-          fetchUserKeyList();
+          // Caso o encurtador não retorne o parâmetro, mas o token já esteja salvo
+          const storedToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
+          if (storedToken && validateToken(storedToken)) {
+            showUIMessage('ℹ️ Continuando com token salvo. Solicitando ID...', 'info', 4000);
+            generateNewKey();
+          } else {
+            fetchUserKeyList();
+          }
         }
       } catch (e) {
         console.error("Erro ao processar retorno do encurtador:", e);

@@ -562,10 +562,10 @@
       MAX_KEY_LIMIT: 5,
       COOLDOWN_DURATION: 30000,
       MAX_RETRIES: 3,
-      ALLOWED_DOMAINS: ['keygenx-ce8h.onrender.com', 'link-target.net'],
+      ALLOWED_DOMAINS: ['keygenx-ce8h.onrender.com', 'link-target.net', 'mrluke956.github.io'],
       VALIDATION_PATTERNS: {
-        token: /^[a-zA-Z0-9\-_]{48,}$/, // Aumentado para tokens hex de 24 bytes
-        key: /^[A-Z0-9\-]{16,32}$/ // Chave pode ter 16-32 caracteres
+        token: /^[a-f0-9]{48}$/,
+        key: /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/
       }
     };
 
@@ -609,27 +609,38 @@
     let audioContext = null;
     let isProcessing = false;
 
-    // Funções de segurança e validação
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> INÍCIO DA CORREÇÃO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    // A função antiga tinha um erro de sintaxe e não protegia contra XSS.
+    // Esta é a versão correta.
     function sanitizeInput(input) {
       if (typeof input !== 'string') return '';
-      return input.replace(/[<>'"&]/g, match => ({'<':'<','>':'>','"':'"',"'":''','&':'&'})[match]);
+      const entityMap = {
+          '&': '&',
+          '<': '<',
+          '>': '>',
+          '"': '"',
+          "'": ''',
+          '/': '/'
+      };
+      return input.replace(/[&<>"'/]/g, (s) => entityMap[s]);
     }
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FIM DA CORREÇÃO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     function validateURL(url) {
       try {
         const urlObj = new URL(url);
-        return SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain));
+        return SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => 
+          urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
+        );
       } catch { return false; }
     }
 
     function validateToken(token) {
-        // Validação de um token hexadecimal com 48 caracteres (24 bytes)
-        return typeof token === 'string' && /^[a-f0-9]{48}$/.test(token);
+        return typeof token === 'string' && SECURITY_CONFIG.VALIDATION_PATTERNS.token.test(token);
     }
 
     function validateKey(key) {
-        // Validação de uma chave no formato XXXX-XXXX-XXXX-XXXX
-        return typeof key === 'string' && /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key);
+        return typeof key === 'string' && SECURITY_CONFIG.VALIDATION_PATTERNS.key.test(key);
     }
 
     // Gerenciamento seguro do localStorage
@@ -732,9 +743,11 @@
       if (cooldownSection) cooldownSection.style.display = 'block';
       if (btnGen) btnGen.disabled = true;
       let remaining = seconds;
+      if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
       cooldownTimer = setInterval(() => {
+        remaining--;
         if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
-        if (--remaining < 0) {
+        if (remaining < 0) {
           clearInterval(cooldownTimer);
           isInCooldown = false;
           if (cooldownSection) cooldownSection.style.display = 'none';
@@ -755,7 +768,7 @@
       messageEl.textContent = sanitizeInput(text);
       messageEl.className = `message visible ${type}`;
       if (messageEl.timeoutId) clearTimeout(messageEl.timeoutId);
-      if (duration > 0) messageEl.timeoutId = setTimeout(() => messageEl.className = 'message', duration);
+      if (duration > 0) messageEl.timeoutId = setTimeout(() => { if (messageEl) messageEl.className = 'message'; }, duration);
     }
 
     function renderKeysList() {
@@ -800,8 +813,7 @@
 
         const verificationToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
         if (!verificationToken || !validateToken(verificationToken)) {
-          showUIMessage('❌ Falha de segurança. Token inválido. Tente novamente.', 'error');
-          throw new Error("Token inválido");
+          throw new Error("Token de verificação inválido. Por favor, reinicie o processo.");
         }
         
         showUIMessage('🛰️ Conectando ao servidor MIRA HQ...', 'info', 0);
@@ -815,13 +827,17 @@
         secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
 
         if (!response.ok) {
-            throw new Error(data.message || `Erro ${response.status}`);
+            throw new Error(data.message || `Erro do servidor: ${response.status}`);
+        }
+        
+        if (!data.key || !validateKey(data.key)) {
+            throw new Error("Resposta do servidor inválida: chave ausente ou mal formatada.");
         }
 
         keyValueEl.textContent = sanitizeInput(data.key);
-        keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
-        keyActions.style.display = 'flex';
-        keyMetadata.style.display = 'block';
+        if (keyTimestamp) keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+        if (keyActions) keyActions.style.display = 'flex';
+        if (keyMetadata) keyMetadata.style.display = 'block';
         showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas.', 'success');
         
         lastKeyGenerationTime = Date.now();
@@ -833,13 +849,14 @@
         showUIMessage(`🚫 Erro: ${sanitizeInput(error.message)}`, 'error', 6000);
         keyContainerEl.classList.remove('visible');
       } finally {
-        keyValueEl.classList.remove('processing');
+        if (keyValueEl) keyValueEl.classList.remove('processing');
         setButtonLoading(btnGen, false);
         isProcessing = false;
       }
     }
 
     async function fetchUserKeyList() {
+      if(isProcessing) return;
       setButtonLoading(btnView, true);
       try {
         const response = await fetch(`${API_BASE_URL}/user_keys`);
@@ -855,15 +872,6 @@
       }
     }
     
-    // ====================================================================================================
-    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FUNÇÕES CORRIGIDAS ABAIXO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    // ====================================================================================================
-
-    /**
-     * CORRIGIDO: Inicia o processo de verificação.
-     * Pega um token da API e o anexa a uma URL de retorno, que é então codificada e
-     * passada para o Linkvertise como um destino dinâmico.
-     */
     async function initiateShortenerRedirect() {
       if (isInCooldown || isProcessing) return;
       if (userKeys.length >= SECURITY_CONFIG.MAX_KEY_LIMIT) {
@@ -879,21 +887,15 @@
         const data = await response.json();
 
         if (!response.ok || !data.verification_token || !validateToken(data.verification_token)) {
-          throw new Error(data.message || 'Não foi possível obter token de verificação.');
+          throw new Error(data.message || 'Não foi possível obter token de verificação da API.');
         }
         
-        // 1. Cria a URL de destino (nosso próprio site) com o token como um parâmetro de busca.
         const returnUrl = `${window.location.origin}${window.location.pathname}?return_token=${data.verification_token}`;
-
-        // 2. Codifica a URL de destino em Base64 para que ela possa ser passada com segurança.
         const encodedReturnUrl = btoa(returnUrl);
-
-        // 3. Constrói a URL final do Linkvertise com o destino dinâmico (usando o parâmetro 'r').
         const dynamicShortenerUrl = `${SHORTENER_URL}?r=${encodeURIComponent(encodedReturnUrl)}`;
         
         showUIMessage('⏳ Redirecionando para o portal de verificação...', 'info');
         
-        // 4. Redireciona o usuário para o Linkvertise.
         setTimeout(() => {
           window.location.href = dynamicShortenerUrl;
         }, 1500);
@@ -905,29 +907,18 @@
       }
     }
 
-    /**
-     * CORRIGIDO: Verifica se o usuário retornou do Linkvertise com um token válido.
-     * Esta função é chamada assim que a página carrega.
-     */
     function checkAndProcessShortenerReturn() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const returnToken = sanitizeInput(urlParams.get('return_token') || '');
 
-        // Se um token válido foi encontrado na URL...
         if (returnToken && validateToken(returnToken)) {
           showUIMessage('✅ Verificação do portal completa! Solicitando ID...', 'success', 4000);
           
-          // Armazena o token de forma segura para a próxima etapa.
           secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, returnToken);
-
-          // Limpa a URL para que o token não fique visível e evite reuso ao recarregar.
           window.history.replaceState({}, document.title, `${window.location.pathname}`);
-
-          // Agora que a prova foi recebida, inicia a geração da chave.
           generateNewKey();
         } else {
-          // Se não houver token, apenas carrega a lista de chaves do usuário (se houver).
           fetchUserKeyList();
         }
       } catch (e) {
@@ -936,7 +927,6 @@
       }
     }
 
-    // Event Listeners
     function setupEventListeners() {
       soundToggle.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
@@ -955,15 +945,12 @@
       });
     }
 
-    // Inicialização da aplicação
     document.addEventListener('DOMContentLoaded', () => {
       initializeApp();
       updateSoundToggle();
       createStars();
       checkCooldownOnLoad();
       setupEventListeners();
-      // >>> A MÁGICA ACONTECE AQUI <<<
-      // Ao carregar a página, esta função verifica se viemos do Linkvertise.
       checkAndProcessShortenerReturn();
     });
   </script>

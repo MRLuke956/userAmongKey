@@ -911,7 +911,7 @@ function sanitizeInput(input) {
     const urlParams = new URLSearchParams(window.location.search);
     const returnToken = sanitizeInput(urlParams.get('return_token') || '');
 
-    if (returnToken && validateToken(returnToken)) {
+    if (returnToken && validateToken(returnToken) && returnToken.length >= 48) {
       // Token válido recebido do encurtador
       showUIMessage('✅ Verificação do portal completa! Aguarde...', 'success', 0);
       

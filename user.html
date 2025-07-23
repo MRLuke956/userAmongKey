@@ -615,7 +615,7 @@ function sanitizeInput(input) {
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
-    "'": '&#39;',  // corrigido aqui
+    "'": '&#39;',
     '/': '&#x2F;'
   };
 
@@ -624,10 +624,6 @@ function sanitizeInput(input) {
   });
 }
 
-  return input.replace(/[&<>"'/]/g, function (s) {
-    return entityMap[s];
-  });
-}
 
     function validateURL(url) {
       try {

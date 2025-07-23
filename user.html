@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -565,8 +564,8 @@
       MAX_RETRIES: 3,
       ALLOWED_DOMAINS: ['keygenx-ce8h.onrender.com', 'link-target.net'],
       VALIDATION_PATTERNS: {
-        token: /^[a-zA-Z0-9\-_]{20,}$/,
-        key: /^[A-Z0-9\-]{8,32}$/
+        token: /^[a-zA-Z0-9\-_]{48,}$/, // Aumentado para tokens hex de 24 bytes
+        key: /^[A-Z0-9\-]{16,32}$/ // Chave pode ter 16-32 caracteres
       }
     };
 
@@ -574,12 +573,8 @@
     const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
     const SHORTENER_URL = 'https://link-target.net/63830/among-us-modmenu-key1';
     
-    // Constantes
+    // Constante para guardar o token (a única necessária para este fluxo)
     const BACKEND_VERIFICATION_TOKEN_KEY = 'miraHqBackendVerificationToken';
-    const RETURN_ACTION_PARAM = 'action';
-    const RETURN_ACTION_VALUE = 'generate_from_shortener';
-    const RETURN_STATUS_PARAM = 'status';
-    const RETURN_STATUS_VALUE = 'completed';
 
     // Elementos DOM
     const btnGen = document.getElementById('generateBtn');
@@ -617,287 +612,138 @@
     // Funções de segurança e validação
     function sanitizeInput(input) {
       if (typeof input !== 'string') return '';
-      return input.replace(/[<>'"&]/g, function(match) {
-        const entityMap = {
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-          '&': '&amp;'
-        };
-        return entityMap[match];
-      });
+      return input.replace(/[<>'"&]/g, match => ({'<':'<','>':'>','"':'"',"'":''','&':'&'})[match]);
     }
 
     function validateURL(url) {
       try {
         const urlObj = new URL(url);
-        return SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => 
-          urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
-        );
-      } catch {
-        return false;
-      }
+        return SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain));
+      } catch { return false; }
     }
 
     function validateToken(token) {
-      return typeof token === 'string' && 
-             SECURITY_CONFIG.VALIDATION_PATTERNS.token.test(token) &&
-             token.length >= 20 && token.length <= 200;
+        // Validação de um token hexadecimal com 48 caracteres (24 bytes)
+        return typeof token === 'string' && /^[a-f0-9]{48}$/.test(token);
     }
 
     function validateKey(key) {
-      return typeof key === 'string' && 
-             SECURITY_CONFIG.VALIDATION_PATTERNS.key.test(key) &&
-             key.length >= 8 && key.length <= 32;
+        // Validação de uma chave no formato XXXX-XXXX-XXXX-XXXX
+        return typeof key === 'string' && /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(key);
     }
 
     // Gerenciamento seguro do localStorage
     function secureGetItem(key) {
-      try {
-        const item = localStorage.getItem(key);
-        return item ? sanitizeInput(item) : null;
-      } catch {
-        return null;
-      }
+      try { const item = localStorage.getItem(key); return item ? sanitizeInput(item) : null; }
+      catch { return null; }
     }
 
     function secureSetItem(key, value) {
-      try {
-        if (typeof value === 'string' && value.length < 1000) {
-          localStorage.setItem(key, value);
-          return true;
-        }
-      } catch {}
-      return false;
+      try { if (typeof value === 'string' && value.length < 1000) { localStorage.setItem(key, value); return true; } }
+      catch {} return false;
     }
 
     function secureRemoveItem(key) {
-      try {
-        localStorage.removeItem(key);
-      } catch {}
+      try { localStorage.removeItem(key); }
+      catch {}
     }
 
-    // Inicialização segura
     function initializeApp() {
       try {
         soundEnabled = secureGetItem('soundEnabled') !== 'false';
-        keyGenerationCount = Math.max(0, parseInt(secureGetItem('keyGenerationCount') || '0'));
-        lastKeyGenerationTime = Math.max(0, parseInt(secureGetItem('lastKeyGenerationTime') || '0'));
-        
-        // Limitar valores máximos para prevenir overflow
-        if (keyGenerationCount > 10000) keyGenerationCount = 0;
-        if (lastKeyGenerationTime > Date.now() + 86400000) lastKeyGenerationTime = 0;
+        keyGenerationCount = parseInt(secureGetItem('keyGenerationCount') || '0', 10);
+        lastKeyGenerationTime = parseInt(secureGetItem('lastKeyGenerationTime') || '0', 10);
       } catch {
-        // Valores padrão em caso de erro
-        soundEnabled = false;
-        keyGenerationCount = 0;
-        lastKeyGenerationTime = 0;
+        soundEnabled = false; keyGenerationCount = 0; lastKeyGenerationTime = 0;
       }
     }
 
-    // Limpeza de recursos
     function cleanup() {
-      if (cooldownTimer) {
-        clearInterval(cooldownTimer);
-        cooldownTimer = null;
-      }
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close().catch(() => {});
-        audioContext = null;
-      }
+      if (cooldownTimer) clearInterval(cooldownTimer);
+      if (audioContext) audioContext.close().catch(() => {});
     }
 
-    // Audio Context com tratamento de erro
     function initAudioContext() {
       if (!audioContext && soundEnabled) {
-        try {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch {}
+        try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch {}
       }
     }
 
     function playSound(frequency, duration = 100, type = 'sine') {
-      if (!soundEnabled || !audioContext || frequency < 80 || frequency > 2000) return;
-      
+      if (!soundEnabled || !audioContext) return;
       try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = Math.max(80, Math.min(2000, frequency));
-        oscillator.type = ['sine', 'square', 'sawtooth', 'triangle'].includes(type) ? type : 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + Math.min(1000, duration) / 1000);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + Math.min(1000, duration) / 1000);
+        const o = audioContext.createOscillator(), g = audioContext.createGain();
+        o.connect(g); g.connect(audioContext.destination);
+        o.frequency.value = frequency; o.type = type;
+        g.gain.setValueAtTime(0.1, audioContext.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+        o.start(audioContext.currentTime); o.stop(audioContext.currentTime + duration / 1000);
       } catch {}
     }
 
     function playSoundSequence(sequence) {
       if (!soundEnabled || !Array.isArray(sequence)) return;
-      sequence.slice(0, 10).forEach((note, index) => {
-        if (note && typeof note.freq === 'number') {
-          setTimeout(() => playSound(note.freq, note.duration, note.type), index * 150);
-        }
-      });
+      sequence.forEach((note, index) => setTimeout(() => playSound(note.freq, note.duration, note.type), index * 150));
     }
 
     function updateSoundToggle() {
-      if (soundToggle) {
-        soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
-        soundToggle.classList.toggle('active', soundEnabled);
-        secureSetItem('soundEnabled', soundEnabled.toString());
-      }
+      if (!soundToggle) return;
+      soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+      soundToggle.classList.toggle('active', soundEnabled);
+      secureSetItem('soundEnabled', soundEnabled.toString());
     }
 
     function showAchievement(text) {
-      if (!achievementPopup || typeof text !== 'string') return;
-      achievementPopup.textContent = `🏆 ${sanitizeInput(text.slice(0, 100))}`;
+      if (!achievementPopup) return;
+      achievementPopup.textContent = `🏆 ${sanitizeInput(text)}`;
       achievementPopup.classList.add('show');
-      setTimeout(() => {
-        achievementPopup.classList.remove('show');
-      }, 3000);
+      setTimeout(() => achievementPopup.classList.remove('show'), 3000);
     }
 
     function updateKeyLimitDisplay() {
       if (!keyLimitSection || !keyLimitText || !keyLimitHelper) return;
-      
-      const keysUsed = Math.max(0, Math.min(SECURITY_CONFIG.MAX_KEY_LIMIT, userKeys.length));
-      const remainingKeys = SECURITY_CONFIG.MAX_KEY_LIMIT - keysUsed;
-      
-      keyLimitText.textContent = `Você possui ${keysUsed} ID${keysUsed !== 1 ? 's' : ''} ativa${keysUsed !== 1 ? 's' : ''} (máximo: ${SECURITY_CONFIG.MAX_KEY_LIMIT} por tripulante)`;
-      
-      if (remainingKeys === 0) {
+      const keysUsed = userKeys.length;
+      const remaining = SECURITY_CONFIG.MAX_KEY_LIMIT - keysUsed;
+      keyLimitText.textContent = `Você possui ${keysUsed} ID${keysUsed !== 1 ? 's' : ''} ativa${keysUsed !== 1 ? 's' : ''} (máximo: ${SECURITY_CONFIG.MAX_KEY_LIMIT})`;
+      if (remaining <= 0) {
         keyLimitInfo.className = 'key-limit-info key-limit-full';
-        keyLimitHelper.textContent = '⚠️ Limite atingido! Use suas IDs ativas no mod Among Us para validar e liberar espaço para novas IDs';
-        keyLimitSection.style.display = 'block';
-      } else if (remainingKeys <= 2) {
+        keyLimitHelper.textContent = '⚠️ Limite atingido! Use uma ID no mod para liberar espaço.';
+      } else if (remaining <= 2) {
         keyLimitInfo.className = 'key-limit-info key-limit-warning';
-        keyLimitHelper.textContent = `⚡ ${remainingKeys} slot${remainingKeys !== 1 ? 's' : ''} restante${remainingKeys !== 1 ? 's' : ''}! Use suas IDs no mod Among Us para validar e liberar espaço`;
-        keyLimitSection.style.display = 'block';
-      } else if (remainingKeys < SECURITY_CONFIG.MAX_KEY_LIMIT) {
-        keyLimitInfo.className = 'key-limit-info';
-        keyLimitHelper.textContent = `✅ ${remainingKeys} slots disponíveis - Use suas IDs no mod Among Us para validar e liberar espaço automaticamente`;
-        keyLimitSection.style.display = 'block';
+        keyLimitHelper.textContent = `⚡ ${remaining} slot${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''}!`;
       } else {
-        keyLimitSection.style.display = 'none';
+        keyLimitInfo.className = 'key-limit-info';
+        keyLimitHelper.textContent = `✅ ${remaining} slots disponíveis.`;
       }
+      keyLimitSection.style.display = 'block';
     }
 
     function checkCooldownOnLoad() {
-      const now = Date.now();
-      const timeSinceLastGeneration = now - lastKeyGenerationTime;
-
-      if (timeSinceLastGeneration < SECURITY_CONFIG.COOLDOWN_DURATION && timeSinceLastGeneration > 0) {
-        const remainingCooldown = Math.ceil((SECURITY_CONFIG.COOLDOWN_DURATION - timeSinceLastGeneration) / 1000);
-        if (remainingCooldown > 0 && remainingCooldown <= 30) {
-          startCooldown(remainingCooldown);
-        }
+      const timeSince = Date.now() - lastKeyGenerationTime;
+      if (timeSince < SECURITY_CONFIG.COOLDOWN_DURATION) {
+        startCooldown(Math.ceil((SECURITY_CONFIG.COOLDOWN_DURATION - timeSince) / 1000));
       }
     }
 
     function startCooldown(seconds = 30) {
-      cleanup(); // Limpar timer anterior
-      
+      if (cooldownTimer) clearInterval(cooldownTimer);
       isInCooldown = true;
       if (cooldownSection) cooldownSection.style.display = 'block';
-      if (btnGen) {
-        btnGen.disabled = true;
-        btnGen.style.opacity = '0.5';
-        btnGen.style.cursor = 'not-allowed';
-      }
-      
-      let remaining = Math.max(0, Math.min(60, Math.floor(seconds))); // Limitar entre 0-60 segundos
-      if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
-      
+      if (btnGen) btnGen.disabled = true;
+      let remaining = seconds;
       cooldownTimer = setInterval(() => {
-        remaining--;
         if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
-        
-        if (remaining <= 0) {
+        if (--remaining < 0) {
           clearInterval(cooldownTimer);
-          cooldownTimer = null;
           isInCooldown = false;
-          
           if (cooldownSection) cooldownSection.style.display = 'none';
-          if (btnGen) {
-            btnGen.disabled = false;
-            btnGen.style.opacity = '1';
-            btnGen.style.cursor = 'pointer';
-          }
-          
-          if (soundEnabled) {
-            playSoundSequence([
-              {freq: 440, duration: 100, type: 'sine'},
-              {freq: 554, duration: 100, type: 'sine'},
-              {freq: 659, duration: 200, type: 'sine'}
-            ]);
-          }
+          if (btnGen) btnGen.disabled = false;
           showUIMessage('✅ Sistema pronto para nova solicitação!', 'success', 3000);
         }
       }, 1000);
     }
-
-    function updateProgress(percent) {
-      if (!progressBar || !progressFill) return;
-      
-      const safePercent = Math.max(0, Math.min(100, percent));
-      progressBar.style.display = 'block';
-      progressFill.style.width = `${safePercent}%`;
-      
-      if (safePercent >= 100) {
-        setTimeout(() => {
-          if (progressBar && progressFill) {
-            progressBar.style.display = 'none';
-            progressFill.style.width = '0%';
-          }
-        }, 1000);
-      }
-    }
-
-    function createStars() {
-      if (!starfield) return;
-      
-      // Limpar estrelas existentes
-      starfield.innerHTML = '';
-      
-      try {
-        const numStarsBase = Math.min(200, Math.floor((window.innerWidth * window.innerHeight) / 15000));
-        const starLayersData = [
-          { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
-          { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
-          { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
-        ];
-        
-        starLayersData.forEach(layer => {
-          for (let i = 0; i < layer.count; i++) {
-            const star = document.createElement('div');
-            star.classList.add('star', layer.class);
-            star.style.left = `${Math.random() * 100}vw`;
-            star.style.top = `${Math.random() * 100}vh`;
-            
-            const size = layer.baseSize + Math.random() * 0.7;
-            star.style.width = `${size}px`;
-            star.style.height = `${size}px`;
-            star.style.setProperty('--star-opacity', layer.baseOpacity);
-            star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
-            
-            const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
-            const twinkleDuration = 2 + Math.random() * 4; 
-            star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
-            star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`;
-            
-            starfield.appendChild(star);
-          }
-        });
-      } catch {}
-    }
-
+    
     function setButtonLoading(button, isLoading) {
       if (!button) return;
       button.classList.toggle('loading', isLoading);
@@ -905,33 +751,21 @@
     }
 
     function showUIMessage(text, type = 'info', duration = 4500) {
-      if (!messageEl || typeof text !== 'string') return;
-      
-      messageEl.textContent = sanitizeInput(text.slice(0, 200));
-      messageEl.className = `message visible ${['info', 'success', 'error'].includes(type) ? type : 'info'}`; 
-      
+      if (!messageEl) return;
+      messageEl.textContent = sanitizeInput(text);
+      messageEl.className = `message visible ${type}`;
       if (messageEl.timeoutId) clearTimeout(messageEl.timeoutId);
-      if (duration > 0) {
-        messageEl.timeoutId = setTimeout(() => {
-          if (messageEl) messageEl.className = 'message'; 
-        }, Math.min(10000, duration));
-      }
+      if (duration > 0) messageEl.timeoutId = setTimeout(() => messageEl.className = 'message', duration);
     }
 
     function renderKeysList() {
       if (!keysListUl) return;
-      
       keysListUl.innerHTML = ''; 
-      
-      if (!Array.isArray(userKeys) || userKeys.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'Nenhum registro de ID neste terminal para o ciclo atual.';
-        li.classList.add('no-keys'); 
-        keysListUl.appendChild(li);
+      if (!userKeys || userKeys.length === 0) {
+        keysListUl.innerHTML = '<li class="no-keys">Nenhum registro de ID neste ciclo.</li>';
         return;
       }
-      
-      userKeys.slice(0, SECURITY_CONFIG.MAX_KEY_LIMIT).forEach(key => {
+      userKeys.forEach(key => {
         if (validateKey(key)) {
           const li = document.createElement('li');
           li.textContent = sanitizeInput(key);
@@ -941,316 +775,179 @@
     }
 
     async function copyToClipboard() {
-      if (!keyValueEl) return;
-      
-      const keyValue = keyValueEl.textContent;
-      if (!keyValue || keyValue.includes('AUTENTICANDO') || !validateKey(keyValue)) return;
-      
+      if (!keyValueEl || !validateKey(keyValueEl.textContent)) return;
       try {
-        await navigator.clipboard.writeText(keyValue);
+        await navigator.clipboard.writeText(keyValueEl.textContent);
         if (copyButton) {
           copyButton.textContent = '✅ Copiado!';
           copyButton.classList.add('copied');
         }
-        
-        if (soundEnabled) {
-          playSoundSequence([
-            {freq: 800, duration: 100, type: 'sine'},
-            {freq: 1000, duration: 150, type: 'sine'}
-          ]);
-        }
-        
-        setTimeout(() => {
-          if (copyButton) {
-            copyButton.textContent = '📋 Copiar ID';
-            copyButton.classList.remove('copied');
-          }
-        }, 2000);
+        setTimeout(() => { if (copyButton) { copyButton.textContent = '📋 Copiar ID'; copyButton.classList.remove('copied'); } }, 2000);
       } catch (err) {
-        showUIMessage('❌ Erro ao copiar. Tente selecionar manualmente.', 'error', 3000);
-        if (soundEnabled) playSound(200, 200, 'sawtooth');
+        showUIMessage('❌ Erro ao copiar.', 'error');
       }
     }
 
     async function generateNewKey() {
       if (isProcessing) return;
       isProcessing = true;
+      setButtonLoading(btnGen, true);
       
       try {
-        initAudioContext();
-        
-        if (soundEnabled) {
-          playSoundSequence([
-            {freq: 800, duration: 100, type: 'square'},
-            {freq: 600, duration: 100, type: 'square'},
-            {freq: 400, duration: 150, type: 'square'}
-          ]);
-        }
+        keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA...';
+        keyValueEl.classList.add('processing');
+        keyContainerEl.classList.add('visible');
 
-        setButtonLoading(btnGen, true); 
-        if (keyContainerEl) keyContainerEl.classList.remove('visible'); 
-        if (keyActions) keyActions.style.display = 'none';
-        if (keyMetadata) keyMetadata.style.display = 'none';
-        if (keyValueEl) {
-          keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
-          keyValueEl.classList.add('processing');
-        }
-        updateProgress(10);
-        
         const verificationToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
         if (!verificationToken || !validateToken(verificationToken)) {
-          showUIMessage('❌ Falha na verificação de segurança. Tente o processo novamente.', 'error', 6000);
-          if (keyValueEl) {
-            keyValueEl.textContent = '';
-            keyValueEl.classList.remove('processing');
-          }
-          if (soundEnabled) playSound(200, 300, 'sawtooth');
-          return;
+          showUIMessage('❌ Falha de segurança. Token inválido. Tente novamente.', 'error');
+          throw new Error("Token inválido");
         }
+        
+        showUIMessage('🛰️ Conectando ao servidor MIRA HQ...', 'info', 0);
 
-        if (!messageEl || !messageEl.classList.contains('success')) {
-          showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
-        }
-        updateProgress(30);
-
-        if (!validateURL(API_BASE_URL)) {
-          throw new Error('URL do servidor não é confiável');
-        }
-
-        // Corrigir método e cabeçalho de acordo com o backend
         const response = await fetch(`${API_BASE_URL}/generate_key`, {
-          method: 'GET',  // Mudado para GET
-          headers: {
-            'X-Verification-Token': verificationToken
-          }
+          method: 'GET',
+          headers: { 'X-Verification-Token': verificationToken }
         });
         
-        updateProgress(70);
         const data = await response.json(); 
-        if (keyValueEl) keyValueEl.classList.remove('processing');
-        secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY); 
-
-        if (response.ok && data.status === 'success' && data.key && validateKey(data.key)) {
-          updateProgress(100);
-          if (keyValueEl) keyValueEl.textContent = sanitizeInput(data.key);
-          if (keyContainerEl) keyContainerEl.classList.add('visible');
-          if (keyActions) keyActions.style.display = 'flex';
-          if (keyMetadata) keyMetadata.style.display = 'block';
-          if (keyTimestamp) keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
-          
-          keyGenerationCount++;
-          lastKeyGenerationTime = Date.now();
-          secureSetItem('keyGenerationCount', keyGenerationCount.toString());
-          secureSetItem('lastKeyGenerationTime', lastKeyGenerationTime.toString());
-          
-          if (soundEnabled) {
-            playSoundSequence([
-              {freq: 523, duration: 150, type: 'sine'},
-              {freq: 659, duration: 150, type: 'sine'},
-              {freq: 784, duration: 200, type: 'sine'},
-              {freq: 1047, duration: 250, type: 'sine'}
-            ]);
-          }
-          
-          showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
-          
-          // Achievements seguros
-          if (keyGenerationCount === 1) {
-            showAchievement('Primeiro Acesso - Bem-vindo à MIRA HQ!');
-          } else if (keyGenerationCount === 5) {
-            showAchievement('Tripulante Veterano - 5 IDs geradas!');
-          } else if (keyGenerationCount === 10) {
-            showAchievement('Especialista em Segurança - 10 IDs!');
-          }
-          
-          await fetchUserKeyList();
-          startCooldown(30);
-        } else {
-          let errorMessage = 'ERRO DE PROTOCOLO: Solicitação de ID Negada.';
-          if (data && typeof data.message === 'string') {
-            errorMessage = sanitizeInput(data.message.slice(0, 100));
-          }
-          
-          if (response.status === 403) { 
-            errorMessage = `❌ Falha na verificação: ${errorMessage}`;
-          } else if (response.status === 429) {
-            errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
-            if (data.message && data.message.includes('5 chaves')) {
-              startCooldown(60);
-            }
-          }
-          showUIMessage(errorMessage, 'error', 6000);
-          if (keyContainerEl) keyContainerEl.classList.remove('visible');
-          if (soundEnabled) playSound(200, 500, 'sawtooth');
-        }
-      } catch (error) {
-        if (keyValueEl) keyValueEl.classList.remove('processing');
         secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
-        showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
-        if (keyContainerEl) keyContainerEl.classList.remove('visible');
-        if (soundEnabled) playSound(150, 800, 'sawtooth');
+
+        if (!response.ok) {
+            throw new Error(data.message || `Erro ${response.status}`);
+        }
+
+        keyValueEl.textContent = sanitizeInput(data.key);
+        keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+        keyActions.style.display = 'flex';
+        keyMetadata.style.display = 'block';
+        showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas.', 'success');
+        
+        lastKeyGenerationTime = Date.now();
+        secureSetItem('lastKeyGenerationTime', lastKeyGenerationTime.toString());
+        await fetchUserKeyList();
+        startCooldown(30);
+
+      } catch (error) {
+        showUIMessage(`🚫 Erro: ${sanitizeInput(error.message)}`, 'error', 6000);
+        keyContainerEl.classList.remove('visible');
       } finally {
+        keyValueEl.classList.remove('processing');
         setButtonLoading(btnGen, false);
         isProcessing = false;
       }
     }
 
     async function fetchUserKeyList() {
+      setButtonLoading(btnView, true);
       try {
-        setButtonLoading(btnView, true);
-        if (!messageEl || (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa"))) {
-          showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
-        }
-
-        if (!validateURL(API_BASE_URL)) {
-          throw new Error('URL do servidor não é confiável');
-        }
-
         const response = await fetch(`${API_BASE_URL}/user_keys`);
         const data = await response.json();
-
-        if (response.ok && data.status === 'success') {
-          userKeys = Array.isArray(data.keys) ? data.keys.filter(key => validateKey(key)).slice(0, SECURITY_CONFIG.MAX_KEY_LIMIT) : [];
-          renderKeysList();
-          updateKeyLimitDisplay();
-          if (btnView && btnView.classList.contains('loading')) { 
-            showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
-          }
-        } else {
-          const errorMessage = (data && typeof data.message === 'string') ? sanitizeInput(data.message.slice(0, 100)) : `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
-          showUIMessage(`❌ ${errorMessage}`, 'error');
-        }
+        if (!response.ok) throw new Error(data.message || 'Falha ao buscar chaves');
+        userKeys = data.keys || [];
+        renderKeysList();
+        updateKeyLimitDisplay();
       } catch (error) {
-        showUIMessage('🚫 Falha de comunicação ao acessar registros. Tente novamente.', 'error', 6000);
+        showUIMessage(`❌ Erro ao carregar registros: ${sanitizeInput(error.message)}`, 'error');
       } finally {
         setButtonLoading(btnView, false);
       }
     }
+    
+    // ====================================================================================================
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FUNÇÕES CORRIGIDAS ABAIXO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    // ====================================================================================================
 
+    /**
+     * CORRIGIDO: Inicia o processo de verificação.
+     * Pega um token da API e o anexa a uma URL de retorno, que é então codificada e
+     * passada para o Linkvertise como um destino dinâmico.
+     */
     async function initiateShortenerRedirect() {
-      // Verificações de segurança PRIMEIRO - incluindo cooldown
-      if (isInCooldown || (btnGen && btnGen.disabled) || isProcessing) {
-        showUIMessage('⏱️ AGUARDE: Sistema em cooldown. Aguarde o tempo restante antes de fazer nova solicitação.', 'error', 4000);
-        if (soundEnabled) playSound(200, 300, 'sawtooth');
-        return;
-      }
-
+      if (isInCooldown || isProcessing) return;
       if (userKeys.length >= SECURITY_CONFIG.MAX_KEY_LIMIT) {
-        showUIMessage('⚠️ LIMITE ATINGIDO: Você possui o máximo de 5 IDs. Use uma ID no mod Among Us para liberar espaço antes de gerar nova.', 'error', 6000);
-        if (soundEnabled) playSound(200, 500, 'sawtooth');
-        return;
-      }
-
-      if (!validateURL(SHORTENER_URL)) {
-        showUIMessage('🚫 ERRO DE SEGURANÇA: URL de verificação não confiável.', 'error', 6000);
-        return;
+        return showUIMessage('⚠️ LIMITE ATINGIDO! Use uma ID no mod para liberar espaço.', 'error');
       }
 
       isProcessing = true;
+      setButtonLoading(btnGen, true);
+      showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
       
       try {
-        if (soundEnabled) playSound(600, 100, 'square');
-        setButtonLoading(btnGen, true);
-        showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
-
-        if (!validateURL(API_BASE_URL)) {
-          throw new Error('URL do servidor não é confiável');
-        }
-
-        // Corrigir método de acordo com o backend
-        const response = await fetch(`${API_BASE_URL}/initiate-verification`, {
-          method: 'GET'  // Mudado para GET
-        });
+        const response = await fetch(`${API_BASE_URL}/initiate-verification`, { method: 'GET' });
         const data = await response.json();
 
-        if (response.ok && data.status === 'success' && data.verification_token && validateToken(data.verification_token)) {
-          secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
-          showUIMessage('⏳ Preparando redirecionamento para o portal...', 'info', 5000);
-          
-          setTimeout(() => {
-            window.location.href = SHORTENER_URL;
-          }, 1500);
-        } else {
-          const errorMessage = (data && typeof data.message === 'string') ? sanitizeInput(data.message.slice(0, 100)) : 'Erro desconhecido.';
-          showUIMessage(`❌ Falha ao iniciar verificação: ${errorMessage}`, 'error', 6000);
-          setButtonLoading(btnGen, false);
-          isProcessing = false;
+        if (!response.ok || !data.verification_token || !validateToken(data.verification_token)) {
+          throw new Error(data.message || 'Não foi possível obter token de verificação.');
         }
+        
+        // 1. Cria a URL de destino (nosso próprio site) com o token como um parâmetro de busca.
+        const returnUrl = `${window.location.origin}${window.location.pathname}?return_token=${data.verification_token}`;
+
+        // 2. Codifica a URL de destino em Base64 para que ela possa ser passada com segurança.
+        const encodedReturnUrl = btoa(returnUrl);
+
+        // 3. Constrói a URL final do Linkvertise com o destino dinâmico (usando o parâmetro 'r').
+        const dynamicShortenerUrl = `${SHORTENER_URL}?r=${encodeURIComponent(encodedReturnUrl)}`;
+        
+        showUIMessage('⏳ Redirecionando para o portal de verificação...', 'info');
+        
+        // 4. Redireciona o usuário para o Linkvertise.
+        setTimeout(() => {
+          window.location.href = dynamicShortenerUrl;
+        }, 1500);
+
       } catch (error) {
-        showUIMessage('🚫 Falha de comunicação ao iniciar verificação. Tente novamente.', 'error', 6000);
+        showUIMessage(`🚫 Falha ao iniciar verificação: ${sanitizeInput(error.message)}`, 'error', 6000);
         setButtonLoading(btnGen, false);
         isProcessing = false;
       }
     }
 
+    /**
+     * CORRIGIDO: Verifica se o usuário retornou do Linkvertise com um token válido.
+     * Esta função é chamada assim que a página carrega.
+     */
     function checkAndProcessShortenerReturn() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
-        const action = sanitizeInput(urlParams.get(RETURN_ACTION_PARAM) || '');
-        const status = sanitizeInput(urlParams.get(RETURN_STATUS_PARAM) || '');
+        const returnToken = sanitizeInput(urlParams.get('return_token') || '');
 
-        const actionMatches = action === RETURN_ACTION_VALUE;
-        const statusMatches = status === RETURN_STATUS_VALUE;
-        const backendToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
-        const backendTokenExists = backendToken && validateToken(backendToken);
-
-        if (actionMatches && statusMatches && backendTokenExists) {
-          showUIMessage('✅ Verificação do portal completa! Solicitando ID de Tripulante...', 'success', 4000);
+        // Se um token válido foi encontrado na URL...
+        if (returnToken && validateToken(returnToken)) {
+          showUIMessage('✅ Verificação do portal completa! Solicitando ID...', 'success', 4000);
           
-          // Limpar URL de parâmetros sensíveis
-          const cleanUrl = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
+          // Armazena o token de forma segura para a próxima etapa.
+          secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, returnToken);
 
+          // Limpa a URL para que o token não fique visível e evite reuso ao recarregar.
+          window.history.replaceState({}, document.title, `${window.location.pathname}`);
+
+          // Agora que a prova foi recebida, inicia a geração da chave.
           generateNewKey();
         } else {
-          if (backendToken && (!actionMatches || !statusMatches)) {
-            secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
-          }
+          // Se não houver token, apenas carrega a lista de chaves do usuário (se houver).
           fetchUserKeyList();
-          if (keyContainerEl) keyContainerEl.classList.remove('visible');
         }
-      } catch {
+      } catch (e) {
+        console.error("Erro ao processar retorno do encurtador:", e);
         fetchUserKeyList();
-        if (keyContainerEl) keyContainerEl.classList.remove('visible');
       }
     }
 
-    // Event Listeners seguros
+    // Event Listeners
     function setupEventListeners() {
-      if (soundToggle) {
-        soundToggle.addEventListener('click', () => {
-          soundEnabled = !soundEnabled;
-          updateSoundToggle();
-          initAudioContext();
-          
-          if (soundEnabled) {
-            playSoundSequence([
-              {freq: 440, duration: 100, type: 'sine'},
-              {freq: 554, duration: 100, type: 'sine'}
-            ]);
-          }
-        });
-      }
-
-      if (copyButton) {
-        copyButton.addEventListener('click', copyToClipboard);
-      }
-
-      if (btnGen) {
-        btnGen.addEventListener('click', initiateShortenerRedirect); 
-      }
-
-      if (btnView) {
-        btnView.addEventListener('click', () => {
-          if (soundEnabled) playSound(500, 100, 'square');
-          fetchUserKeyList();
-        });
-      }
-
-      // Limpeza na saída da página
+      soundToggle.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        updateSoundToggle();
+        initAudioContext();
+        if (soundEnabled) playSoundSequence([{freq: 440, duration: 100}, {freq: 554, duration: 100}]);
+      });
+      copyButton.addEventListener('click', copyToClipboard);
+      btnGen.addEventListener('click', initiateShortenerRedirect);
+      btnView.addEventListener('click', fetchUserKeyList);
       window.addEventListener('beforeunload', cleanup);
-      
-      // Redimensionamento otimizado
       let resizeTimeout;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
@@ -1265,19 +962,9 @@
       createStars();
       checkCooldownOnLoad();
       setupEventListeners();
-      checkAndProcessShortenerReturn(); 
-      
-      // Som de inicialização
-      setTimeout(() => {
-        if (soundEnabled) {
-          playSoundSequence([
-            {freq: 220, duration: 100, type: 'sine'},
-            {freq: 277, duration: 100, type: 'sine'},
-            {freq: 330, duration: 100, type: 'sine'},
-            {freq: 440, duration: 200, type: 'sine'}
-          ]);
-        }
-      }, 1000);
+      // >>> A MÁGICA ACONTECE AQUI <<<
+      // Ao carregar a página, esta função verifica se viemos do Linkvertise.
+      checkAndProcessShortenerReturn();
     });
   </script>
 </body>

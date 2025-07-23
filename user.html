@@ -891,7 +891,7 @@ function sanitizeInput(input) {
         secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
         const returnUrl = `${window.location.origin}${window.location.pathname}?return_token=${data.verification_token}`;
         const encodedReturnUrl = btoa(returnUrl);
-        const dynamicShortenerUrl = `${SHORTENER_URL}?r=${encodeURIComponent(encodedReturnUrl)}`;
+        const dynamicShortenerUrl = `${SHORTENER_URL}?r=${encodedReturnUrl}`;
         
         showUIMessage('⏳ Redirecionando para o portal de verificação...', 'info');
         

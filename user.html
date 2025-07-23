@@ -888,6 +888,7 @@ function sanitizeInput(input) {
           throw new Error(data.message || 'Não foi possível obter token de verificação da API.');
         }
         
+        secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
         const returnUrl = `${window.location.origin}${window.location.pathname}?return_token=${data.verification_token}`;
         const encodedReturnUrl = btoa(returnUrl);
         const dynamicShortenerUrl = `${SHORTENER_URL}?r=${encodeURIComponent(encodedReturnUrl)}`;
@@ -1024,12 +1025,18 @@ function sanitizeInput(input) {
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      initializeApp();
-      updateSoundToggle();
-      createStars();
-      checkCooldownOnLoad();
-      setupEventListeners();
-      checkAndProcessShortenerReturn();
+      try {
+        initializeApp();
+        updateSoundToggle();
+        createStars();
+        checkCooldownOnLoad();
+        setupEventListeners();
+        // Priorize processar o retorno do shortener ANTES de qualquer outra ação
+        checkAndProcessShortenerReturn();
+        console.log('[DEBUG] DOMContentLoaded: checkAndProcessShortenerReturn chamado');
+      } catch(e) {
+        console.error('[DEBUG] Erro no DOMContentLoaded:', e);
+      }
     });
   </script>
 </body>

@@ -1,1284 +1,188 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Among Us - Terminal de Acesso MIRA HQ</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --background-color: #0c0c0f;
-      --panel-bg-color: #1e2a3e; 
-      --panel-border-color: #3a506b; 
-      --panel-highlight-color: #5bc0de; 
-      --text-color-light: #f0f4f8; 
-      --text-color-medium: #adb5bd; 
-      --text-color-dark: #6c757d;
-      --crewmate-yellow: #ffc107; 
-      --crewmate-yellow-darker: #d9a406;
-      --crewmate-yellow-text: #121212; 
-      --impostor-red: #dc3545;
-      --impostor-red-darker: #b02a37;
-      --emergency-blue: #007bff;
-      --emergency-blue-darker: #0056b3;
-      --emergency-text: #ffffff;
-      --key-id-color: #00f9a0;
-      --success-color: #28a745; 
-      --error-color: var(--impostor-red); 
-      --info-color: var(--emergency-blue);
-      --font-title: 'Orbitron', sans-serif;
-      --font-body: 'Space Grotesk', sans-serif;
-      --font-monospace: 'Space Grotesk', monospace;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: var(--font-body);
-      background-color: var(--background-color);
-      color: var(--text-color-light);
-      min-height: 100vh;
-      padding: 2rem 1rem; 
-      overflow-x: hidden; 
-      position: relative;
-      display: flex; 
-      flex-direction: column; 
-      align-items: center;
-      opacity: 0;
-      animation: bootUp 2s ease-out forwards;
-    }
-
-    @keyframes bootUp {
-      0% { opacity: 0; transform: scale(0.95); }
-      50% { opacity: 0.5; transform: scale(0.98); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    #starfield {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      pointer-events: none; z-index: -1; overflow: hidden;
-    }
-    .star {
-      position: absolute; background-color: #ffffff; border-radius: 50%;
-      animation-name: twinkle; animation-timing-function: ease-in-out; animation-iteration-count: infinite;
-    }
-    .star-layer1 { animation-duration: 320s; animation-name: moveStarsDiagonal, twinkle; } 
-    .star-layer2 { animation-duration: 220s; animation-name: moveStarsDiagonal, twinkle; }
-    .star-layer3 { animation-duration: 120s; animation-name: moveStarsDiagonal, twinkle; } 
-    @keyframes moveStarsDiagonal {
-      0% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
-      25% { transform: translate(-50px, 25px) rotate(90deg); opacity: 0.8; }
-      50% { transform: translate(20px, -60px) rotate(180deg); opacity: 1; }
-      75% { transform: translate(40px, 40px) rotate(270deg); opacity: 0.7; }
-      100% { transform: translate(0, 0) rotate(360deg); opacity: 0.5; }
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: var(--star-opacity, 0.2); transform: scale(0.7); }
-      50% { opacity: var(--star-opacity-twinkle, 0.9); transform: scale(1); }
-    }
-    .scanline-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; z-index: 2; opacity: 0.07;
-        background: repeating-linear-gradient(transparent, transparent 2px, rgba(0, 255, 255, 0.2) 3px, rgba(0, 255, 255, 0.2) 4px);
-        animation: scanlineAnim 20s linear infinite;
-    }
-    @keyframes scanlineAnim {
-        0% { background-position: 0 0; }
-        100% { background-position: 0 100px; }
-    }
-
-    .container {
-      position: relative; z-index: 1; background-color: var(--panel-bg-color);
-      padding: clamp(1.5rem, 5vw, 2.5rem); border-radius: 16px; 
-      max-width: 580px; width: 95%; margin: auto; 
-      border: 3px solid var(--panel-border-color);
-      box-shadow: 0 0 35px rgba(58, 80, 107, 0.45), inset 0 0 18px rgba(58, 80, 107, 0.3); 
-      text-align: center;
-      transform: translateY(20px);
-      animation: slideIn 1s ease-out 0.5s forwards;
-    }
-
-    @keyframes slideIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    .controls-section {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-      gap: 1rem;
-    }
-
-    .sound-toggle {
-      background: none;
-      border: 2px solid var(--panel-border-color);
-      color: var(--text-color-medium);
-      padding: 0.8rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-    }
-
-    .sound-toggle:hover {
-      border-color: var(--panel-highlight-color);
-      color: var(--panel-highlight-color);
-      transform: scale(1.05);
-    }
-
-    .sound-toggle.active {
-      border-color: var(--crewmate-yellow);
-      color: var(--crewmate-yellow);
-      box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
-    }
-
-    .cooldown-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .cooldown-timer {
-      background: rgba(220, 53, 69, 0.1);
-      border: 2px solid var(--impostor-red);
-      border-radius: 8px;
-      padding: 1rem;
-      color: var(--impostor-red);
-      font-family: var(--font-title);
-      font-weight: 700;
-      text-align: center;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 1; }
-    }
-
-    .key-limit-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .key-limit-info {
-      background: rgba(0, 123, 255, 0.1);
-      border: 2px solid var(--info-color);
-      border-radius: 8px;
-      padding: 1rem;
-      color: var(--info-color);
-      font-family: var(--font-title);
-      font-weight: 600;
-      text-align: center;
-      line-height: 1.4;
-    }
-
-    .key-limit-warning {
-      background: rgba(255, 193, 7, 0.1);
-      border: 2px solid var(--crewmate-yellow);
-      color: var(--crewmate-yellow);
-    }
-
-    .key-limit-full {
-      background: rgba(220, 53, 69, 0.1);
-      border: 2px solid var(--impostor-red);
-      color: var(--impostor-red);
-    }
-
-    header { margin-bottom: 1.5rem; }
-    header h1 {
-      font-family: var(--font-title); color: var(--crewmate-yellow); 
-      margin-bottom: 0.75rem; font-size: clamp(1.7em, 5.5vw, 2.3em);
-      text-transform: uppercase; letter-spacing: 1.5px;
-      text-shadow: 0 0 12px rgba(255, 193, 7, 0.7);
-    }
-    header p.subtitle {
-      color: var(--text-color-medium); margin-bottom: 2.5rem;
-      font-size: clamp(0.9em, 3vw, 1.05em); line-height: 1.6; font-style: italic;
-    }
-    .button-group {
-      display: grid; grid-template-columns: 1fr; 
-      gap: 1.2rem; margin-bottom: 2.5rem;
-    }
-    @media (min-width: 500px) { 
-      .button-group { grid-template-columns: 1fr 1fr; }
-    }
-    button {
-      font-family: var(--font-title); font-weight: 700; 
-      font-size: clamp(0.85rem, 3.5vw, 0.95rem);
-      padding: 1rem 1.2rem; border-radius: 8px; border: none; cursor: pointer;
-      transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.15s ease-out;
-      display: flex; align-items: center; justify-content: center;
-      gap: 0.7rem; position: relative; text-transform: uppercase; letter-spacing: 1px;
-      box-shadow: 0 5px 0px var(--shadow-color, #000), 0 8px 12px rgba(0,0,0,0.3);
-    }
-    #generateBtn {
-      background-color: var(--crewmate-yellow); color: var(--crewmate-yellow-text);
-      --shadow-color: var(--crewmate-yellow-darker);
-    }
-    #generateBtn:hover:not([disabled]) {
-      background-color: #ffd100; transform: translateY(-3px);
-      box-shadow: 0 8px 0px var(--crewmate-yellow-darker), 0 10px 15px rgba(0,0,0,0.25);
-    }
-    #generateBtn:active:not([disabled]) {
-      transform: translateY(1px);
-      box-shadow: 0 3px 0px var(--crewmate-yellow-darker), 0 6px 10px rgba(0,0,0,0.3);
-    }
-    #viewKeysBtn {
-      background-color: var(--emergency-blue); color: var(--emergency-text);
-      --shadow-color: var(--emergency-blue-darker);
-    }
-     #viewKeysBtn:hover:not([disabled]) {
-      background-color: #2095f3; transform: translateY(-3px);
-      box-shadow: 0 8px 0px var(--emergency-blue-darker), 0 10px 15px rgba(0,0,0,0.25);
-    }
-    #viewKeysBtn:active:not([disabled]) {
-      transform: translateY(1px);
-      box-shadow: 0 3px 0px var(--emergency-blue-darker), 0 6px 10px rgba(0,0,0,0.3);
-    }
-    button[disabled] {
-      opacity: 0.5; cursor: not-allowed;
-      box-shadow: 0 2px 0px rgba(0,0,0,0.4) !important;
-    }
-    button .spinner {
-      display: none; width: 20px; height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.2); 
-      border-radius: 50%; animation: spin .7s linear infinite;
-    }
-    #generateBtn.loading .spinner { border-top-color: var(--crewmate-yellow-text); } 
-    #viewKeysBtn.loading .spinner { border-top-color: var(--emergency-text); }
-    button.loading .spinner { display: inline-block; }
-    button.loading .button-text { display: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .key-display-area {
-      background-color: rgba(0,0,0, 0.45); 
-      border: 2px solid var(--panel-highlight-color);
-      padding: 1.8rem 1.5rem; border-radius: 12px;
-      margin: 2.5rem auto; max-width: 95%; min-height: 100px; 
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      box-shadow: inset 0 0 15px rgba(91, 192, 222, 0.25), 0 0 10px rgba(91, 192, 222, 0.1);
-      position: relative;
-    }
-
-    .key-container { 
-      opacity: 0; transform: translateY(15px) scale(0.9);
-      transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      width: 100%; 
-    }
-    .key-container.visible { opacity: 1; transform: translateY(0) scale(1); }
-
-    .key-actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .copy-button {
-      background: var(--success-color);
-      color: white;
-      border: none;
-      padding: 0.7rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: var(--font-body);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.3s ease;
-      text-transform: none;
-      letter-spacing: 0;
-      font-size: 0.9rem;
-      box-shadow: 0 3px 0px #1e7e34, 0 5px 8px rgba(0,0,0,0.2);
-    }
-
-    .copy-button:hover {
-      background: #218838;
-      transform: translateY(-2px);
-      box-shadow: 0 5px 0px #1e7e34, 0 7px 12px rgba(0,0,0,0.25);
-    }
-
-    .copy-button:active {
-      transform: translateY(1px) !important;
-      box-shadow: 0 2px 0px #1e7e34, 0 4px 6px rgba(0,0,0,0.2) !important;
-    }
-
-    .copy-button.copied {
-      background: var(--crewmate-yellow);
-      color: var(--crewmate-yellow-text);
-      animation: copySuccess 0.6s ease;
-    }
-
-    @keyframes copySuccess {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 1rem;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--key-id-color), var(--panel-highlight-color));
-      width: 0%;
-      transition: width 0.3s ease;
-      border-radius: 2px;
-    }
-
-    .achievement-popup {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: var(--crewmate-yellow);
-      color: var(--crewmate-yellow-text);
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 700;
-      box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
-      transform: translateX(400px);
-      transition: transform 0.5s ease;
-      z-index: 1000;
-      border: 2px solid var(--crewmate-yellow-darker);
-      max-width: 300px;
-      word-wrap: break-word;
-    }
-
-    .achievement-popup.show {
-      transform: translateX(0);
-    }
-
-    .key-metadata {
-      margin-top: 1rem;
-      padding: 0.8rem;
-      background: rgba(0,0,0,0.3);
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: var(--text-color-medium);
-      border-left: 3px solid var(--info-color);
-    }
-
-    .key-value-label {
-        font-family: var(--font-monospace); font-size: clamp(0.8em, 2.5vw, 0.9em);
-        color: var(--text-color-medium); margin-bottom: 0.8rem;
-        text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500;
-    }
-    .key-value {
-      font-family: var(--font-monospace); font-size: clamp(1.3em, 5vw, 1.8em); 
-      font-weight: 700; color: var(--key-id-color);
-      word-break: break-all; letter-spacing: 2px; 
-      text-shadow: 0 0 15px var(--key-id-color), 0 0 20px var(--key-id-color);
-      padding: 0.3rem; line-height: 1.4;
-    }
-    .key-value.processing {
-        color: var(--text-color-medium); font-style: italic;
-        text-shadow: none; animation: pulseProcessing 1.5s infinite ease-in-out;
-    }
-    @keyframes pulseProcessing {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-    }
-    .message-area {
-      min-height: 3.2em; margin: 1.8rem 0 1.2rem 0;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .message {
-      opacity: 0; transform: scale(0.9);
-      transition: opacity .3s ease, transform .3s ease;
-      padding: .9rem 1.3rem; border-radius: 8px;
-      font-size: clamp(0.85em, 3vw, 0.95em); font-weight: 500;
-      width: 100%; max-width: 420px; 
-      border-left-width: 6px; border-left-style: solid;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .message.visible { opacity: 1; transform: scale(1); }
-    .message.error   { background-color: rgba(220, 53, 69, 0.1); border-left-color: var(--error-color); color: var(--error-color); }
-    .message.success { background-color: rgba(40, 167, 69, 0.1); border-left-color: var(--success-color); color: var(--success-color); }
-    .message.info    { background-color: rgba(0, 123, 255, 0.1); border-left-color: var(--info-color); color: var(--info-color); }
-    .keys-list-section {
-      margin-top: 3rem; padding-top: 2rem;
-      border-top: 3px double var(--panel-border-color);
-    }
-    .keys-list-section h2 {
-      font-family: var(--font-title); color: var(--panel-highlight-color);
-      font-size: clamp(1.3em, 4vw, 1.6em); margin-bottom: 1.5rem;
-      text-transform: uppercase; letter-spacing: 1px;
-      text-shadow: 0 0 8px rgba(91, 192, 222, 0.4);
-    }
-    .keys-list-section ul {
-      list-style: none; max-height: 240px; overflow-y: auto;   
-      padding-right: 12px; border: 2px solid var(--panel-border-color); 
-      border-radius: 8px; padding: 1rem; background-color: rgba(0,0,0,0.2);
-    }
-    .keys-list-section li {
-      background-color: rgba(44, 62, 80, 0.3);
-      padding: 0.9rem 1.2rem; border-radius: 6px; margin-bottom: 0.7rem;
-      font-family: var(--font-monospace); font-size: clamp(0.9em, 3vw, 1em);
-      color: var(--text-color-light);
-      border-left: 5px solid var(--panel-highlight-color);
-      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-      word-break: break-all; display: flex; align-items: center;
-    }
-    .keys-list-section li:last-child { margin-bottom: 0; }
-    .keys-list-section li:hover {
-      background-color: rgba(58, 80, 107, 0.5);
-      border-left-color: var(--crewmate-yellow);
-      transform: translateX(5px);
-    }
-    .keys-list-section li.no-keys { 
-        text-align: center; font-style: italic; color: var(--text-color-dark);
-        border-left-color: var(--text-color-dark); justify-content: center;
-        background-color: transparent;
-    }
-    .keys-list-section li::before { 
-        content: '🆔'; margin-right: 0.8em;
-        font-size: 1.1em; opacity: 0.8;
-    }
-    .keys-list-section li.no-keys::before { content: '🚫'; }
-    .keys-list-section ul::-webkit-scrollbar { width: 12px; }
-    .keys-list-section ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.25); border-radius: 6px; border: 1px solid var(--panel-border-color);}
-    .keys-list-section ul::-webkit-scrollbar-thumb { background: var(--panel-highlight-color); border-radius: 6px; border: 2px solid rgba(0,0,0,0.25); }
-    .keys-list-section ul::-webkit-scrollbar-thumb:hover { background: var(--crewmate-yellow); }
-    .keys-list-section ul {
-      scrollbar-width: auto; 
-      scrollbar-color: var(--panel-highlight-color) rgba(0,0,0,0.25); 
-    }
-    @media (max-width: 520px) {
-      body { padding: 1.5rem 0.5rem; } 
-      .container { 
-        width: 98%; padding: clamp(1.2rem, 4vw, 1.8rem);
-        margin-top: 1rem; margin-bottom: 1rem; 
-      }
-      header h1 { font-size: clamp(1.6em, 5vw, 1.9em); }
-      .key-value { font-size: clamp(1.1em, 4vw, 1.4em); }
-      .keys-list-section ul { max-height: 160px; }
-      .controls-section {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-      .achievement-popup {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        transform: translateY(-100px);
-      }
-      .achievement-popup.show {
-        transform: translateY(0);
-      }
-      .key-limit-info {
-        font-size: 0.9rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Sistema de Geração de Keys - Among Us Mod Menu">
+    <meta name="theme-color" content="#1a2433">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <title>MIRA HQ - Terminal de Acesso</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style_glitch.css">
 </head>
 <body>
-  <div id="starfield"></div> 
+  <canvas id="starfield-canvas"></canvas>
   <div class="scanline-overlay"></div>
-  
+
+  <div class="main-header">
+    <div class="header-content">
+      <header>
+        <h1 data-translate-key="main_title" data-text="Terminal de Acesso - MIRA HQ">Terminal de Acesso - MIRA HQ</h1>
+        <p class="subtitle" data-translate-key="main_subtitle">🧑‍🚀 Tripulante, requisite sua Identificação de Acesso ou verifique os registros do ciclo atual. Mantenha-se alerta!</p>
+      </header>
+    </div>
+    <div id="userProfileHeader" class="user-profile-header" style="display: none;">
+      <img id="userAvatarHeader" src="" alt="Avatar" class="user-avatar-header">
+      <div class="user-info-header">
+        <span id="userNameHeader" class="username-header"></span>
+        <span id="userDiscriminatorHeader" class="discriminator-header"></span>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
-    <header>
-      <h1>Terminal de Acesso - MIRA HQ</h1>
-      <p class="subtitle">🧑‍🚀 Tripulante, requisite sua Identificação de Acesso ou verifique os registros do ciclo atual. Mantenha-se alerta!</p>
-    </header>
-
-    <div class="controls-section">
-      <div></div>
-      <button class="sound-toggle" id="soundToggle" title="Alternar efeitos sonoros">
-        🔊
-      </button>
+    <div class="status-indicator">
+      <div class="status-dot online"></div>
+      <span data-translate-key="status_online">Sistema MIRA HQ Online</span>
     </div>
 
-    <div class="cooldown-section" id="cooldownSection" style="display: none;">
-      <div class="cooldown-timer">
-        <div>⚠️ SISTEMA EM COOLDOWN</div>
-        <div id="cooldownTime">30s</div>
-        <div style="font-size: 0.8em; margin-top: 0.5rem;">Aguarde para nova solicitação</div>
+    <section id="authSection" class="auth-section">
+        <button id="discordAuthBtn" class="discord-auth-btn">
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTE4LjU0IDcuNzZMMTcuMDggMTkuMkwxMiA5LjY4TDYuOTIgMTkuMkw1LjQ2IDcuNzZMMTIgNS4xTDE4LjU0IDcuNzZaIiBmaWxsPSIjNTg2NUYyIi8+Cjwvc3ZnPg==" alt="Discord">
+            <span data-translate-key="login_discord">🎮 Entrar com Discord</span>
+        </button>
+    </section>
+
+    <div id="userContent" class="user-content-wrapper" style="display: none;">
+      <div class="controls-section">
+        <!-- Botão de som removido ou estilizado melhor se desejar -->
       </div>
+
+      <div class="cooldown-section" id="cooldownSection" style="display: none;">
+        <div class="cooldown-timer">
+          <div data-translate-key="cooldown_title">⚠️ SISTEMA EM COOLDOWN</div>
+          <div id="cooldownTime">30s</div>
+          <div style="font-size: 0.8em; margin-top: 0.5rem;" data-translate-key="cooldown_subtitle">Aguarde para nova solicitação</div>
+        </div>
+      </div>
+
+      <div class="key-limit-section" id="keyLimitSection" style="display: none;">
+        <div class="key-limit-info" id="keyLimitInfo">
+          <div id="keyLimitText"></div>
+          <div style="font-size: 0.85em; margin-top: 0.5rem;" id="keyLimitHelper" data-translate-key="key_limit_helper"></div>
+        </div>
+      </div>
+      
+      <div class="button-group">
+        <button id="generateBtn" title="Requisitar nova ID de Acesso via verificação">
+          <span class="button-text" data-translate-key="generate_button">⚠️ INICIAR TASK: REGISTRO</span>
+          <span class="spinner"></span>
+        </button>
+        <button id="viewKeysBtn" title="Consultar IDs de Tripulantes Ativos">
+          <span class="button-text" data-translate-key="view_keys_button">🛰️ LOG DE SISTEMA</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+      
+      <section class="key-display-area">
+        <div class="key-container" id="keyContainer"> 
+          <div class="key-value-label" data-translate-key="key_label">ID de Tripulante Designada:</div>
+          <div class="key-value" id="keyValue"></div>
+          <div class="key-actions" id="keyActions" style="display: none;">
+            <button class="copy-button" id="copyButton">
+              <span data-translate-key="copy_button">📋 Copiar ID</span>
+            </button>
+          </div>
+          <div class="key-metadata" id="keyMetadata" style="display: none;">
+            <div><span data-translate-key="generated_at">📅 Gerada em:</span> <span id="keyTimestamp"></span></div>
+            <div data-translate-key="key_type">🔑 Tipo: Acesso MIRA HQ</div>
+            <div data-translate-key="key_status">⏱️ Status: Ativa</div>
+          </div>
+          <div class="progress-bar" id="progressBar" style="display: none;">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="message-area">
+        <div class="message" id="message"></div>
+      </section>
+      
+      <section class="keys-list-section">
+        <h2 data-translate-key="records_title">Registros de IDs - Ciclo Atual</h2>
+        <ul id="keysList">
+        </ul>
+      </section>
     </div>
 
-    <div class="key-limit-section" id="keyLimitSection" style="display: none;">
-      <div class="key-limit-info" id="keyLimitInfo">
-        <div id="keyLimitText">Você possui 0 IDs ativas (máximo: 5 por tripulante)</div>
-        <div style="font-size: 0.85em; margin-top: 0.5rem;" id="keyLimitHelper">💡 Use suas IDs no mod Among Us para liberar espaço</div>
-      </div>
-    </div>
-    
-    <div class="button-group">
-      <button id="generateBtn" title="Requisitar nova ID de Acesso via verificação">
-        <span class="button-text">⚠️ INICIAR TASK: REGISTRO</span>
-        <span class="spinner"></span>
+    <div class="bottom-buttons">
+      <button class="support-button" id="supportButton">
+        <span data-translate-key="support_button">🆘 Suporte</span>
       </button>
-      <button id="viewKeysBtn" title="Consultar IDs de Tripulantes Ativos">
-        <span class="button-text">🛰️ LOG DE SISTEMA</span>
-        <span class="spinner"></span>
+
+      <button class="translate-button" id="translateButton">
+        <span data-translate-key="translate_button">🌐 Traduzir Página</span>
       </button>
     </div>
-    
-    <section class="key-display-area">
-      <div class="key-container" id="keyContainer"> 
-        <div class="key-value-label">ID de Tripulante Designada:</div>
-        <div class="key-value" id="keyValue"></div>
-        <div class="key-actions" id="keyActions" style="display: none;">
-          <button class="copy-button" id="copyButton">
-            📋 Copiar ID
-          </button>
-        </div>
-        <div class="key-metadata" id="keyMetadata" style="display: none;">
-          <div>📅 Gerada em: <span id="keyTimestamp"></span></div>
-          <div>🔑 Tipo: Acesso MIRA HQ</div>
-          <div>⏱️ Status: Ativa</div>
-        </div>
-        <div class="progress-bar" id="progressBar" style="display: none;">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-      </div>
-    </section>
-    
-    <section class="message-area">
-      <div class="message" id="message"></div>
-    </section>
-    
-    <section class="keys-list-section">
-      <h2>Registros de IDs - Ciclo Atual</h2>
-      <ul id="keysList" aria-live="polite">
-      </ul>
-    </section>
   </main>
+
+  <div id="userProfileModal" class="modal">
+    <div class="modal-content profile-modal">
+        <span class="close-modal">&times;</span>
+        <div class="modal-header">
+            <img id="modalUserAvatar" src="" alt="Avatar" class="modal-avatar">
+            <div class="modal-user-info">
+                <h3 id="modalUserName"></h3>
+                <p id="modalUserDiscriminator" class="user-handle"></p>
+                <div id="modalServerStatus" class="server-badge"></div>
+            </div>
+        </div>
+        <div class="modal-stats">
+            <div class="stat-card">
+                <div class="stat-icon">🔑</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statKeysToday">0</span>
+                    <span class="stat-label" data-translate-key="stat_keys_today">Keys Hoje</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statTotalKeys">0</span>
+                    <span class="stat-label" data-translate-key="stat_total_keys">Total Keys</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statActiveKeys">0</span>
+                    <span class="stat-label" data-translate-key="stat_active_keys">Keys Ativas</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🕒</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="statMemberSince">N/A</span>
+                    <span class="stat-label" data-translate-key="stat_member_since">Membro desde</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button id="modalGenerateBtn" class="modal-action-btn generate-btn">
+                <span data-translate-key="modal_generate_button">🚀 Gerar Nova Key</span>
+            </button>
+            <button id="modalLogoutBtn" class="modal-action-btn modal-logout-btn">
+                <span data-translate-key="modal_logout_button">🚪 Sair</span>
+            </button>
+        </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <div class="discord-widget-container" id="discordWidgetContainer">
+    <div class="discord-widget-header">
+      <h3 class="discord-widget-title" data-translate-key="widget_title">Suporte - Discord</h3>
+      <button class="close-widget" id="closeWidget">&times;</button>
+    </div>
+    <div class="discord-widget">
+      <iframe src="https://discord.com/widget?id=1372893306727563284&theme=dark" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+    </div>
+  </div>
 
   <div class="achievement-popup" id="achievementPopup"></div>
 
-  <script>
-    // Configurações de segurança
-    const SECURITY_CONFIG = {
-      MAX_KEY_LIMIT: 5,
-      COOLDOWN_DURATION: 30000,
-      MAX_RETRIES: 3,
-      ALLOWED_DOMAINS: ['keygenx-ce8h.onrender.com', 'link-target.net'],
-      VALIDATION_PATTERNS: {
-        token: /^[a-zA-Z0-9\-_]{20,}$/,
-        key: /^[A-Z0-9\-]{8,32}$/
-      }
-    };
-
-    // URLs seguras
-    const API_BASE_URL = 'https://keygenx-ce8h.onrender.com';
-    const SHORTENER_URL = 'https://link-target.net/63830/among-us-modmenu-key1';
-    
-    // Constantes
-    const BACKEND_VERIFICATION_TOKEN_KEY = 'miraHqBackendVerificationToken';
-    const RETURN_ACTION_PARAM = 'action';
-    const RETURN_ACTION_VALUE = 'generate_from_shortener';
-    const RETURN_STATUS_PARAM = 'status';
-    const RETURN_STATUS_VALUE = 'completed';
-
-    // Elementos DOM
-    const btnGen = document.getElementById('generateBtn');
-    const btnView = document.getElementById('viewKeysBtn');
-    const keyContainerEl = document.getElementById('keyContainer');
-    const keyValueEl = document.getElementById('keyValue');
-    const messageEl = document.getElementById('message');
-    const keysListUl = document.getElementById('keysList');
-    const starfield = document.getElementById('starfield');
-    const soundToggle = document.getElementById('soundToggle');
-    const copyButton = document.getElementById('copyButton');
-    const keyActions = document.getElementById('keyActions');
-    const keyMetadata = document.getElementById('keyMetadata');
-    const keyTimestamp = document.getElementById('keyTimestamp');
-    const cooldownSection = document.getElementById('cooldownSection');
-    const cooldownTime = document.getElementById('cooldownTime');
-    const progressBar = document.getElementById('progressBar');
-    const progressFill = document.getElementById('progressFill');
-    const achievementPopup = document.getElementById('achievementPopup');
-    const keyLimitSection = document.getElementById('keyLimitSection');
-    const keyLimitInfo = document.getElementById('keyLimitInfo');
-    const keyLimitText = document.getElementById('keyLimitText');
-    const keyLimitHelper = document.getElementById('keyLimitHelper');
-    
-    // Estado da aplicação
-    let userKeys = [];
-    let soundEnabled = false;
-    let cooldownTimer = null;
-    let keyGenerationCount = 0;
-    let lastKeyGenerationTime = 0;
-    let isInCooldown = false;
-    let audioContext = null;
-    let isProcessing = false;
-
-    // Funções de segurança e validação
-    function sanitizeInput(input) {
-      if (typeof input !== 'string') return '';
-      return input.replace(/[<>'"&]/g, function(match) {
-        const entityMap = {
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;',
-          '&': '&amp;'
-        };
-        return entityMap[match];
-      });
-    }
-
-    function validateURL(url) {
-      try {
-        const urlObj = new URL(url);
-        return SECURITY_CONFIG.ALLOWED_DOMAINS.some(domain => 
-          urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
-        );
-      } catch {
-        return false;
-      }
-    }
-
-    function validateToken(token) {
-      return typeof token === 'string' && 
-             SECURITY_CONFIG.VALIDATION_PATTERNS.token.test(token) &&
-             token.length >= 20 && token.length <= 200;
-    }
-
-    function validateKey(key) {
-      return typeof key === 'string' && 
-             SECURITY_CONFIG.VALIDATION_PATTERNS.key.test(key) &&
-             key.length >= 8 && key.length <= 32;
-    }
-
-    // Gerenciamento seguro do localStorage
-    function secureGetItem(key) {
-      try {
-        const item = localStorage.getItem(key);
-        return item ? sanitizeInput(item) : null;
-      } catch {
-        return null;
-      }
-    }
-
-    function secureSetItem(key, value) {
-      try {
-        if (typeof value === 'string' && value.length < 1000) {
-          localStorage.setItem(key, value);
-          return true;
-        }
-      } catch {}
-      return false;
-    }
-
-    function secureRemoveItem(key) {
-      try {
-        localStorage.removeItem(key);
-      } catch {}
-    }
-
-    // Inicialização segura
-    function initializeApp() {
-      try {
-        soundEnabled = secureGetItem('soundEnabled') !== 'false';
-        keyGenerationCount = Math.max(0, parseInt(secureGetItem('keyGenerationCount') || '0'));
-        lastKeyGenerationTime = Math.max(0, parseInt(secureGetItem('lastKeyGenerationTime') || '0'));
-        
-        // Limitar valores máximos para prevenir overflow
-        if (keyGenerationCount > 10000) keyGenerationCount = 0;
-        if (lastKeyGenerationTime > Date.now() + 86400000) lastKeyGenerationTime = 0;
-      } catch {
-        // Valores padrão em caso de erro
-        soundEnabled = false;
-        keyGenerationCount = 0;
-        lastKeyGenerationTime = 0;
-      }
-    }
-
-    // Limpeza de recursos
-    function cleanup() {
-      if (cooldownTimer) {
-        clearInterval(cooldownTimer);
-        cooldownTimer = null;
-      }
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close().catch(() => {});
-        audioContext = null;
-      }
-    }
-
-    // Audio Context com tratamento de erro
-    function initAudioContext() {
-      if (!audioContext && soundEnabled) {
-        try {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch {}
-      }
-    }
-
-    function playSound(frequency, duration = 100, type = 'sine') {
-      if (!soundEnabled || !audioContext || frequency < 80 || frequency > 2000) return;
-      
-      try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = Math.max(80, Math.min(2000, frequency));
-        oscillator.type = ['sine', 'square', 'sawtooth', 'triangle'].includes(type) ? type : 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + Math.min(1000, duration) / 1000);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + Math.min(1000, duration) / 1000);
-      } catch {}
-    }
-
-    function playSoundSequence(sequence) {
-      if (!soundEnabled || !Array.isArray(sequence)) return;
-      sequence.slice(0, 10).forEach((note, index) => {
-        if (note && typeof note.freq === 'number') {
-          setTimeout(() => playSound(note.freq, note.duration, note.type), index * 150);
-        }
-      });
-    }
-
-    function updateSoundToggle() {
-      if (soundToggle) {
-        soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
-        soundToggle.classList.toggle('active', soundEnabled);
-        secureSetItem('soundEnabled', soundEnabled.toString());
-      }
-    }
-
-    function showAchievement(text) {
-      if (!achievementPopup || typeof text !== 'string') return;
-      achievementPopup.textContent = `🏆 ${sanitizeInput(text.slice(0, 100))}`;
-      achievementPopup.classList.add('show');
-      setTimeout(() => {
-        achievementPopup.classList.remove('show');
-      }, 3000);
-    }
-
-    function updateKeyLimitDisplay() {
-      if (!keyLimitSection || !keyLimitText || !keyLimitHelper) return;
-      
-      const keysUsed = Math.max(0, Math.min(SECURITY_CONFIG.MAX_KEY_LIMIT, userKeys.length));
-      const remainingKeys = SECURITY_CONFIG.MAX_KEY_LIMIT - keysUsed;
-      
-      keyLimitText.textContent = `Você possui ${keysUsed} ID${keysUsed !== 1 ? 's' : ''} ativa${keysUsed !== 1 ? 's' : ''} (máximo: ${SECURITY_CONFIG.MAX_KEY_LIMIT} por tripulante)`;
-      
-      if (remainingKeys === 0) {
-        keyLimitInfo.className = 'key-limit-info key-limit-full';
-        keyLimitHelper.textContent = '⚠️ Limite atingido! Use suas IDs ativas no mod Among Us para validar e liberar espaço para novas IDs';
-        keyLimitSection.style.display = 'block';
-      } else if (remainingKeys <= 2) {
-        keyLimitInfo.className = 'key-limit-info key-limit-warning';
-        keyLimitHelper.textContent = `⚡ ${remainingKeys} slot${remainingKeys !== 1 ? 's' : ''} restante${remainingKeys !== 1 ? 's' : ''}! Use suas IDs no mod Among Us para validar e liberar espaço`;
-        keyLimitSection.style.display = 'block';
-      } else if (remainingKeys < SECURITY_CONFIG.MAX_KEY_LIMIT) {
-        keyLimitInfo.className = 'key-limit-info';
-        keyLimitHelper.textContent = `✅ ${remainingKeys} slots disponíveis - Use suas IDs no mod Among Us para validar e liberar espaço automaticamente`;
-        keyLimitSection.style.display = 'block';
-      } else {
-        keyLimitSection.style.display = 'none';
-      }
-    }
-
-    function checkCooldownOnLoad() {
-      const now = Date.now();
-      const timeSinceLastGeneration = now - lastKeyGenerationTime;
-
-      if (timeSinceLastGeneration < SECURITY_CONFIG.COOLDOWN_DURATION && timeSinceLastGeneration > 0) {
-        const remainingCooldown = Math.ceil((SECURITY_CONFIG.COOLDOWN_DURATION - timeSinceLastGeneration) / 1000);
-        if (remainingCooldown > 0 && remainingCooldown <= 30) {
-          startCooldown(remainingCooldown);
-        }
-      }
-    }
-
-    function startCooldown(seconds = 30) {
-      cleanup(); // Limpar timer anterior
-      
-      isInCooldown = true;
-      if (cooldownSection) cooldownSection.style.display = 'block';
-      if (btnGen) {
-        btnGen.disabled = true;
-        btnGen.style.opacity = '0.5';
-        btnGen.style.cursor = 'not-allowed';
-      }
-      
-      let remaining = Math.max(0, Math.min(60, Math.floor(seconds))); // Limitar entre 0-60 segundos
-      if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
-      
-      cooldownTimer = setInterval(() => {
-        remaining--;
-        if (cooldownTime) cooldownTime.textContent = `${remaining}s`;
-        
-        if (remaining <= 0) {
-          clearInterval(cooldownTimer);
-          cooldownTimer = null;
-          isInCooldown = false;
-          
-          if (cooldownSection) cooldownSection.style.display = 'none';
-          if (btnGen) {
-            btnGen.disabled = false;
-            btnGen.style.opacity = '1';
-            btnGen.style.cursor = 'pointer';
-          }
-          
-          if (soundEnabled) {
-            playSoundSequence([
-              {freq: 440, duration: 100, type: 'sine'},
-              {freq: 554, duration: 100, type: 'sine'},
-              {freq: 659, duration: 200, type: 'sine'}
-            ]);
-          }
-          showUIMessage('✅ Sistema pronto para nova solicitação!', 'success', 3000);
-        }
-      }, 1000);
-    }
-
-    function updateProgress(percent) {
-      if (!progressBar || !progressFill) return;
-      
-      const safePercent = Math.max(0, Math.min(100, percent));
-      progressBar.style.display = 'block';
-      progressFill.style.width = `${safePercent}%`;
-      
-      if (safePercent >= 100) {
-        setTimeout(() => {
-          if (progressBar && progressFill) {
-            progressBar.style.display = 'none';
-            progressFill.style.width = '0%';
-          }
-        }, 1000);
-      }
-    }
-
-    function createStars() {
-      if (!starfield) return;
-      
-      // Limpar estrelas existentes
-      starfield.innerHTML = '';
-      
-      try {
-        const numStarsBase = Math.min(200, Math.floor((window.innerWidth * window.innerHeight) / 15000));
-        const starLayersData = [
-          { class: 'star-layer1', count: Math.floor(numStarsBase * 0.3), baseSize: 0.4, animBase: 300, baseOpacity: 0.3, twinkleOpacity: 0.6 }, 
-          { class: 'star-layer2', count: Math.floor(numStarsBase * 0.4), baseSize: 0.7, animBase: 200, baseOpacity: 0.4, twinkleOpacity: 0.8 },
-          { class: 'star-layer3', count: Math.floor(numStarsBase * 0.3), baseSize: 1.1, animBase: 100, baseOpacity: 0.5, twinkleOpacity: 1 }  
-        ];
-        
-        starLayersData.forEach(layer => {
-          for (let i = 0; i < layer.count; i++) {
-            const star = document.createElement('div');
-            star.classList.add('star', layer.class);
-            star.style.left = `${Math.random() * 100}vw`;
-            star.style.top = `${Math.random() * 100}vh`;
-            
-            const size = layer.baseSize + Math.random() * 0.7;
-            star.style.width = `${size}px`;
-            star.style.height = `${size}px`;
-            star.style.setProperty('--star-opacity', layer.baseOpacity);
-            star.style.setProperty('--star-opacity-twinkle', layer.twinkleOpacity);
-            
-            const moveDuration = layer.animBase + (Math.random() * (layer.animBase * 0.4) - (layer.animBase * 0.2)); 
-            const twinkleDuration = 2 + Math.random() * 4; 
-            star.style.animationDuration = `${moveDuration}s, ${twinkleDuration}s`;
-            star.style.animationDelay = `${Math.random() * moveDuration}s, ${Math.random() * twinkleDuration}s`;
-            
-            starfield.appendChild(star);
-          }
-        });
-      } catch {}
-    }
-
-    function setButtonLoading(button, isLoading) {
-      if (!button) return;
-      button.classList.toggle('loading', isLoading);
-      button.disabled = isLoading;
-    }
-
-    function showUIMessage(text, type = 'info', duration = 4500) {
-      if (!messageEl || typeof text !== 'string') return;
-      
-      messageEl.textContent = sanitizeInput(text.slice(0, 200));
-      messageEl.className = `message visible ${['info', 'success', 'error'].includes(type) ? type : 'info'}`; 
-      
-      if (messageEl.timeoutId) clearTimeout(messageEl.timeoutId);
-      if (duration > 0) {
-        messageEl.timeoutId = setTimeout(() => {
-          if (messageEl) messageEl.className = 'message'; 
-        }, Math.min(10000, duration));
-      }
-    }
-
-    function renderKeysList() {
-      if (!keysListUl) return;
-      
-      keysListUl.innerHTML = ''; 
-      
-      if (!Array.isArray(userKeys) || userKeys.length === 0) {
-        const li = document.createElement('li');
-        li.textContent = 'Nenhum registro de ID neste terminal para o ciclo atual.';
-        li.classList.add('no-keys'); 
-        keysListUl.appendChild(li);
-        return;
-      }
-      
-      userKeys.slice(0, SECURITY_CONFIG.MAX_KEY_LIMIT).forEach(key => {
-        if (validateKey(key)) {
-          const li = document.createElement('li');
-          li.textContent = sanitizeInput(key);
-          keysListUl.appendChild(li);
-        }
-      });
-    }
-
-    async function copyToClipboard() {
-      if (!keyValueEl) return;
-      
-      const keyValue = keyValueEl.textContent;
-      if (!keyValue || keyValue.includes('AUTENTICANDO') || !validateKey(keyValue)) return;
-      
-      try {
-        await navigator.clipboard.writeText(keyValue);
-        if (copyButton) {
-          copyButton.textContent = '✅ Copiado!';
-          copyButton.classList.add('copied');
-        }
-        
-        if (soundEnabled) {
-          playSoundSequence([
-            {freq: 800, duration: 100, type: 'sine'},
-            {freq: 1000, duration: 150, type: 'sine'}
-          ]);
-        }
-        
-        setTimeout(() => {
-          if (copyButton) {
-            copyButton.textContent = '📋 Copiar ID';
-            copyButton.classList.remove('copied');
-          }
-        }, 2000);
-      } catch (err) {
-        showUIMessage('❌ Erro ao copiar. Tente selecionar manualmente.', 'error', 3000);
-        if (soundEnabled) playSound(200, 200, 'sawtooth');
-      }
-    }
-
-    async function generateNewKey() {
-      if (isProcessing) return;
-      isProcessing = true;
-      
-      try {
-        initAudioContext();
-        
-        if (soundEnabled) {
-          playSoundSequence([
-            {freq: 800, duration: 100, type: 'square'},
-            {freq: 600, duration: 100, type: 'square'},
-            {freq: 400, duration: 150, type: 'square'}
-          ]);
-        }
-
-        setButtonLoading(btnGen, true); 
-        if (keyContainerEl) keyContainerEl.classList.remove('visible'); 
-        if (keyActions) keyActions.style.display = 'none';
-        if (keyMetadata) keyMetadata.style.display = 'none';
-        if (keyValueEl) {
-          keyValueEl.textContent = 'AUTENTICANDO NO SISTEMA MIRA HQ...'; 
-          keyValueEl.classList.add('processing');
-        }
-        updateProgress(10);
-        
-        const verificationToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
-        if (!verificationToken || !validateToken(verificationToken)) {
-          showUIMessage('❌ Falha na verificação de segurança. Tente o processo novamente.', 'error', 6000);
-          if (keyValueEl) {
-            keyValueEl.textContent = '';
-            keyValueEl.classList.remove('processing');
-          }
-          if (soundEnabled) playSound(200, 300, 'sawtooth');
-          return;
-        }
-
-        if (!messageEl || !messageEl.classList.contains('success')) {
-          showUIMessage('🛰️ Link com Servidor Central MIRA HQ...', 'info', 0); 
-        }
-        updateProgress(30);
-
-        if (!validateURL(API_BASE_URL)) {
-          throw new Error('URL do servidor não é confiável');
-        }
-
-        // Corrigir método e cabeçalho de acordo com o backend
-        const response = await fetch(`${API_BASE_URL}/generate_key`, {
-          method: 'GET',  // Mudado para GET
-          headers: {
-            'X-Verification-Token': verificationToken
-          }
-        });
-        
-        updateProgress(70);
-        const data = await response.json(); 
-        if (keyValueEl) keyValueEl.classList.remove('processing');
-        secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY); 
-
-        if (response.ok && data.status === 'success' && data.key && validateKey(data.key)) {
-          updateProgress(100);
-          if (keyValueEl) keyValueEl.textContent = sanitizeInput(data.key);
-          if (keyContainerEl) keyContainerEl.classList.add('visible');
-          if (keyActions) keyActions.style.display = 'flex';
-          if (keyMetadata) keyMetadata.style.display = 'block';
-          if (keyTimestamp) keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
-          
-          keyGenerationCount++;
-          lastKeyGenerationTime = Date.now();
-          secureSetItem('keyGenerationCount', keyGenerationCount.toString());
-          secureSetItem('lastKeyGenerationTime', lastKeyGenerationTime.toString());
-          
-          if (soundEnabled) {
-            playSoundSequence([
-              {freq: 523, duration: 150, type: 'sine'},
-              {freq: 659, duration: 150, type: 'sine'},
-              {freq: 784, duration: 200, type: 'sine'},
-              {freq: 1047, duration: 250, type: 'sine'}
-            ]);
-          }
-          
-          showUIMessage('✅ ID de Acesso Válida! Prossiga com suas tarefas, Tripulante.', 'success');
-          
-          // Achievements seguros
-          if (keyGenerationCount === 1) {
-            showAchievement('Primeiro Acesso - Bem-vindo à MIRA HQ!');
-          } else if (keyGenerationCount === 5) {
-            showAchievement('Tripulante Veterano - 5 IDs geradas!');
-          } else if (keyGenerationCount === 10) {
-            showAchievement('Especialista em Segurança - 10 IDs!');
-          }
-          
-          await fetchUserKeyList();
-          startCooldown(30);
-        } else {
-          let errorMessage = 'ERRO DE PROTOCOLO: Solicitação de ID Negada.';
-          if (data && typeof data.message === 'string') {
-            errorMessage = sanitizeInput(data.message.slice(0, 100));
-          }
-          
-          if (response.status === 403) { 
-            errorMessage = `❌ Falha na verificação: ${errorMessage}`;
-          } else if (response.status === 429) {
-            errorMessage = '⚠️ ALERTA: Limite de requisições de ID atingido. Aguarde o próximo ciclo.';
-            if (data.message && data.message.includes('5 chaves')) {
-              startCooldown(60);
-            }
-          }
-          showUIMessage(errorMessage, 'error', 6000);
-          if (keyContainerEl) keyContainerEl.classList.remove('visible');
-          if (soundEnabled) playSound(200, 500, 'sawtooth');
-        }
-      } catch (error) {
-        if (keyValueEl) keyValueEl.classList.remove('processing');
-        secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
-        showUIMessage('🚫 EMERGÊNCIA: Perda de comunicação com o servidor. Possível sabotagem!', 'error', 6000);
-        if (keyContainerEl) keyContainerEl.classList.remove('visible');
-        if (soundEnabled) playSound(150, 800, 'sawtooth');
-      } finally {
-        setButtonLoading(btnGen, false);
-        isProcessing = false;
-      }
-    }
-
-    async function fetchUserKeyList() {
-      try {
-        setButtonLoading(btnView, true);
-        if (!messageEl || (!messageEl.classList.contains('success') && !messageEl.classList.contains('error') && !messageEl.textContent.includes("Redirecionando") && !messageEl.textContent.includes("Verificação completa"))) {
-          showUIMessage('Consultando Log de IDs do sistema...', 'info', 0);
-        }
-
-        if (!validateURL(API_BASE_URL)) {
-          throw new Error('URL do servidor não é confiável');
-        }
-
-        const response = await fetch(`${API_BASE_URL}/user_keys`);
-        const data = await response.json();
-
-        if (response.ok && data.status === 'success') {
-          userKeys = Array.isArray(data.keys) ? data.keys.filter(key => validateKey(key)).slice(0, SECURITY_CONFIG.MAX_KEY_LIMIT) : [];
-          renderKeysList();
-          updateKeyLimitDisplay();
-          if (btnView && btnView.classList.contains('loading')) { 
-            showUIMessage(userKeys.length > 0 ? 'Relatório de IDs carregado.' : 'Nenhuma ID encontrada no log.', 'info', 3000);
-          }
-        } else {
-          const errorMessage = (data && typeof data.message === 'string') ? sanitizeInput(data.message.slice(0, 100)) : `FALHA DE SISTEMA ${response.status}: Impossível acessar registros.`;
-          showUIMessage(`❌ ${errorMessage}`, 'error');
-        }
-      } catch (error) {
-        showUIMessage('🚫 Falha de comunicação ao acessar registros. Tente novamente.', 'error', 6000);
-      } finally {
-        setButtonLoading(btnView, false);
-      }
-    }
-
-    async function initiateShortenerRedirect() {
-      // Verificações de segurança PRIMEIRO - incluindo cooldown
-      if (isInCooldown || (btnGen && btnGen.disabled) || isProcessing) {
-        showUIMessage('⏱️ AGUARDE: Sistema em cooldown. Aguarde o tempo restante antes de fazer nova solicitação.', 'error', 4000);
-        if (soundEnabled) playSound(200, 300, 'sawtooth');
-        return;
-      }
-
-      if (userKeys.length >= SECURITY_CONFIG.MAX_KEY_LIMIT) {
-        showUIMessage('⚠️ LIMITE ATINGIDO: Você possui o máximo de 5 IDs. Use uma ID no mod Among Us para liberar espaço antes de gerar nova.', 'error', 6000);
-        if (soundEnabled) playSound(200, 500, 'sawtooth');
-        return;
-      }
-
-      if (!validateURL(SHORTENER_URL)) {
-        showUIMessage('🚫 ERRO DE SEGURANÇA: URL de verificação não confiável.', 'error', 6000);
-        return;
-      }
-
-      isProcessing = true;
-      
-      try {
-        if (soundEnabled) playSound(600, 100, 'square');
-        setButtonLoading(btnGen, true);
-        showUIMessage('⏳ Iniciando verificação de segurança...', 'info', 0);
-
-        if (!validateURL(API_BASE_URL)) {
-          throw new Error('URL do servidor não é confiável');
-        }
-
-        // Corrigir método de acordo com o backend
-        const response = await fetch(`${API_BASE_URL}/initiate-verification`, {
-          method: 'GET'  // Mudado para GET
-        });
-        const data = await response.json();
-
-        if (response.ok && data.status === 'success' && data.verification_token && validateToken(data.verification_token)) {
-          secureSetItem(BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
-          showUIMessage('⏳ Preparando redirecionamento para o portal...', 'info', 5000);
-          
-          setTimeout(() => {
-            window.location.href = SHORTENER_URL;
-          }, 1500);
-        } else {
-          const errorMessage = (data && typeof data.message === 'string') ? sanitizeInput(data.message.slice(0, 100)) : 'Erro desconhecido.';
-          showUIMessage(`❌ Falha ao iniciar verificação: ${errorMessage}`, 'error', 6000);
-          setButtonLoading(btnGen, false);
-          isProcessing = false;
-        }
-      } catch (error) {
-        showUIMessage('🚫 Falha de comunicação ao iniciar verificação. Tente novamente.', 'error', 6000);
-        setButtonLoading(btnGen, false);
-        isProcessing = false;
-      }
-    }
-
-    function checkAndProcessShortenerReturn() {
-      try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const action = sanitizeInput(urlParams.get(RETURN_ACTION_PARAM) || '');
-        const status = sanitizeInput(urlParams.get(RETURN_STATUS_PARAM) || '');
-
-        const actionMatches = action === RETURN_ACTION_VALUE;
-        const statusMatches = status === RETURN_STATUS_VALUE;
-        const backendToken = secureGetItem(BACKEND_VERIFICATION_TOKEN_KEY);
-        const backendTokenExists = backendToken && validateToken(backendToken);
-
-        if (actionMatches && statusMatches && backendTokenExists) {
-          showUIMessage('✅ Verificação do portal completa! Solicitando ID de Tripulante...', 'success', 4000);
-          
-          // Limpar URL de parâmetros sensíveis
-          const cleanUrl = window.location.origin + window.location.pathname;
-          window.history.replaceState({}, document.title, cleanUrl);
-
-          generateNewKey();
-        } else {
-          if (backendToken && (!actionMatches || !statusMatches)) {
-            secureRemoveItem(BACKEND_VERIFICATION_TOKEN_KEY);
-          }
-          fetchUserKeyList();
-          if (keyContainerEl) keyContainerEl.classList.remove('visible');
-        }
-      } catch {
-        fetchUserKeyList();
-        if (keyContainerEl) keyContainerEl.classList.remove('visible');
-      }
-    }
-
-    // Event Listeners seguros
-    function setupEventListeners() {
-      if (soundToggle) {
-        soundToggle.addEventListener('click', () => {
-          soundEnabled = !soundEnabled;
-          updateSoundToggle();
-          initAudioContext();
-          
-          if (soundEnabled) {
-            playSoundSequence([
-              {freq: 440, duration: 100, type: 'sine'},
-              {freq: 554, duration: 100, type: 'sine'}
-            ]);
-          }
-        });
-      }
-
-      if (copyButton) {
-        copyButton.addEventListener('click', copyToClipboard);
-      }
-
-      if (btnGen) {
-        btnGen.addEventListener('click', initiateShortenerRedirect); 
-      }
-
-      if (btnView) {
-        btnView.addEventListener('click', () => {
-          if (soundEnabled) playSound(500, 100, 'square');
-          fetchUserKeyList();
-        });
-      }
-
-      // Limpeza na saída da página
-      window.addEventListener('beforeunload', cleanup);
-      
-      // Redimensionamento otimizado
-      let resizeTimeout;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(createStars, 400); 
-      });
-    }
-
-    // Inicialização da aplicação
-    document.addEventListener('DOMContentLoaded', () => {
-      initializeApp();
-      updateSoundToggle();
-      createStars();
-      checkCooldownOnLoad();
-      setupEventListeners();
-      checkAndProcessShortenerReturn(); 
-      
-      // Som de inicialização
-      setTimeout(() => {
-        if (soundEnabled) {
-          playSoundSequence([
-            {freq: 220, duration: 100, type: 'sine'},
-            {freq: 277, duration: 100, type: 'sine'},
-            {freq: 330, duration: 100, type: 'sine'},
-            {freq: 440, duration: 200, type: 'sine'}
-          ]);
-        }
-      }, 1000);
-    });
-  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>

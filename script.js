@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = {
         // URL da API já definida para produção
-        API_BASE_URL: 'https://keygen2.onrender.com',
-        SHORTENER_URL: 'https://link-target.net/63830/dfTOvKegYIZo',
+        API_BASE_URL: 'https://keygenx-ce8h.onrender.com',
+        SHORTENER_URL: 'https://link-target.net/63830/among-us-modmenu-key1',
         MAX_KEY_LIMIT: 5,
         COOLDOWN_DURATION: 30000,
         BACKEND_VERIFICATION_TOKEN_KEY: 'miraHqBackendVerificationToken',

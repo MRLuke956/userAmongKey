@@ -1268,57 +1268,104 @@ button.loading .button-text {
   }
 }
 
-/* Method Selection Modal Styles */
+/* =========================================
+   ESTILO DA MODAL DE SELEÇÃO DE MÉTODO (ATUALIZADO)
+   ========================================= */
+
 .method-selection-content {
-  background: rgba(20, 25, 35, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, var(--panel-bg-color) 0%, #0f1219 100%);
+  border: 2px solid var(--panel-highlight-color);
+  box-shadow: 0 0 40px rgba(106, 147, 201, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.5);
   max-width: 500px;
-  width: 90%;
-  border-radius: 15px;
+  width: 95%;
+  border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Efeito de scanline sutil no fundo da modal */
+.method-selection-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(transparent,
+      transparent 2px,
+      rgba(106, 147, 201, 0.05) 3px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.method-selection-content h2 {
+  font-family: var(--font-title);
+  color: var(--crewmate-yellow);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 203, 116, 0.5);
+  position: relative;
+  z-index: 1;
+}
+
+.method-selection-content p {
+  text-align: center;
+  color: var(--text-color-medium);
+  font-size: 0.9em;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .methods-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .method-option {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 15px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--panel-border-color);
+  border-radius: 8px;
+  padding: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   width: 100%;
-  color: white;
+  color: var(--text-color-light);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Efeito de destaque ao passar o mouse */
 .method-option:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(106, 147, 201, 0.1);
+  border-color: var(--panel-highlight-color);
   transform: translateX(5px);
-  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: -5px 0 0 var(--panel-highlight-color);
 }
 
 .method-option.recommended {
-  border-color: #4CAF50;
-  background: rgba(76, 175, 80, 0.1);
+  border-color: var(--success-color);
+  background: rgba(46, 204, 113, 0.05);
 }
 
 .method-option.recommended:hover {
-  background: rgba(76, 175, 80, 0.2);
+  background: rgba(46, 204, 113, 0.15);
+  border-color: var(--success-color);
+  box-shadow: -5px 0 0 var(--success-color), 0 0 15px rgba(46, 204, 113, 0.2);
 }
 
 .method-icon {
-  font-size: 24px;
-  margin-right: 15px;
+  font-size: 1.8rem;
+  margin-right: 1rem;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
 }
 
 .method-info {
@@ -1328,16 +1375,36 @@ button.loading .button-text {
 }
 
 .method-name {
-  font-weight: bold;
-  font-size: 1.1em;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1em;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
 }
 
 .method-desc {
-  font-size: 0.85em;
-  opacity: 0.7;
+  font-family: var(--font-body);
+  font-size: 0.8em;
+  color: var(--text-color-dark);
+}
+
+.method-option:hover .method-desc {
+  color: var(--text-color-medium);
 }
 
 .method-arrow {
-  font-size: 20px;
-  opacity: 0.5;
+  font-size: 1.2rem;
+  opacity: 0.3;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.method-option:hover .method-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+  color: var(--panel-highlight-color);
+}
+
+.method-option.recommended:hover .method-arrow {
+  color: var(--success-color);
 }

@@ -142,7 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
             redirecting_portal: '⏳ Redirecting to portal...',
             unknown_error: 'Unknown error.',
             verification_complete: '✅ Verification complete! Requesting ID...',
-            system_ready: '✅ System ready!'
+            system_ready: '✅ System ready!',
+            // Novos
+            select_method_title: 'Select Verification Method',
+            select_method_desc: 'Choose one of the options below to start verification:',
+            method_1: 'Method 1 (Recommended)',
+            method_1_desc: 'Fastest & Most Stable',
+            method_2: 'Method 2',
+            method_2_desc: 'Fast Alternative',
+            method_3: 'Method 3',
+            method_3_desc: 'Backup Server'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -203,7 +212,16 @@ document.addEventListener('DOMContentLoaded', () => {
             redirecting_portal: '⏳ Redirecionando para o portal...',
             unknown_error: 'Erro desconhecido.',
             verification_complete: '✅ Verificação completa! Solicitando ID...',
-            system_ready: '✅ Sistema pronto!'
+            system_ready: '✅ Sistema pronto!',
+            // Novos
+            select_method_title: 'Selecione o Método',
+            select_method_desc: 'Escolha uma das opções abaixo para iniciar a verificação:',
+            method_1: 'Método 1 (Recomendado)',
+            method_1_desc: 'Mais rápido e estável',
+            method_2: 'Método 2',
+            method_2_desc: 'Alternativa rápida',
+            method_3: 'Método 3',
+            method_3_desc: 'Servidor alternativo'
         }
     };
 

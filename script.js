@@ -865,8 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (appState.soundEnabled) playSoundSequence([{freq: 440, duration: 100, type: 'sine'},{freq: 554, duration: 100, type: 'sine'}]);
         });
         */
-        elements.copyButton.addEventListener('click', copyToClipboard);
-        elements.copyButton.addEventListener('click', copyToClipboard);
+        if (elements.copyButton) elements.copyButton.addEventListener('click', copyToClipboard);
 
         // Method Menu Logic
         if (elements.btnOpenMethodMenu) {
@@ -879,20 +878,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none';
             });
         }
-        window.addEventListener('click', (e) => {
-            if (e.target === elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none';
-        });
+        if (elements.methodSelectionModal) {
+            window.addEventListener('click', (e) => {
+                if (e.target === elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none';
+            });
+        }
 
         // Method Buttons in Modal
-        if (elements.btnMethod1) elements.btnMethod1.addEventListener('click', () => { elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(1); });
-        if (elements.btnMethod2) elements.btnMethod2.addEventListener('click', () => { elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(2); });
-        if (elements.btnMethod3) elements.btnMethod3.addEventListener('click', () => { elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(3); });
-        elements.btnView.addEventListener('click', () => { if (appState.soundEnabled) playSound(500, 100, 'square'); fetchUserKeyList(); });
-        elements.translateButton.addEventListener('click', toggleTranslation);
-        elements.supportButton.addEventListener('click', openDiscordWidget);
-        elements.closeWidget.addEventListener('click', closeDiscordWidget);
-        elements.overlay.addEventListener('click', closeDiscordWidget);
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && elements.discordWidgetContainer.classList.contains('active')) closeDiscordWidget(); });
+        if (elements.btnMethod1) elements.btnMethod1.addEventListener('click', () => { if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(1); });
+        if (elements.btnMethod2) elements.btnMethod2.addEventListener('click', () => { if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(2); });
+        if (elements.btnMethod3) elements.btnMethod3.addEventListener('click', () => { if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(3); });
+        if (elements.btnView) elements.btnView.addEventListener('click', () => { if (appState.soundEnabled) playSound(500, 100, 'square'); fetchUserKeyList(); });
+        if (elements.translateButton) elements.translateButton.addEventListener('click', toggleTranslation);
+        if (elements.supportButton) elements.supportButton.addEventListener('click', openDiscordWidget);
+        if (elements.closeWidget) elements.closeWidget.addEventListener('click', closeDiscordWidget);
+        if (elements.overlay) elements.overlay.addEventListener('click', closeDiscordWidget);
+        if (elements.discordWidgetContainer) {
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && elements.discordWidgetContainer.classList.contains('active')) closeDiscordWidget(); });
+        }
         window.addEventListener('beforeunload', () => { if (appState.cooldownTimer) clearInterval(appState.cooldownTimer); });
     }
 

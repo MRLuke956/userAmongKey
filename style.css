@@ -795,73 +795,6 @@ button.loading .button-text {
   transform: translateY(-2px);
 }
 
-.download-button {
-  position: relative;
-  background: linear-gradient(90deg, rgba(0, 255, 249, 0.05), rgba(0, 255, 249, 0.1), rgba(0, 255, 249, 0.05));
-  color: #00fff9;
-  border: 1px solid rgba(0, 255, 249, 0.3);
-  padding: 1rem 1.2rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: var(--font-title);
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-  justify-content: center;
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  box-shadow: 0 0 15px rgba(0, 255, 249, 0.1), inset 0 0 10px rgba(0, 255, 249, 0.05);
-  font-size: 0.9rem;
-  overflow: hidden;
-  backdrop-filter: blur(5px);
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-}
-
-.download-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 249, 0.2), transparent);
-  transition: 0.5s;
-  z-index: 1;
-}
-
-.download-button:hover::before {
-  left: 100%;
-  transition: 0.5s;
-}
-
-.download-button:hover {
-  background: rgba(0, 255, 249, 0.15);
-  border-color: #00fff9;
-  box-shadow: 0 0 25px rgba(0, 255, 249, 0.4), inset 0 0 15px rgba(0, 255, 249, 0.2);
-  text-shadow: 0 0 8px #00fff9;
-  transform: translateY(-2px);
-  letter-spacing: 3px;
-}
-
-.download-button:active {
-  transform: scale(0.98);
-  box-shadow: 0 0 10px rgba(0, 255, 249, 0.3);
-}
-
-.download-button .button-icon {
-  font-size: 1.2em;
-  filter: drop-shadow(0 0 5px rgba(0, 255, 249, 0.8));
-  transition: transform 0.3s ease;
-}
-
-.download-button:hover .button-icon {
-  transform: rotate(360deg) scale(1.2);
-}
-
 .discord-widget-container {
   display: none;
   position: fixed;
@@ -993,8 +926,8 @@ button.loading .button-text {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.6); /* Mais transparente para ver as estrelas */
+  backdrop-filter: blur(8px); /* Desfoque no fundo do site */
 }
 
 .profile-modal {
@@ -1335,283 +1268,199 @@ button.loading .button-text {
   }
 }
 
-/* Method Selection Modal Styles */
+/* =========================================
+   ESTILO "MIRA HQ HOLOGRAPHIC" PARA A MODAL (NOVO)
+   ========================================= */
+
+/* A Caixa da Modal em si */
 .method-selection-content {
-  background: rgba(20, 25, 35, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  max-width: 500px;
+  /* Fundo semi-transparente azulado escuro */
+  background: rgba(18, 22, 31, 0.85);
+  /* Borda fina e brilhante */
+  border: 1px solid rgba(106, 147, 201, 0.3);
+  /* Sombra suave e brilho azul ao redor */
+  box-shadow: 
+    0 0 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 0 20px rgba(106, 147, 201, 0.1);
+  
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 480px;
   width: 90%;
-  border-radius: 15px;
-  padding: 2rem;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+  /* Efeito de vidro */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
+/* Linha decorativa no topo (Estilo Among Us) */
+.method-selection-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--panel-highlight-color), transparent);
+  opacity: 0.8;
+}
+
+/* Botão de Fechar (X) */
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-color-medium);
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+  line-height: 0;
+}
+
+.close-modal:hover {
+  background: rgba(231, 76, 60, 0.2);
+  color: var(--impostor-red);
+  transform: rotate(90deg);
+}
+
+/* Títulos e Textos */
+.method-selection-content h2 {
+  font-family: var(--font-title);
+  color: var(--crewmate-yellow);
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 15px rgba(255, 203, 116, 0.4);
+}
+
+.method-selection-content p {
+  color: var(--text-color-medium);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+/* Lista de Botões */
 .methods-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 1rem;
 }
 
+/* Estilo dos Botões (Os "Cards") */
 .method-option {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 15px;
+  /* Fundo bem sutil */
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.0) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 4px solid rgba(255, 255, 255, 0.1);
+  padding: 1.2rem;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-align: left;
-  width: 100%;
-  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
-.method-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(5px);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.method-option.recommended {
-  border-color: #4CAF50;
-  background: rgba(76, 175, 80, 0.1);
-}
-
-.method-option.recommended:hover {
-  background: rgba(76, 175, 80, 0.2);
-}
-
+/* Ícones dos botões */
 .method-icon {
-  font-size: 24px;
-  margin-right: 15px;
+  font-size: 1.8rem;
+  margin-right: 1.2rem;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+  transition: transform 0.3s ease;
 }
 
 .method-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.method-name {
-  font-weight: bold;
-  font-size: 1.1em;
-}
-
-.method-desc {
-  font-size: 0.85em;
-  opacity: 0.7;
-}
-
-.method-arrow {
-  font-size: 20px;
-  opacity: 0.5;
-}
-
-/* --- Confetti Effect --- */
-.confetti {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: #f00;
-  animation: confetti-fall 3s linear forwards;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateY(100vh) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-/* --- Help Button --- */
-.help-button {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-color-medium);
-  border: 1px solid var(--panel-border-color);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-  transition: all 0.2s ease;
-}
-
-.help-button:hover {
-  background: var(--panel-highlight-color);
-  color: white;
-  border-color: var(--panel-highlight-color);
-}
-
-/* --- Tutorial Modal --- */
-.tutorial-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
   text-align: left;
 }
 
-.step-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  border-left: 3px solid var(--panel-highlight-color);
-}
-
-.step-number {
-  background: var(--panel-highlight-color);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-.step-content h4 {
-  color: var(--text-color-light);
-  margin-bottom: 0.3rem;
-}
-
-.step-content p {
-  color: var(--text-color-medium);
-  font-size: 0.9rem;
-}
-
-/* --- DOPAMINE ENHANCEMENTS --- */
-
-/* Access Granted Overlay */
-.access-granted-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 10, 20, 0.92);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  backdrop-filter: blur(5px);
-}
-
-.access-granted-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.access-text {
+.method-name {
+  display: block;
   font-family: var(--font-title);
-  font-size: 4rem;
-  font-weight: 900;
-  color: var(--success-color);
+  font-size: 1rem;
+  color: var(--text-color-light);
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.5px;
+}
+
+.method-desc {
+  font-size: 0.75rem;
+  color: var(--text-color-dark);
   text-transform: uppercase;
-  letter-spacing: 5px;
-  position: relative;
-  text-shadow: 0 0 20px var(--success-color), 0 0 40px var(--success-color);
-  transform: scale(0.5);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  letter-spacing: 1px;
+  font-weight: 600;
 }
 
-.access-granted-overlay.show .access-text {
-  transform: scale(1);
-  animation: glitch-skew 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+.method-arrow {
+  color: var(--text-color-dark);
+  opacity: 0.5;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
 }
 
-.access-text::before,
-.access-text::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.8;
+/* --- ESTADOS DE HOVER (A Mágica acontece aqui) --- */
+
+.method-option:hover {
+  background: linear-gradient(90deg, rgba(106, 147, 201, 0.15) 0%, rgba(106, 147, 201, 0.05) 100%);
+  transform: translateX(5px) scale(1.01);
+  border-color: var(--panel-highlight-color);
+  border-left-color: var(--panel-highlight-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-.access-text::before {
-  left: 2px;
-  text-shadow: -2px 0 #ff00c1;
-  clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-anim 5s infinite linear alternate-reverse;
+.method-option:hover .method-icon {
+  transform: scale(1.1) rotate(-5deg);
 }
 
-.access-text::after {
-  left: -2px;
-  text-shadow: -2px 0 #00fff9;
-  clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-anim2 5s infinite linear alternate-reverse;
+.method-option:hover .method-arrow {
+  opacity: 1;
+  transform: translateX(5px);
+  color: var(--panel-highlight-color);
 }
 
-/* Typing Cursor */
-.typing-cursor::after {
-  content: '▋';
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 2px;
-  animation: blink 1s step-end infinite;
-  color: var(--key-id-color);
-  font-size: 0.8em;
+.method-option:hover .method-desc {
+  color: var(--panel-highlight-color);
 }
 
-@keyframes blink {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0;
-  }
+/* Estilo Específico para o RECOMENDADO (Botão 1) */
+.method-option.recommended {
+  border-left-color: var(--success-color);
+  background: linear-gradient(90deg, rgba(46, 204, 113, 0.05) 0%, transparent 100%);
 }
 
-/* Enhanced Button Interactions */
-button:active:not([disabled]) {
-  transform: scale(0.96) translateY(2px) !important;
-  box-shadow: 0 0 15px currentColor !important;
+.method-option.recommended .method-desc {
+  color: #6ab04c; /* Um verde mais suave para o texto */
 }
 
-/* Key Container Pop Animation */
-@keyframes popIn {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-
-  60% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+.method-option.recommended:hover {
+  border-color: var(--success-color);
+  border-left-color: var(--success-color);
+  background: linear-gradient(90deg, rgba(46, 204, 113, 0.15) 0%, rgba(46, 204, 113, 0.05) 100%);
+  box-shadow: 0 0 15px rgba(46, 204, 113, 0.15);
 }
 
-.key-container.pop-in {
-  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+.method-option.recommended:hover .method-arrow {
+  color: var(--success-color);
+}
+
+/* Animação de entrada suave */
+@keyframes modalPop {
+  0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal.active .modal-content,
+.modal[style*="display: block"] .modal-content {
+  animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

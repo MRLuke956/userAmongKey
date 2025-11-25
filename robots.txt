@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://crewcore.online/sitemap.xml

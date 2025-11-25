@@ -67,7 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
         userNameHeader: document.getElementById('userNameHeader'),
         userDiscriminatorHeader: document.getElementById('userDiscriminatorHeader'),
         authSection: document.getElementById('authSection'),
-        userContent: document.getElementById('userContent')
+        userContent: document.getElementById('userContent'),
+        helpButton: document.getElementById('helpButton'),
+        tutorialModal: document.getElementById('tutorialModal'),
+        closeTutorialModal: document.getElementById('closeTutorialModal'),
+        accessGrantedOverlay: document.getElementById('accessGrantedOverlay')
     };
 
     const appState = {
@@ -79,7 +83,17 @@ document.addEventListener('DOMContentLoaded', () => {
         isInCooldown: false,
         audioContext: null,
         isProcessing: false,
-        currentLanguage: 'pt'
+        currentLanguage: navigator.language.startsWith('pt') ? 'pt' : 'en',
+        turnstileToken: null
+    };
+
+    window.onTurnstileSuccess = function (token) {
+        appState.turnstileToken = token;
+        // Enable method buttons
+        ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.disabled = false;
+        });
     };
 
     const translations = {
@@ -143,15 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
             unknown_error: 'Unknown error.',
             verification_complete: '✅ Verification complete! Requesting ID...',
             system_ready: '✅ System ready!',
-            // Novos
-            select_method_title: 'Select Verification Method',
-            select_method_desc: 'Choose one of the options below to start verification:',
-            method_1: 'Method 1 (Recommended)',
-            method_1_desc: 'Fastest & Most Stable',
-            method_2: 'Method 2',
-            method_2_desc: 'Fast Alternative',
-            method_3: 'Method 3',
-            method_3_desc: 'Backup Server'
+            tutorial_title: 'How to Activate',
+            step_1_title: 'Open Among Us',
+            step_1_desc: 'Start the game with the mod installed.',
+            step_2_title: 'Press F1',
+            step_2_desc: 'In the main menu or lobby, press F1 to open the panel.',
+            step_3_title: 'Paste Key',
+            step_3_desc: 'Copy the key generated here and paste it into the mod activation field.',
+            help_button_title: 'How to use?',
+            view_keys_title: 'Consult Active Crewmate IDs',
+            download_mod_button: 'Download Mod Menu (GitHub)'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -213,15 +228,16 @@ document.addEventListener('DOMContentLoaded', () => {
             unknown_error: 'Erro desconhecido.',
             verification_complete: '✅ Verificação completa! Solicitando ID...',
             system_ready: '✅ Sistema pronto!',
-            // Novos
-            select_method_title: 'Selecione o Método',
-            select_method_desc: 'Escolha uma das opções abaixo para iniciar a verificação:',
-            method_1: 'Método 1 (Recomendado)',
-            method_1_desc: 'Mais rápido e estável',
-            method_2: 'Método 2',
-            method_2_desc: 'Alternativa rápida',
-            method_3: 'Método 3',
-            method_3_desc: 'Servidor alternativo'
+            tutorial_title: 'Como Ativar o Mod',
+            step_1_title: 'Abra o Among Us',
+            step_1_desc: 'Inicie o jogo com o mod instalado.',
+            step_2_title: 'Aperte F1',
+            step_2_desc: 'No menu principal ou lobby, pressione a tecla F1 para abrir o painel.',
+            step_3_title: 'Cole a Key',
+            step_3_desc: 'Copie a key gerada aqui e cole no campo de ativação do mod.',
+            help_button_title: 'Como usar?',
+            view_keys_title: 'Consultar IDs de Tripulantes Ativos',
+            download_mod_button: 'Baixar Mod Menu (GitHub)'
         }
     };
 
@@ -267,6 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.modalGenerateBtn) elements.modalGenerateBtn.addEventListener('click', () => { this.hideUserModal(); initiateShortenerRedirect(); });
             if (elements.modalLogoutBtn) elements.modalLogoutBtn.addEventListener('click', () => { this.hideUserModal(); this.logout(); });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && elements.userProfileModal.style.display === 'block') this.hideUserModal(); });
+
+            if (elements.helpButton) elements.helpButton.addEventListener('click', () => { elements.tutorialModal.style.display = 'block'; });
+            if (elements.closeTutorialModal) elements.closeTutorialModal.addEventListener('click', () => { elements.tutorialModal.style.display = 'none'; });
+            window.addEventListener('click', (e) => { if (e.target === elements.tutorialModal) elements.tutorialModal.style.display = 'none'; });
         }
 
         async startAuth() {
@@ -335,6 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!this.sessionId) return false;
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/auth/me`, { headers: { 'X-Session-ID': this.sessionId } });
+                if (response.status === 401) {
+                    console.warn('Sessão expirada (401) no validateSession. Realizando logout...');
+                    await this.logout();
+                    return false;
+                }
                 if (response.ok) {
                     const data = await response.json();
                     if (data.status === 'success') {
@@ -351,6 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!this.sessionId) return;
             try {
                 const response = await fetch(`${CONFIG.API_BASE_URL}/auth/user-stats`, { headers: { 'X-Session-ID': this.sessionId } });
+                if (response.status === 401) {
+                    console.warn('Sessão expirada (401) no loadUserStats. Realizando logout...');
+                    await this.logout();
+                    return;
+                }
                 if (response.ok) {
                     const data = await response.json();
                     if (data.status === 'success') {
@@ -413,17 +443,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async logout() {
+            if (this.isLoggingOut) return; // Prevent recursive logout
+            this.isLoggingOut = true;
+            this.isAuthenticated = false; // Immediately mark as not authenticated
+
             if (this.sessionId) {
                 try {
-                    await fetch(`${CONFIG.API_BASE_URL}/auth/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: this.sessionId }) });
+                    // Fire and forget logout to avoid blocking UI
+                    fetch(`${CONFIG.API_BASE_URL}/auth/logout`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: this.sessionId })
+                    }).catch(e => console.warn('Logout request failed:', e));
                 } catch (error) { console.error('Erro no logout:', error); }
             }
+
             ['crewbot_session', 'crewbot_user', 'crewbot_stats', 'crewbot_session_expires'].forEach(k => localStorage.removeItem(k));
             Object.assign(this, { sessionId: null, userData: null, userStats: null, isAuthenticated: false, sessionExpiresAt: 0 });
+
             this.updateUI();
             this.hideUserModal();
             showUIMessage(translations[appState.currentLanguage].logout_success, 'info');
-            await fetchUserKeyList();
+
+            // Ensure we don't fetch keys after logout
+            appState.userKeys = [];
+            renderKeysList();
+            updateKeyLimitDisplay();
+
+            this.isLoggingOut = false;
         }
 
         getAvatarUrl(userId, avatarHash, size = 64) {
@@ -572,6 +619,77 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function createConfetti(x, y) {
+        const colors = ['#ffcb74', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { x: x / window.innerWidth, y: y / window.innerHeight },
+            colors: colors,
+            disableForReducedMotion: true
+        });
+    }
+
+    function triggerConfetti() {
+        const duration = 2000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 3,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#ffcb74', '#e74c3c', '#3498db']
+            });
+            confetti({
+                particleCount: 3,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#ffcb74', '#e74c3c', '#3498db']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+
+    function typeWriterEffect(text, element, speed = 40) {
+        element.textContent = '';
+        element.classList.add('typing-cursor');
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                element.textContent += text.charAt(i);
+                i++;
+                // Randomize speed slightly for realism
+                setTimeout(type, speed + Math.random() * 30);
+            } else {
+                element.classList.remove('typing-cursor');
+            }
+        }
+        type();
+    }
+
+    function showAccessGranted() {
+        const overlay = elements.accessGrantedOverlay;
+        if (!overlay) return;
+        overlay.classList.add('show');
+        // Play a heavy "access granted" sound if enabled
+        if (appState.soundEnabled) {
+            playSoundSequence([
+                { freq: 150, duration: 100, type: 'sawtooth' },
+                { freq: 150, duration: 100, type: 'sawtooth' },
+                { freq: 400, duration: 400, type: 'square' }
+            ]);
+        }
+        setTimeout(() => {
+            overlay.classList.remove('show');
+        }, 2200);
+    }
+
     async function copyToClipboard() {
         const keyValue = elements.keyValueEl.textContent;
         if (!keyValue || keyValue.includes('...') || !validateKey(keyValue)) return;
@@ -581,6 +699,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (copyButtonSpan) copyButtonSpan.textContent = translations[appState.currentLanguage].copied_text;
             elements.copyButton.classList.add('copied');
             if (appState.soundEnabled) playSoundSequence([{ freq: 800, duration: 100, type: 'sine' }, { freq: 1000, duration: 150, type: 'sine' }]);
+
+            const rect = elements.copyButton.getBoundingClientRect();
+            createConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
             setTimeout(() => {
                 if (copyButtonSpan) copyButtonSpan.textContent = translations[appState.currentLanguage].copy_button;
                 elements.copyButton.classList.remove('copied');
@@ -654,14 +776,31 @@ document.addEventListener('DOMContentLoaded', () => {
             showUIMessage(translations[appState.currentLanguage].connecting_server, 'info', 0);
             const headers = { 'X-Verification-Token': verificationToken, ...discordAuth.getAuthHeaders() };
             const response = await fetch(`${CONFIG.API_BASE_URL}/generate_key`, { method: 'GET', headers });
+
+            if (response.status === 401) {
+                showUIMessage('Sessão expirada. Faça login novamente.', 'error');
+                await discordAuth.logout();
+                return;
+            }
+
             const data = await response.json();
 
             elements.keyValueEl.classList.remove('processing');
             localStorage.removeItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY);
 
             if (response.ok && data.status === 'success' && validateKey(data.key)) {
-                elements.keyValueEl.textContent = data.key;
+                // Visual Dopamine Sequence
+                showAccessGranted();
+                triggerConfetti();
+
                 elements.keyContainerEl.classList.add('visible');
+                elements.keyContainerEl.classList.add('pop-in');
+
+                // Delay showing the key slightly to sync with overlay fade
+                setTimeout(() => {
+                    typeWriterEffect(data.key, elements.keyValueEl);
+                }, 800);
+
                 elements.keyActions.style.display = 'flex';
                 elements.keyMetadata.style.display = 'block';
                 elements.keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
@@ -683,6 +822,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 startCooldown(CONFIG.COOLDOWN_DURATION / 1000);
             } else {
                 const errorMessage = data?.message || 'ERRO: Solicitação Negada.';
+
+                // Se for erro de "muito rápido" (400) ou rate limit (429), tenta novamente após um delay curto
+                if (response.status === 400 && errorMessage.includes('rápida')) {
+                    showUIMessage('Verificando segurança... aguarde.', 'info', 2000);
+                    setTimeout(() => generateNewKey(), 2500); // Tenta de novo em 2.5s
+                    return;
+                }
+
                 if (response.status === 429) startCooldown(60);
                 showUIMessage(errorMessage, 'error');
                 if (appState.soundEnabled) playSound(200, 500, 'sawtooth');
@@ -700,11 +847,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchUserKeyList() {
+        // Don't fetch if not authenticated or if logging out
+        if (!discordAuth.isAuthenticated || !discordAuth.sessionId || discordAuth.isLoggingOut) {
+            console.log('[fetchUserKeyList] User not authenticated or logging out, skipping');
+            return;
+        }
+
         try {
             setButtonLoading(elements.btnView, true);
             showUIMessage(translations[appState.currentLanguage].consulting_log, 'info', 0);
             const headers = discordAuth.getAuthHeaders();
             const response = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
+
+            if (response.status === 401) {
+                console.warn('Sessão expirada (401) no fetchUserKeyList. Realizando logout...');
+                await discordAuth.logout();
+                return;
+            }
+
             const data = await response.json();
             if (response.ok && data.status === 'success') {
                 appState.userKeys = data.keys || [];
@@ -737,7 +897,19 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (appState.soundEnabled) playSound(600, 100, 'square');
             showUIMessage(translations[appState.currentLanguage].starting_verification, 'info', 0);
-            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-verification`, { method: 'GET' });
+
+            if (!appState.turnstileToken) {
+                showUIMessage('Por favor, complete o captcha primeiro.', 'error');
+                appState.isProcessing = false;
+                return;
+            }
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-verification`, {
+                method: 'GET',
+                headers: {
+                    'X-Turnstile-Token': appState.turnstileToken
+                }
+            });
             const data = await response.json();
             if (response.ok && data.status === 'success' && validateToken(data.verification_token)) {
                 localStorage.setItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
@@ -809,6 +981,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = el.getAttribute('data-translate-key');
             if (translations[lang][key]) {
                 el.textContent = translations[lang][key];
+            }
+            if (translations[lang][key]) {
+                el.textContent = translations[lang][key];
+            }
+        });
+        document.querySelectorAll('[data-translate-title]').forEach(el => {
+            const key = el.getAttribute('data-translate-title');
+            if (translations[lang][key]) {
+                el.title = translations[lang][key];
             }
         });
         document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
@@ -909,6 +1090,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.btnView) elements.btnView.addEventListener('click', () => { if (appState.soundEnabled) playSound(500, 100, 'square'); fetchUserKeyList(); });
         if (elements.translateButton) elements.translateButton.addEventListener('click', toggleTranslation);
         if (elements.supportButton) elements.supportButton.addEventListener('click', openDiscordWidget);
+        const downloadModBtn = document.getElementById('downloadModBtn');
+        if (downloadModBtn) {
+            downloadModBtn.addEventListener('click', () => {
+                if (appState.soundEnabled) playSoundSequence([{ freq: 600, duration: 100, type: 'sine' }, { freq: 800, duration: 150, type: 'sine' }]);
+            });
+        }
         if (elements.closeWidget) elements.closeWidget.addEventListener('click', closeDiscordWidget);
         if (elements.overlay) elements.overlay.addEventListener('click', closeDiscordWidget);
         if (elements.discordWidgetContainer) {

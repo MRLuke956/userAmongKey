@@ -15,13 +15,13 @@ header h1::after {
 header h1::before {
   left: 2px;
   text-shadow: -2px 0 #ff00c1;
-  clip: rect(44px, 450px, 56px, 0);
+  clip: rect(44px, 9999px, 56px, 0);
   animation: glitch-anim 5s infinite linear alternate-reverse;
 }
 header h1::after {
   left: -2px;
   text-shadow: -2px 0 #00fff9;
-  clip: rect(44px, 450px, 56px, 0);
+  clip: rect(44px, 9999px, 56px, 0);
   animation: glitch-anim2 5s infinite linear alternate-reverse;
 }
 @keyframes glitch-anim {

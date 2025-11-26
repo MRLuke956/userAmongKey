@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
         messageEl: document.getElementById('message'),
         keysListUl: document.getElementById('keysList'),
         starfieldCanvas: document.getElementById('starfield-canvas'),
-        // soundToggle: document.getElementById('soundToggle'), // Removido para limpar a UI
         copyButton: document.getElementById('copyButton'),
         keyActions: document.getElementById('keyActions'),
         keyMetadata: document.getElementById('keyMetadata'),
@@ -157,6 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
             unknown_error: 'Unknown error.',
             verification_complete: '✅ Verification complete! Requesting ID...',
             system_ready: '✅ System ready!',
+            select_method_title: 'Select Method',
+            select_method_desc: 'Choose one of the options below to start verification:',
+            method_1: 'Method 1 (Recommended)',
+            method_1_desc: 'Faster and more stable',
+            method_2: 'Method 2',
+            method_2_desc: 'Quick alternative',
+            method_3: 'Method 3',
+            method_3_desc: 'Alternative server',
             tutorial_title: 'How to Activate',
             step_1_title: 'Open Among Us',
             step_1_desc: 'Start the game with the mod installed.',
@@ -228,6 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
             unknown_error: 'Erro desconhecido.',
             verification_complete: '✅ Verificação completa! Solicitando ID...',
             system_ready: '✅ Sistema pronto!',
+            select_method_title: 'Selecione o Método',
+            select_method_desc: 'Escolha uma das opções abaixo para iniciar a verificação:',
+            method_1: 'Método 1 (Recomendado)',
+            method_1_desc: 'Mais rápido e estável',
+            method_2: 'Método 2',
+            method_2_desc: 'Alternativa rápida',
+            method_3: 'Método 3',
+            method_3_desc: 'Servidor alternativo',
             tutorial_title: 'Como Ativar o Mod',
             step_1_title: 'Abra o Among Us',
             step_1_desc: 'Inicie o jogo com o mod instalado.',
@@ -981,9 +996,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = el.getAttribute('data-translate-key');
             if (translations[lang][key]) {
                 el.textContent = translations[lang][key];
-            }
-            if (translations[lang][key]) {
-                el.textContent = translations[lang][key];
+                // Atualiza também o data-text para efeitos de glitch/css
+                if (el.hasAttribute('data-text')) {
+                    el.setAttribute('data-text', translations[lang][key]);
+                }
             }
         });
         document.querySelectorAll('[data-translate-title]').forEach(el => {
@@ -1056,14 +1072,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupEventListeners() {
-        /*
-        elements.soundToggle.addEventListener('click', () => {
-            appState.soundEnabled = !appState.soundEnabled;
-            updateSoundToggle();
-            initAudioContext();
-            if (appState.soundEnabled) playSoundSequence([{freq: 440, duration: 100, type: 'sine'},{freq: 554, duration: 100, type: 'sine'}]);
-        });
-        */
         if (elements.copyButton) elements.copyButton.addEventListener('click', copyToClipboard);
 
         // Method Menu Logic

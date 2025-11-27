@@ -1072,6 +1072,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupEventListeners() {
+        // Initialize AudioContext on first user interaction to comply with browser policies
+        const initAudio = () => {
+            initAudioContext();
+            if (appState.audioContext && appState.audioContext.state === 'suspended') {
+                appState.audioContext.resume();
+            }
+            document.removeEventListener('click', initAudio);
+            document.removeEventListener('keydown', initAudio);
+        };
+        document.addEventListener('click', initAudio);
+        document.addEventListener('keydown', initAudio);
+
         if (elements.copyButton) elements.copyButton.addEventListener('click', copyToClipboard);
 
         // Method Menu Logic

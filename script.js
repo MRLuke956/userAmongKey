@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         MAX_KEY_LIMIT: 5,
         COOLDOWN_DURATION: 30000,
-        BACKEND_VERIFICATION_TOKEN_KEY: 'miraHqBackendVerificationToken',
+        BACKEND_VERIFICATION_TOKEN_KEY: '_vt_' + btoa('mhq').substring(0, 4),
         // Configuração dos Retornos (O que o site espera receber do encurtador)
         RETURN_CONFIG: {
             1: { action: 'complete_m1', status: 'success' },
@@ -656,7 +656,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // sanitizeInput removido pois textContent já é seguro e isso causava escape duplo.
 
-    function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9-]{19}$/.test(key); }
+    // SEGURANÇA: Aceita Standard (19 chars) e Premium (P-XXXX-XXXX-XXXX-XXXX = 23 chars)
+    function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9P-]{19,23}$/.test(key); }
     function validateToken(token) { return typeof token === 'string' && /^[a-zA-Z0-9\-_]{20,}$/.test(token); }
 
     function initAudioContext() {

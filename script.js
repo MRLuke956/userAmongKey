@@ -1,3 +1,77 @@
+// ============================================
+// TURNSTILE CALLBACKS - DEVEM ESTAR NO ESCOPO GLOBAL ANTES DO DOM CARREGAR
+// ============================================
+window._turnstileToken = null;
+window._turnstileVerifiedAt = null;
+window._turnstileReady = false;
+
+window.onTurnstileSuccess = function(token) {
+    console.log('[Turnstile] ✅ Verification successful, token received');
+    window._turnstileToken = token;
+    window._turnstileVerifiedAt = Date.now();
+    
+    // Habilita os botões imediatamente
+    ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('disabled');
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+            btn.style.cursor = 'pointer';
+        }
+    });
+    
+    // Atualiza o hint
+    const hint = document.getElementById('turnstileHint');
+    if (hint) {
+        hint.textContent = '✅ Verificado! Selecione um método abaixo';
+        hint.style.color = '#4CAF50';
+    }
+    
+    // Sincroniza com appState quando disponível
+    if (window._syncTurnstileState) {
+        window._syncTurnstileState(token);
+    }
+};
+
+window.onTurnstileError = function() {
+    console.error('[Turnstile] ❌ Verification failed');
+    window._turnstileToken = null;
+    alert('Erro na verificação Cloudflare. Recarregue a página.');
+};
+
+window.onTurnstileExpired = function() {
+    console.warn('[Turnstile] ⚠️ Token expired');
+    window._turnstileToken = null;
+    
+    // Desabilita os botões
+    ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+        }
+    });
+    
+    // Reseta o hint
+    const hint = document.getElementById('turnstileHint');
+    if (hint) {
+        hint.textContent = 'Complete a verificação acima para desbloquear os métodos';
+        hint.style.color = '#888';
+    }
+    
+    // Reseta o widget
+    if (window.turnstile) {
+        const widget = document.querySelector('.cf-turnstile');
+        if (widget) window.turnstile.reset(widget);
+    }
+};
+
+// ============================================
+// MAIN APPLICATION
+// ============================================
 document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = {
         // URL da API já definida para produção
@@ -84,45 +158,23 @@ document.addEventListener('DOMContentLoaded', () => {
         audioContext: null,
         isProcessing: false,
         currentLanguage: navigator.language.startsWith('pt') ? 'pt' : 'en',
-        turnstileToken: null
+        turnstileToken: window._turnstileToken || null,
+        turnstileVerifiedAt: window._turnstileVerifiedAt || null
     };
 
-    window.onTurnstileSuccess = function (token) {
-        console.log('[Turnstile] Verification successful');
+    // Sincroniza o token global com o appState
+    window._syncTurnstileState = function(token) {
         appState.turnstileToken = token;
-        appState.turnstileVerifiedAt = Date.now(); // Track when verified
-        enableMethodButtons();
-        
-        // Update hint text to show success
-        const hint = document.getElementById('turnstileHint');
-        if (hint) {
-            hint.textContent = translations[appState.currentLanguage].turnstile_success;
-            hint.style.color = '#4CAF50';
-        }
+        appState.turnstileVerifiedAt = Date.now();
+        console.log('[Turnstile] State synced with appState');
     };
 
-    window.onTurnstileError = function () {
-        console.error('[Turnstile] Verification failed');
-        appState.turnstileToken = null;
-        showUIMessage('Erro na verificação. Recarregue a página.', 'error');
-    };
-
-    window.onTurnstileExpired = function () {
-        console.warn('[Turnstile] Token expired');
-        appState.turnstileToken = null;
-        disableMethodButtons();
-        // Reset hint text
-        const hint = document.getElementById('turnstileHint');
-        if (hint) {
-            hint.textContent = translations[appState.currentLanguage].turnstile_hint;
-            hint.style.color = '#888';
-        }
-        // Reset turnstile widget
-        if (window.turnstile) {
-            const widget = document.querySelector('.cf-turnstile');
-            if (widget) window.turnstile.reset(widget);
-        }
-    };
+    // Se já foi verificado antes do DOM carregar, sincroniza
+    if (window._turnstileToken) {
+        appState.turnstileToken = window._turnstileToken;
+        appState.turnstileVerifiedAt = window._turnstileVerifiedAt;
+        console.log('[Turnstile] Pre-existing token synced');
+    }
 
     function enableMethodButtons() {
         ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {

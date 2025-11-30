@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = {
         // URL da API já definida para produção
         API_BASE_URL: 'https://keygenx-1.onrender.com',
+        REQUEST_TIMEOUT: 15000, // 15 segundos timeout para requests
         SHORTENER_URLS: {
             1: 'https://link-target.net/63830/among-us-modmenu-key1',
             2: 'https://link-target.net/63830/DXuC2z7SQT1o',
@@ -87,20 +88,73 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.onTurnstileSuccess = function (token) {
+        console.log('[Turnstile] Verification successful');
         appState.turnstileToken = token;
-        // Enable method buttons
+        appState.turnstileVerifiedAt = Date.now(); // Track when verified
+        enableMethodButtons();
+        
+        // Update hint text to show success
+        const hint = document.getElementById('turnstileHint');
+        if (hint) {
+            hint.textContent = translations[appState.currentLanguage].turnstile_success;
+            hint.style.color = '#4CAF50';
+        }
+    };
+
+    window.onTurnstileError = function () {
+        console.error('[Turnstile] Verification failed');
+        appState.turnstileToken = null;
+        showUIMessage('Erro na verificação. Recarregue a página.', 'error');
+    };
+
+    window.onTurnstileExpired = function () {
+        console.warn('[Turnstile] Token expired');
+        appState.turnstileToken = null;
+        disableMethodButtons();
+        // Reset hint text
+        const hint = document.getElementById('turnstileHint');
+        if (hint) {
+            hint.textContent = translations[appState.currentLanguage].turnstile_hint;
+            hint.style.color = '#888';
+        }
+        // Reset turnstile widget
+        if (window.turnstile) {
+            const widget = document.querySelector('.cf-turnstile');
+            if (widget) window.turnstile.reset(widget);
+        }
+    };
+
+    function enableMethodButtons() {
         ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
             const btn = document.getElementById(id);
-            if (btn) btn.disabled = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }
         });
-    };
+    }
+
+    function disableMethodButtons() {
+        ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+            }
+        });
+    }
 
     const translations = {
         en: {
             main_title: 'Access Terminal - MIRA HQ',
             main_subtitle: '🧑‍🚀 Crewmate, request your Access ID or check the current cycle logs. Stay alert!',
             status_online: 'MIRA HQ System Online',
-            login_discord: '🎮 Login with Discord',
+            login_discord: 'Login with Discord',
+            login_discord_subtitle: 'Fast and secure',
+            auth_section_subtitle: 'Authenticate to generate your access key',
+            auth_section_hint: '🔒 No write permissions requested',
             cooldown_title: '⚠️ SYSTEM IN COOLDOWN',
             cooldown_subtitle: 'Wait for new request',
             key_limit_text: 'You have {count} active ID(s) (maximum: {max} per Discord account)',
@@ -173,13 +227,18 @@ document.addEventListener('DOMContentLoaded', () => {
             step_3_desc: 'Copy the key generated here and paste it into the mod activation field.',
             help_button_title: 'How to use?',
             view_keys_title: 'Consult Active Crewmate IDs',
-            download_mod_button: 'Download Mod Menu (GitHub)'
+            download_mod_button: 'Download Mod Menu (GitHub)',
+            turnstile_hint: 'Complete the verification above to unlock the methods',
+            turnstile_success: '✅ Verified! Select a method below'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
             main_subtitle: '🧑‍🚀 Tripulante, requisite sua Identificação de Acesso ou verifique os registros do ciclo atual. Mantenha-se alerta!',
             status_online: 'Sistema MIRA HQ Online',
-            login_discord: '🎮 Entrar com Discord',
+            login_discord: 'Entrar com Discord',
+            login_discord_subtitle: 'Rápido e seguro',
+            auth_section_subtitle: 'Autentique-se para gerar sua key de acesso',
+            auth_section_hint: '🔒 Nenhuma permissão de escrita é solicitada',
             cooldown_title: '⚠️ SISTEMA EM COOLDOWN',
             cooldown_subtitle: 'Aguarde para nova solicitação',
             key_limit_text: 'Você possui {count} ID{s} ativa{s} (máximo: {max} por conta Discord)',
@@ -252,7 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
             step_3_desc: 'Copie a key gerada aqui e cole no campo de ativação do mod.',
             help_button_title: 'Como usar?',
             view_keys_title: 'Consultar IDs de Tripulantes Ativos',
-            download_mod_button: 'Baixar Mod Menu (GitHub)'
+            download_mod_button: 'Baixar Mod Menu (GitHub)',
+            turnstile_hint: 'Complete a verificação acima para desbloquear os métodos',
+            turnstile_success: '✅ Verificado! Selecione um método abaixo'
         }
     };
 
@@ -592,8 +653,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function showUIMessage(text, type = 'info', duration = 4500) {
-        elements.messageEl.textContent = text.slice(0, 200);
+        // Sanitiza texto para prevenir XSS
+        const sanitizedText = text.replace(/[<>]/g, '').slice(0, 200);
+        elements.messageEl.textContent = sanitizedText;
         elements.messageEl.className = `message visible ${type}`;
+        // Announce to screen readers
+        elements.messageEl.setAttribute('role', 'alert');
+        elements.messageEl.setAttribute('aria-live', 'polite');
         if (elements.messageEl.timeoutId) clearTimeout(elements.messageEl.timeoutId);
         if (duration > 0) elements.messageEl.timeoutId = setTimeout(() => { elements.messageEl.className = 'message'; }, duration);
     }
@@ -706,8 +772,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function copyToClipboard() {
-        const keyValue = elements.keyValueEl.textContent;
-        if (!keyValue || keyValue.includes('...') || !validateKey(keyValue)) return;
+        const keyValue = elements.keyValueEl.textContent?.trim();
+        if (!keyValue || keyValue.includes('...') || keyValue.includes('AUTENTICANDO') || !validateKey(keyValue)) return;
         try {
             await navigator.clipboard.writeText(keyValue);
             const copyButtonSpan = elements.copyButton.querySelector('span');
@@ -819,6 +885,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.keyActions.style.display = 'flex';
                 elements.keyMetadata.style.display = 'block';
                 elements.keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+                
+                // Adiciona animação de pulso ao botão de copiar para chamar atenção
+                if (elements.copyButton) {
+                    elements.copyButton.classList.add('pulse-hint');
+                    setTimeout(() => elements.copyButton.classList.remove('pulse-hint'), 4500);
+                }
 
                 appState.keyGenerationCount++;
                 appState.lastKeyGenerationTime = Date.now();
@@ -916,6 +988,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!appState.turnstileToken) {
                 showUIMessage('Por favor, complete o captcha primeiro.', 'error');
                 appState.isProcessing = false;
+                // Re-open modal for user to complete captcha
+                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
+                return;
+            }
+
+            // Check token age before sending
+            const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
+            if (tokenAge > 4 * 60 * 1000) {
+                showUIMessage('Verificação expirada. Complete o captcha novamente.', 'error');
+                appState.turnstileToken = null;
+                appState.isProcessing = false;
+                disableMethodButtons();
+                if (window.turnstile) {
+                    const widget = document.querySelector('.cf-turnstile');
+                    if (widget) window.turnstile.reset(widget);
+                }
+                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
                 return;
             }
 
@@ -926,6 +1015,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             const data = await response.json();
+            
+            // Handle Turnstile rejection from backend
+            if (response.status === 403 && data.message?.includes('Captcha')) {
+                showUIMessage('Verificação falhou. Tente novamente.', 'error');
+                appState.turnstileToken = null;
+                disableMethodButtons();
+                if (window.turnstile) {
+                    const widget = document.querySelector('.cf-turnstile');
+                    if (widget) window.turnstile.reset(widget);
+                }
+                appState.isProcessing = false;
+                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
+                return;
+            }
+            
             if (response.ok && data.status === 'success' && validateToken(data.verification_token)) {
                 localStorage.setItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
                 showUIMessage(translations[appState.currentLanguage].redirecting_portal, 'info', 5000);
@@ -1085,11 +1189,38 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('keydown', initAudio);
 
         if (elements.copyButton) elements.copyButton.addEventListener('click', copyToClipboard);
+        // Permitir clicar diretamente na key para copiar
+        if (elements.keyValueEl) {
+            elements.keyValueEl.style.cursor = 'pointer';
+            elements.keyValueEl.addEventListener('click', copyToClipboard);
+        }
 
         // Method Menu Logic
         if (elements.btnOpenMethodMenu) {
             elements.btnOpenMethodMenu.addEventListener('click', () => {
-                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
+                if (elements.methodSelectionModal) {
+                    elements.methodSelectionModal.style.display = 'block';
+                    
+                    // Check if Turnstile token is still valid (< 4 minutes old)
+                    const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
+                    const TOKEN_MAX_AGE = 4 * 60 * 1000; // 4 minutes
+                    
+                    if (appState.turnstileToken && tokenAge < TOKEN_MAX_AGE) {
+                        // Token still valid, enable buttons
+                        console.log('[Modal] Turnstile token still valid, enabling buttons');
+                        enableMethodButtons();
+                    } else if (appState.turnstileToken && tokenAge >= TOKEN_MAX_AGE) {
+                        // Token expired, reset
+                        console.log('[Modal] Turnstile token expired, resetting');
+                        appState.turnstileToken = null;
+                        disableMethodButtons();
+                        if (window.turnstile) {
+                            const widget = document.querySelector('.cf-turnstile');
+                            if (widget) window.turnstile.reset(widget);
+                        }
+                    }
+                    // If no token, Turnstile will handle it automatically
+                }
             });
         }
         if (elements.closeMethodModal) {
@@ -1146,10 +1277,24 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
         appState.keyGenerationCount = parseInt(localStorage.getItem('keyGenerationCount') || '0');
         appState.lastKeyGenerationTime = parseInt(localStorage.getItem('lastKeyGenerationTime') || '0');
+        
+        // Sistema de detecção de idioma automático
         const preferredLang = localStorage.getItem('preferredLanguage');
+        let targetLang;
+        
         if (preferredLang && translations[preferredLang]) {
-            applyTranslation(preferredLang);
+            // Usuário já escolheu um idioma antes
+            targetLang = preferredLang;
+        } else {
+            // Detecta idioma do navegador
+            const browserLang = navigator.language || navigator.userLanguage;
+            // Se for português (pt, pt-BR, pt-PT), usa PT. Caso contrário, usa EN
+            targetLang = browserLang.toLowerCase().startsWith('pt') ? 'pt' : 'en';
+            console.log(`[i18n] Browser language: ${browserLang} → Using: ${targetLang.toUpperCase()}`);
         }
+        
+        // Aplica tradução (mesmo se for PT, para garantir consistência)
+        applyTranslation(targetLang);
     }
 
     initializeApp();

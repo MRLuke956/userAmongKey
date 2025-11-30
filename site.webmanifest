@@ -1,7 +1,22 @@
 {
-  "name": "crewcore",
-  "short_name": "Crewcore",
+  "name": "CrewCore - Among Us Mod Menu",
+  "short_name": "CrewCore",
+  "description": "Gerador de Key para Among Us Mod Menu",
+  "start_url": "/",
+  "scope": "/",
   "icons": [
+    {
+      "src": "favicon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "web-app-manifest-192x192.png",
       "sizes": "192x192",
@@ -12,10 +27,16 @@
       "src": "web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#3b00ff",
-  "background_color": "#ffffff",
+  "theme_color": "#1a2433",
+  "background_color": "#0a0f16",
   "display": "standalone"
 }

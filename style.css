@@ -229,41 +229,133 @@ header p.subtitle {
 
 .auth-section {
   margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  border: 1px solid var(--panel-border-color);
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(88, 101, 242, 0.3);
   text-align: center;
 }
 
+.auth-subtitle {
+  color: var(--text-color-medium);
+  font-size: 0.9em;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.auth-hint {
+  color: var(--text-color-medium);
+  font-size: 0.75em;
+  margin-top: 0.8rem;
+  opacity: 0.6;
+}
+
 .discord-auth-btn {
-  background: linear-gradient(45deg, #5865F2, #7289DA);
+  position: relative;
+  background: transparent;
   color: white;
   border: none;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
+  padding: 0;
+  border-radius: 12px;
   cursor: pointer;
-  font-family: var(--font-title);
-  font-weight: 700;
+  width: 100%;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.discord-btn-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #5865F2 0%, #4752c4 50%, #3c45a5 100%);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.discord-btn-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  transition: all 0.3s ease;
-  width: 100%;
   justify-content: center;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  box-shadow: 0 5px 0px #4752c4, 0 8px 12px rgba(0, 0, 0, 0.3);
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+.discord-icon-wrapper {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.6rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.discord-icon {
+  transition: transform 0.3s ease;
+}
+
+.discord-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.discord-btn-title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 1.1em;
+  letter-spacing: 0.5px;
+}
+
+.discord-btn-subtitle {
+  font-size: 0.75em;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.discord-btn-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .discord-auth-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 0px #4752c4, 0 10px 15px rgba(88, 101, 242, 0.4);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4), 0 0 20px rgba(88, 101, 242, 0.2);
+}
+
+.discord-auth-btn:hover .discord-btn-bg {
+  background: linear-gradient(135deg, #6873f5 0%, #5865F2 50%, #4752c4 100%);
+}
+
+.discord-auth-btn:hover .discord-icon-wrapper {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.discord-auth-btn:hover .discord-icon {
+  transform: scale(1.1);
+}
+
+.discord-auth-btn:hover .discord-btn-shine {
+  left: 100%;
 }
 
 .discord-auth-btn:active {
-  transform: translateY(1px);
-  box-shadow: 0 3px 0px #4752c4, 0 6px 10px rgba(0, 0, 0, 0.3);
+  transform: translateY(1px) scale(0.99);
+  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+}
+
+.discord-auth-btn:active .discord-btn-bg {
+  background: linear-gradient(135deg, #4752c4 0%, #3c45a5 100%);
 }
 
 .controls-section {
@@ -426,6 +518,26 @@ button[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
   box-shadow: 0 2px 0px rgba(0, 0, 0, 0.4) !important;
+  pointer-events: none;
+}
+
+/* Focus states for accessibility */
+button:focus-visible,
+.discord-auth-btn:focus-visible,
+.copy-button:focus-visible {
+  outline: 2px solid var(--crewmate-yellow);
+  outline-offset: 2px;
+}
+
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 button .spinner {
@@ -531,6 +643,20 @@ button.loading .button-text {
   animation: copySuccess 0.6s ease;
 }
 
+/* Pulso sutil para chamar atenção após key ser gerada */
+.copy-button.pulse-hint {
+  animation: pulseHint 1.5s ease-in-out 3;
+}
+
+@keyframes pulseHint {
+  0%, 100% {
+    box-shadow: 0 3px 0px #27ae60, 0 5px 8px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 3px 0px #27ae60, 0 5px 20px rgba(46, 204, 113, 0.6), 0 0 30px rgba(46, 204, 113, 0.4);
+  }
+}
+
 @keyframes copySuccess {
   0% {
     transform: scale(1);
@@ -593,12 +719,38 @@ button.loading .button-text {
   padding: 0.3rem;
   line-height: 1.4;
   transition: all 0.3s ease;
+  user-select: all;
+  -webkit-user-select: all;
+  position: relative;
+}
+
+/* Tooltip hint ao passar o mouse na key */
+.key-value::after {
+  content: '📋 Clique para copiar';
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #00ffc8;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.65em;
+  letter-spacing: 0;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.key-value:hover::after {
+  opacity: 1;
 }
 
 .key-value:hover {
   color: #fff;
   text-shadow: 0 0 20px var(--key-id-color), 0 0 30px var(--key-id-color);
-  cursor: text;
+  cursor: pointer;
 }
 
 .key-value.processing {
@@ -1355,7 +1507,7 @@ button.loading .button-text {
   color: white;
 }
 
-.method-option:hover {
+.method-option:hover:not([disabled]) {
   background: rgba(255, 255, 255, 0.1);
   transform: translateX(5px);
   border-color: rgba(255, 255, 255, 0.3);
@@ -1366,8 +1518,40 @@ button.loading .button-text {
   background: rgba(76, 175, 80, 0.1);
 }
 
-.method-option.recommended:hover {
+.method-option.recommended:hover:not([disabled]) {
   background: rgba(76, 175, 80, 0.2);
+}
+
+/* Disabled state for method buttons */
+.method-option[disabled],
+.method-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(50%);
+  transform: none !important;
+}
+
+.method-option[disabled]:hover,
+.method-option:disabled:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Waiting for Turnstile indicator */
+.turnstile-container {
+  position: relative;
+}
+
+.turnstile-container::after {
+  content: '';
+  display: none;
+}
+
+/* Success state animation for Turnstile */
+.cf-turnstile iframe[data-state="solved"] + .turnstile-success-indicator {
+  display: block;
 }
 
 .method-icon {

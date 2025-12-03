@@ -1345,7 +1345,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // === ANTI-BYPASS: Renderiza o challenge ===
-    function renderChallenge(challenge, attemptsRemaining = 3) {
+    function renderChallenge(challenge, attemptsRemaining = 5) {
         const lang = appState.currentLanguage;
         
         // Question - emoji grande e claro
@@ -1362,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 challenge.options.forEach(opt => {
                     const btn = document.createElement('button');
                     btn.className = 'challenge-option challenge-color-option';
-                    btn.style.backgroundColor = opt.hex;
+                    btn.style.setProperty('background', opt.hex, 'important');
                     btn.title = opt.name || '';
                     btn.dataset.answer = opt.code;
                     btn.onclick = () => submitChallengeAnswer(opt.code);

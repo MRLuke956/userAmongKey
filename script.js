@@ -84,7 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         MAX_KEY_LIMIT: 5,
         COOLDOWN_DURATION: 30000,
-        BACKEND_VERIFICATION_TOKEN_KEY: '_vt_' + btoa('mhq').substring(0, 4),
+        SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 horas em ms
+        // === ANTI-BYPASS: Novas chaves de storage ===
+        BYPASS_SESSION_KEY: 'miraHqBypassSession',      // session_id da verificação
+        BYPASS_PROOF_TOKEN_KEY: 'miraHqProofToken',     // proof_token após challenge
+        BYPASS_STARTED_AT_KEY: 'miraHqBypassStartedAt', // timestamp de início
         // Configuração dos Retornos (O que o site espera receber do encurtador)
         RETURN_CONFIG: {
             1: { action: 'complete_m1', status: 'success' },
@@ -145,7 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
         helpButton: document.getElementById('helpButton'),
         tutorialModal: document.getElementById('tutorialModal'),
         closeTutorialModal: document.getElementById('closeTutorialModal'),
-        accessGrantedOverlay: document.getElementById('accessGrantedOverlay')
+        accessGrantedOverlay: document.getElementById('accessGrantedOverlay'),
+        // === ANTI-BYPASS: Challenge Modal Elements ===
+        challengeModal: document.getElementById('challengeModal'),
+        challengeQuestion: document.getElementById('challengeQuestion'),
+        challengeOptions: document.getElementById('challengeOptions'),
+        challengeTimer: document.getElementById('challengeTimer'),
+        challengeAttempts: document.getElementById('challengeAttempts'),
+        closeChallengeModal: document.getElementById('closeChallengeModal')
     };
 
     const appState = {
@@ -159,7 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
         isProcessing: false,
         currentLanguage: navigator.language.startsWith('pt') ? 'pt' : 'en',
         turnstileToken: window._turnstileToken || null,
-        turnstileVerifiedAt: window._turnstileVerifiedAt || null
+        turnstileVerifiedAt: window._turnstileVerifiedAt || null,
+        // === ANTI-BYPASS STATE ===
+        currentChallenge: null,
+        challengeTimerInterval: null,
+        bypassSessionId: null,
+        proofToken: null
     };
 
     // Sincroniza o token global com o appState
@@ -281,7 +297,20 @@ document.addEventListener('DOMContentLoaded', () => {
             view_keys_title: 'Consult Active Crewmate IDs',
             download_mod_button: 'Download Mod Menu (GitHub)',
             turnstile_hint: 'Complete the verification above to unlock the methods',
-            turnstile_success: '✅ Verified! Select a method below'
+            turnstile_success: '✅ Verified! Select a method below',
+            // === ANTI-BYPASS CHALLENGE ===
+            challenge_title: '🔐 Security Verification',
+            challenge_subtitle: 'Complete the challenge to prove you are human',
+            challenge_timeout: 'Time remaining:',
+            challenge_attempts: 'Attempts:',
+            challenge_solving: 'Verifying answer...',
+            challenge_success: '✅ Challenge completed!',
+            challenge_wrong: '❌ Oops! Wrong answer. Try again.',
+            challenge_expired: '⏰ Time expired. No problem, start over!',
+            challenge_blocked: '🚫 Bypass attempt detected! Wait 1 minute.',
+            challenge_bypass_detected: '⚠️ Bypass detected! You must complete the shortener correctly.',
+            verification_processing: '⏳ Processing return...',
+            challenge_hint: '⚠️ Complete to receive your key'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -365,7 +394,20 @@ document.addEventListener('DOMContentLoaded', () => {
             view_keys_title: 'Consultar IDs de Tripulantes Ativos',
             download_mod_button: 'Baixar Mod Menu (GitHub)',
             turnstile_hint: 'Complete a verificação acima para desbloquear os métodos',
-            turnstile_success: '✅ Verificado! Selecione um método abaixo'
+            turnstile_success: '✅ Verificado! Selecione um método abaixo',
+            // === ANTI-BYPASS CHALLENGE ===
+            challenge_title: '🔐 Verificação de Segurança',
+            challenge_subtitle: 'Complete o desafio para provar que você é humano',
+            challenge_timeout: 'Tempo restante:',
+            challenge_attempts: 'Tentativas:',
+            challenge_solving: 'Verificando resposta...',
+            challenge_success: '✅ Desafio completo!',
+            challenge_wrong: '❌ Ops! Resposta errada. Tente novamente.',
+            challenge_expired: '⏰ Tempo expirado. Sem problemas, comece novamente!',
+            challenge_blocked: '🚫 Tentativa de bypass detectada! Aguarde 1 minuto.',
+            challenge_bypass_detected: '⚠️ Bypass detectado! Você deve completar o encurtador corretamente.',
+            verification_processing: '⏳ Processando retorno...',
+            challenge_hint: '⚠️ Complete para receber sua key'
         }
     };
 
@@ -550,9 +592,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.modalServerStatus.className = 'server-badge missing';
             }
 
-            elements.statKeysToday.textContent = this.userStats.keys_today;
-            elements.statTotalKeys.textContent = this.userStats.keys_total;
-            elements.statActiveKeys.textContent = this.userStats.keys_active;
+            // Animação de atualização nos stats
+            const animateStat = (el, value) => {
+                el.textContent = value;
+                el.classList.add('updating');
+                setTimeout(() => el.classList.remove('updating'), 500);
+            };
+            animateStat(elements.statKeysToday, this.userStats.keys_today);
+            animateStat(elements.statTotalKeys, this.userStats.keys_total);
+            animateStat(elements.statActiveKeys, this.userStats.keys_active);
 
             let memberText = 'N/A';
             if (this.userStats.member_since) {
@@ -587,6 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             ['crewbot_session', 'crewbot_user', 'crewbot_stats', 'crewbot_session_expires'].forEach(k => localStorage.removeItem(k));
+            // Limpa também dados de bypass pendentes
+            clearBypassStorage();
             Object.assign(this, { sessionId: null, userData: null, userStats: null, isAuthenticated: false, sessionExpiresAt: 0 });
 
             this.updateUI();
@@ -656,8 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // sanitizeInput removido pois textContent já é seguro e isso causava escape duplo.
 
-    // SEGURANÇA: Aceita Standard (19 chars) e Premium (P-XXXX-XXXX-XXXX-XXXX = 23 chars)
-    function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9P-]{19,23}$/.test(key); }
+    function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9-]{19}$/.test(key); }
     function validateToken(token) { return typeof token === 'string' && /^[a-zA-Z0-9\-_]{20,}$/.test(token); }
 
     function initAudioContext() {
@@ -709,12 +758,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Sanitiza texto para prevenir XSS
         const sanitizedText = text.replace(/[<>]/g, '').slice(0, 200);
         elements.messageEl.textContent = sanitizedText;
-        elements.messageEl.className = `message visible ${type}`;
+        elements.messageEl.className = `message visible show ${type}`;
         // Announce to screen readers
         elements.messageEl.setAttribute('role', 'alert');
         elements.messageEl.setAttribute('aria-live', 'polite');
         if (elements.messageEl.timeoutId) clearTimeout(elements.messageEl.timeoutId);
-        if (duration > 0) elements.messageEl.timeoutId = setTimeout(() => { elements.messageEl.className = 'message'; }, duration);
+        if (duration > 0) elements.messageEl.timeoutId = setTimeout(() => { 
+            elements.messageEl.classList.remove('show');
+            setTimeout(() => { elements.messageEl.className = 'message'; }, 300);
+        }, duration);
     }
 
     function updateKeyLimitDisplay() {
@@ -819,9 +871,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 { freq: 400, duration: 400, type: 'square' }
             ]);
         }
+        // Fade out mais rápido para mostrar a key sendo escrita
         setTimeout(() => {
-            overlay.classList.remove('show');
-        }, 2200);
+            overlay.classList.add('fading');
+        }, 1200);
+        setTimeout(() => {
+            overlay.classList.remove('show', 'fading');
+        }, 1800);
     }
 
     async function copyToClipboard() {
@@ -902,13 +958,14 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.keyValueEl.textContent = translations[appState.currentLanguage].processing_auth;
             elements.keyValueEl.classList.add('processing');
 
-            const verificationToken = localStorage.getItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY);
-            if (!verificationToken || !validateToken(verificationToken)) {
-                throw new Error('Falha na verificação de segurança.');
+            // === ANTI-BYPASS: Usa proof_token em vez de verification_token ===
+            const proofToken = appState.proofToken || localStorage.getItem(CONFIG.BYPASS_PROOF_TOKEN_KEY);
+            if (!proofToken || !validateToken(proofToken)) {
+                throw new Error('Token de prova ausente. Complete a verificação primeiro.');
             }
 
             showUIMessage(translations[appState.currentLanguage].connecting_server, 'info', 0);
-            const headers = { 'X-Verification-Token': verificationToken, ...discordAuth.getAuthHeaders() };
+            const headers = { 'X-Proof-Token': proofToken, ...discordAuth.getAuthHeaders() };
             const response = await fetch(`${CONFIG.API_BASE_URL}/generate_key`, { method: 'GET', headers });
 
             if (response.status === 401) {
@@ -920,20 +977,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             elements.keyValueEl.classList.remove('processing');
-            localStorage.removeItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY);
+            
+            // === ANTI-BYPASS: Limpa proof token após uso ===
+            clearBypassStorage();
 
             if (response.ok && data.status === 'success' && validateKey(data.key)) {
                 // Visual Dopamine Sequence
                 showAccessGranted();
                 triggerConfetti();
 
-                elements.keyContainerEl.classList.add('visible');
+                elements.keyContainerEl.classList.add('visible', 'success');
                 elements.keyContainerEl.classList.add('pop-in');
+                
+                // Remove success class after animation
+                setTimeout(() => elements.keyContainerEl.classList.remove('success'), 600);
 
-                // Delay showing the key slightly to sync with overlay fade
+                // Delay showing the key to sync with overlay fade out
                 setTimeout(() => {
                     typeWriterEffect(data.key, elements.keyValueEl);
-                }, 800);
+                }, 1300);
 
                 elements.keyActions.style.display = 'flex';
                 elements.keyMetadata.style.display = 'block';
@@ -976,11 +1038,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             elements.keyValueEl.classList.remove('processing');
-            localStorage.removeItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY);
+            clearBypassStorage();
             showUIMessage(translations[appState.currentLanguage].emergency_error.replace('{error}', error.message), 'error');
             if (appState.soundEnabled) playSound(150, 800, 'sawtooth');
         } finally {
-            // setAllMethodsLoading(false); // This was removed, so we need to ensure btnOpenMethodMenu is handled
             setButtonLoading(elements.btnOpenMethodMenu, false);
             appState.isProcessing = false;
         }
@@ -1041,7 +1102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!appState.turnstileToken) {
                 showUIMessage('Por favor, complete o captcha primeiro.', 'error');
                 appState.isProcessing = false;
-                // Re-open modal for user to complete captcha
                 if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
                 return;
             }
@@ -1061,13 +1121,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-verification`, {
+            // === ANTI-BYPASS: Inicia sessão de verificação ===
+            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-verification?method=${methodIndex}`, {
                 method: 'GET',
                 headers: {
                     'X-Turnstile-Token': appState.turnstileToken
                 }
             });
             const data = await response.json();
+            
+            // Handle blocked IP (too many failed attempts)
+            if (response.status === 429) {
+                const lang = appState.currentLanguage;
+                showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
+                appState.isProcessing = false;
+                return;
+            }
             
             // Handle Turnstile rejection from backend
             if (response.status === 403 && data.message?.includes('Captcha')) {
@@ -1083,14 +1152,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            if (response.ok && data.status === 'success' && validateToken(data.verification_token)) {
-                localStorage.setItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY, data.verification_token);
+            if (response.ok && data.status === 'success' && data.session_id) {
+                // === ANTI-BYPASS: Salva session_id para usar no retorno ===
+                localStorage.setItem(CONFIG.BYPASS_SESSION_KEY, data.session_id);
+                localStorage.setItem(CONFIG.BYPASS_STARTED_AT_KEY, Date.now().toString());
+                
                 showUIMessage(translations[appState.currentLanguage].redirecting_portal, 'info', 5000);
 
                 // Select the correct URL based on method
                 let targetUrl = CONFIG.SHORTENER_URLS[methodIndex] || CONFIG.SHORTENER_URLS[1];
 
-                // Append method parameter just in case (optional, but good for tracking)
+                // Append method parameter for tracking
                 const urlObj = new URL(targetUrl);
                 urlObj.searchParams.append('method', methodIndex);
 
@@ -1105,14 +1177,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function checkAndProcessShortenerReturn() {
+    // === ANTI-BYPASS: Verifica retorno do encurtador e inicia challenge ===
+    async function checkAndProcessShortenerReturn() {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const action = urlParams.get('action');
             const status = urlParams.get('status');
-            const backendToken = localStorage.getItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY);
+            const sessionId = localStorage.getItem(CONFIG.BYPASS_SESSION_KEY);
 
-            if (!backendToken) return;
+            // Se não tem session_id, não é um retorno válido
+            if (!sessionId) return;
 
             // Check if any of the valid return configurations match
             let isValidReturn = false;
@@ -1123,14 +1197,315 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (action === CONFIG.RETURN_CONFIG[3].action && status === CONFIG.RETURN_CONFIG[3].status) { isValidReturn = true; methodUsed = 3; }
 
             if (isValidReturn) {
-                showUIMessage(translations[appState.currentLanguage].verification_complete, 'success');
+                const lang = appState.currentLanguage;
+                showUIMessage(translations[lang].verification_processing, 'info', 0);
                 window.history.replaceState({}, document.title, window.location.pathname);
-                generateNewKey();
-            } else {
-                // Only clear if it looks like a return attempt but failed (optional, or just leave it for manual retry)
-                // localStorage.removeItem(CONFIG.BACKEND_VERIFICATION_TOKEN_KEY); 
+                
+                // === ANTI-BYPASS: Chama /verify-return para validar timing e obter challenge ===
+                try {
+                    const response = await fetch(`${CONFIG.API_BASE_URL}/verify-return`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sessionId })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Handle bypass detection
+                    if (data.bypass_detected) {
+                        showUIMessage(translations[lang].challenge_bypass_detected, 'error', 10000);
+                        clearBypassStorage();
+                        if (appState.soundEnabled) playSound(200, 500, 'sawtooth');
+                        return;
+                    }
+                    
+                    // Handle blocked
+                    if (response.status === 429) {
+                        showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
+                        clearBypassStorage();
+                        return;
+                    }
+                    
+                    // Handle errors
+                    if (!response.ok) {
+                        showUIMessage(data.message || 'Erro na verificação.', 'error');
+                        clearBypassStorage();
+                        return;
+                    }
+                    
+                    // === SUCCESS: Recebeu challenge - Mostra modal ===
+                    if (data.status === 'success' && data.challenge) {
+                        appState.currentChallenge = {
+                            ...data.challenge,
+                            sessionId: sessionId,
+                            timeout: data.timeout_seconds || 120
+                        };
+                        showChallengeModal(data.challenge, data.timeout_seconds);
+                    }
+                } catch (error) {
+                    console.error('[Anti-Bypass] Erro no verify-return:', error);
+                    showUIMessage('Erro ao verificar retorno. Tente novamente.', 'error');
+                    clearBypassStorage();
+                }
             }
-        } catch (e) { /* Ignore errors */ }
+        } catch (e) { 
+            console.error('[Anti-Bypass] Error in checkAndProcessShortenerReturn:', e);
+        }
+    }
+    
+    // === ANTI-BYPASS: Limpa storage de verificação ===
+    function clearBypassStorage() {
+        localStorage.removeItem(CONFIG.BYPASS_SESSION_KEY);
+        localStorage.removeItem(CONFIG.BYPASS_STARTED_AT_KEY);
+        localStorage.removeItem(CONFIG.BYPASS_PROOF_TOKEN_KEY);
+        appState.currentChallenge = null;
+        appState.proofToken = null;
+        if (appState.challengeTimerInterval) {
+            clearInterval(appState.challengeTimerInterval);
+            appState.challengeTimerInterval = null;
+        }
+    }
+    
+    // === ANTI-BYPASS: Mostra modal do challenge ===
+    function showChallengeModal(challenge, timeoutSeconds = 120) {
+        const lang = appState.currentLanguage;
+        
+        // Cria modal dinamicamente se não existir
+        let modal = elements.challengeModal;
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'challengeModal';
+            modal.className = 'modal challenge-modal';
+            modal.innerHTML = `
+                <div class="modal-content challenge-modal-content">
+                    <div class="challenge-header">
+                        <h2 data-translate-key="challenge_title">${translations[lang].challenge_title}</h2>
+                        <p data-translate-key="challenge_subtitle">${translations[lang].challenge_subtitle}</p>
+                    </div>
+                    <div class="challenge-timer">
+                        <span data-translate-key="challenge_timeout">${translations[lang].challenge_timeout}</span>
+                        <span id="challengeTimer">${timeoutSeconds}s</span>
+                    </div>
+                    <div class="challenge-body">
+                        <div class="challenge-question" id="challengeQuestion"></div>
+                        <div class="challenge-options" id="challengeOptions"></div>
+                    </div>
+                    <div class="challenge-footer">
+                        <span id="challengeAttempts"></span>
+                        <p class="challenge-hint" id="challengeHint">${translations[lang].challenge_hint}</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            elements.challengeModal = modal;
+            elements.challengeQuestion = document.getElementById('challengeQuestion');
+            elements.challengeOptions = document.getElementById('challengeOptions');
+            elements.challengeTimer = document.getElementById('challengeTimer');
+            elements.challengeAttempts = document.getElementById('challengeAttempts');
+            
+            // Impede fechar clicando fora (evita perder progresso)
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    // Shake animation para indicar que não pode fechar
+                    modal.querySelector('.challenge-modal-content').classList.add('shake');
+                    setTimeout(() => {
+                        modal.querySelector('.challenge-modal-content').classList.remove('shake');
+                    }, 500);
+                }
+            });
+        }
+        
+        // Atualiza conteúdo do challenge
+        renderChallenge(challenge);
+        
+        // Inicia timer
+        let remaining = timeoutSeconds;
+        elements.challengeTimer.textContent = `${remaining}s`;
+        
+        if (appState.challengeTimerInterval) clearInterval(appState.challengeTimerInterval);
+        appState.challengeTimerInterval = setInterval(() => {
+            remaining--;
+            if (elements.challengeTimer) elements.challengeTimer.textContent = `${remaining}s`;
+            
+            if (remaining <= 0) {
+                clearInterval(appState.challengeTimerInterval);
+                hideChallengeModal();
+                showUIMessage(translations[lang].challenge_expired, 'error');
+                clearBypassStorage();
+            }
+        }, 1000);
+        
+        // Mostra modal
+        modal.style.display = 'block';
+        if (appState.soundEnabled) playSoundSequence([
+            { freq: 440, duration: 100, type: 'sine' },
+            { freq: 550, duration: 100, type: 'sine' },
+            { freq: 660, duration: 150, type: 'sine' }
+        ]);
+    }
+    
+    // === ANTI-BYPASS: Renderiza o challenge ===
+    function renderChallenge(challenge, attemptsRemaining = 3) {
+        const lang = appState.currentLanguage;
+        
+        // Question - emoji grande e claro
+        if (elements.challengeQuestion) {
+            elements.challengeQuestion.innerHTML = `<span class="challenge-question-text">${challenge.question}</span>`;
+        }
+        
+        // Options
+        if (elements.challengeOptions) {
+            elements.challengeOptions.innerHTML = '';
+            
+            if (challenge.type === 'color') {
+                // Color buttons - círculos coloridos
+                challenge.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'challenge-option challenge-color-option';
+                    btn.style.backgroundColor = opt.hex;
+                    btn.title = opt.name || '';
+                    btn.dataset.answer = opt.code;
+                    btn.onclick = () => submitChallengeAnswer(opt.code);
+                    elements.challengeOptions.appendChild(btn);
+                });
+            } else if (challenge.type === 'emoji_simple') {
+                // Emoji buttons - grandes e clicáveis
+                challenge.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'challenge-option challenge-emoji-option';
+                    btn.textContent = opt;
+                    btn.onclick = () => submitChallengeAnswer(opt);
+                    elements.challengeOptions.appendChild(btn);
+                });
+            } else {
+                // Number/text buttons
+                challenge.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'challenge-option';
+                    btn.textContent = opt;
+                    btn.onclick = () => submitChallengeAnswer(opt);
+                    elements.challengeOptions.appendChild(btn);
+                });
+            }
+        }
+        
+        // Attempts
+        if (elements.challengeAttempts) {
+            elements.challengeAttempts.textContent = `${translations[lang].challenge_attempts} ${attemptsRemaining}/5`;
+        }
+    }
+    
+    // === ANTI-BYPASS: Envia resposta do challenge ===
+    async function submitChallengeAnswer(answer) {
+        const lang = appState.currentLanguage;
+        
+        if (!appState.currentChallenge) {
+            showUIMessage('Erro: Challenge não encontrado.', 'error');
+            return;
+        }
+        
+        // Desabilita botões enquanto processa
+        const optionButtons = elements.challengeOptions?.querySelectorAll('button');
+        optionButtons?.forEach(btn => btn.disabled = true);
+        
+        showUIMessage(translations[lang].challenge_solving, 'info', 0);
+        
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/solve-challenge`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: appState.currentChallenge.sessionId,
+                    challenge_id: appState.currentChallenge.id,
+                    answer: String(answer)
+                })
+            });
+            
+            const data = await response.json();
+            
+            // Handle bypass detection
+            if (data.bypass_detected) {
+                hideChallengeModal();
+                showUIMessage(translations[lang].challenge_bypass_detected, 'error', 10000);
+                clearBypassStorage();
+                return;
+            }
+            
+            // Handle blocked
+            if (response.status === 429) {
+                hideChallengeModal();
+                showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
+                clearBypassStorage();
+                return;
+            }
+            
+            // Handle wrong answer with new challenge
+            if (data.new_challenge) {
+                showUIMessage(translations[lang].challenge_wrong, 'error', 2000);
+                if (appState.soundEnabled) playSound(200, 200, 'sawtooth');
+                
+                // Atualiza challenge
+                appState.currentChallenge = {
+                    ...data.new_challenge,
+                    sessionId: appState.currentChallenge.sessionId,
+                    timeout: appState.currentChallenge.timeout
+                };
+                renderChallenge(data.new_challenge, data.attempts_remaining);
+                return;
+            }
+            
+            // Handle need to restart
+            if (data.restart_required) {
+                hideChallengeModal();
+                showUIMessage(data.message || 'Muitas tentativas. Inicie novamente.', 'error');
+                clearBypassStorage();
+                return;
+            }
+            
+            // Handle other errors
+            if (!response.ok) {
+                hideChallengeModal();
+                showUIMessage(data.message || 'Erro ao verificar resposta.', 'error');
+                clearBypassStorage();
+                return;
+            }
+            
+            // === SUCCESS: Challenge resolvido! ===
+            if (data.status === 'success' && data.proof_token) {
+                hideChallengeModal();
+                showUIMessage(translations[lang].challenge_success, 'success');
+                if (appState.soundEnabled) playSoundSequence([
+                    { freq: 523, duration: 100, type: 'sine' },
+                    { freq: 659, duration: 100, type: 'sine' },
+                    { freq: 784, duration: 200, type: 'sine' }
+                ]);
+                
+                // Salva proof token e gera key
+                appState.proofToken = data.proof_token;
+                localStorage.setItem(CONFIG.BYPASS_PROOF_TOKEN_KEY, data.proof_token);
+                
+                // Limpa session (não precisa mais)
+                localStorage.removeItem(CONFIG.BYPASS_SESSION_KEY);
+                
+                // Gera a key!
+                setTimeout(() => generateNewKey(), 500);
+            }
+        } catch (error) {
+            console.error('[Anti-Bypass] Erro ao submeter challenge:', error);
+            showUIMessage('Erro de conexão. Tente novamente.', 'error');
+            optionButtons?.forEach(btn => btn.disabled = false);
+        }
+    }
+    
+    // === ANTI-BYPASS: Esconde modal do challenge ===
+    function hideChallengeModal() {
+        if (elements.challengeModal) {
+            elements.challengeModal.style.display = 'none';
+        }
+        if (appState.challengeTimerInterval) {
+            clearInterval(appState.challengeTimerInterval);
+            appState.challengeTimerInterval = null;
+        }
     }
 
     function openDiscordWidget() {

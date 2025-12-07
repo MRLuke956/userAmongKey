@@ -5,11 +5,11 @@ window._turnstileToken = null;
 window._turnstileVerifiedAt = null;
 window._turnstileReady = false;
 
-window.onTurnstileSuccess = function(token) {
+window.onTurnstileSuccess = function (token) {
     console.log('[Turnstile] ✅ Verification successful, token received');
     window._turnstileToken = token;
     window._turnstileVerifiedAt = Date.now();
-    
+
     // Habilita os botões imediatamente
     ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
         const btn = document.getElementById(id);
@@ -21,30 +21,30 @@ window.onTurnstileSuccess = function(token) {
             btn.style.cursor = 'pointer';
         }
     });
-    
+
     // Atualiza o hint
     const hint = document.getElementById('turnstileHint');
     if (hint) {
         hint.textContent = '✅ Verificado! Selecione um método abaixo';
         hint.style.color = '#4CAF50';
     }
-    
+
     // Sincroniza com appState quando disponível
     if (window._syncTurnstileState) {
         window._syncTurnstileState(token);
     }
 };
 
-window.onTurnstileError = function() {
+window.onTurnstileError = function () {
     console.error('[Turnstile] ❌ Verification failed');
     window._turnstileToken = null;
     alert('Erro na verificação Cloudflare. Recarregue a página.');
 };
 
-window.onTurnstileExpired = function() {
+window.onTurnstileExpired = function () {
     console.warn('[Turnstile] ⚠️ Token expired');
     window._turnstileToken = null;
-    
+
     // Desabilita os botões
     ['btnMethod1', 'btnMethod2', 'btnMethod3'].forEach(id => {
         const btn = document.getElementById(id);
@@ -54,14 +54,14 @@ window.onTurnstileExpired = function() {
             btn.style.pointerEvents = 'none';
         }
     });
-    
+
     // Reseta o hint
     const hint = document.getElementById('turnstileHint');
     if (hint) {
         hint.textContent = 'Complete a verificação acima para desbloquear os métodos';
         hint.style.color = '#888';
     }
-    
+
     // Reseta o widget
     if (window.turnstile) {
         const widget = document.querySelector('.cf-turnstile');
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Sincroniza o token global com o appState
-    window._syncTurnstileState = function(token) {
+    window._syncTurnstileState = function (token) {
         appState.turnstileToken = token;
         appState.turnstileVerifiedAt = Date.now();
         console.log('[Turnstile] State synced with appState');
@@ -310,7 +310,20 @@ document.addEventListener('DOMContentLoaded', () => {
             challenge_blocked: '🚫 Bypass attempt detected! Wait 1 minute.',
             challenge_bypass_detected: '⚠️ Bypass detected! You must complete the shortener correctly.',
             verification_processing: '⏳ Processing return...',
-            challenge_hint: '⚠️ Complete to receive your key'
+            challenge_hint: '⚠️ Complete to receive your key',
+            // === PREMIUM ===
+            premium_title: 'Skip verification',
+            plan_popular: 'POPULAR',
+            plan_best: 'BEST VALUE',
+            plan_48h_name: '48 Hours',
+            plan_monthly_name: '30 Days',
+            feature_no_verification: 'No verification',
+            feature_unlimited: 'Unlimited keys',
+            feature_instant: 'Instant activation',
+            feature_priority: 'Priority support',
+            feature_updates: 'Early access',
+            buy_now: 'Buy',
+            secure_payment: 'Secure payment via Stripe'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -407,7 +420,20 @@ document.addEventListener('DOMContentLoaded', () => {
             challenge_blocked: '🚫 Tentativa de bypass detectada! Aguarde 1 minuto.',
             challenge_bypass_detected: '⚠️ Bypass detectado! Você deve completar o encurtador corretamente.',
             verification_processing: '⏳ Processando retorno...',
-            challenge_hint: '⚠️ Complete para receber sua key'
+            challenge_hint: '⚠️ Complete para receber sua key',
+            // === PREMIUM ===
+            premium_title: 'Pule a verificação',
+            plan_popular: 'POPULAR',
+            plan_best: 'MELHOR VALOR',
+            plan_48h_name: '48 Horas',
+            plan_monthly_name: '30 Dias',
+            feature_no_verification: 'Sem verificação',
+            feature_unlimited: 'Keys ilimitadas',
+            feature_instant: 'Ativação instantânea',
+            feature_priority: 'Suporte prioritário',
+            feature_updates: 'Acesso antecipado',
+            buy_now: 'Comprar',
+            secure_payment: 'Pagamento seguro via Stripe'
         }
     };
 
@@ -763,7 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.messageEl.setAttribute('role', 'alert');
         elements.messageEl.setAttribute('aria-live', 'polite');
         if (elements.messageEl.timeoutId) clearTimeout(elements.messageEl.timeoutId);
-        if (duration > 0) elements.messageEl.timeoutId = setTimeout(() => { 
+        if (duration > 0) elements.messageEl.timeoutId = setTimeout(() => {
             elements.messageEl.classList.remove('show');
             setTimeout(() => { elements.messageEl.className = 'message'; }, 300);
         }, duration);
@@ -977,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             elements.keyValueEl.classList.remove('processing');
-            
+
             // === ANTI-BYPASS: Limpa proof token após uso ===
             clearBypassStorage();
 
@@ -988,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 elements.keyContainerEl.classList.add('visible', 'success');
                 elements.keyContainerEl.classList.add('pop-in');
-                
+
                 // Remove success class after animation
                 setTimeout(() => elements.keyContainerEl.classList.remove('success'), 600);
 
@@ -1000,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.keyActions.style.display = 'flex';
                 elements.keyMetadata.style.display = 'block';
                 elements.keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
-                
+
                 // Adiciona animação de pulso ao botão de copiar para chamar atenção
                 if (elements.copyButton) {
                     elements.copyButton.classList.add('pulse-hint');
@@ -1082,6 +1108,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Busca status premium do usuário e keys premium
+    async function fetchUserPremiumStatus() {
+        if (!discordAuth.isAuthenticated || !discordAuth.sessionId) return;
+
+        try {
+            const headers = discordAuth.getAuthHeaders();
+            const response = await fetch(`${CONFIG.API_BASE_URL}/user_premium_keys`, { headers });
+
+            if (response.status === 401) return;
+
+            const data = await response.json();
+            if (response.ok && data.status === 'success') {
+                appState.userPremiumKeys = data.premium_keys || [];
+                appState.hasActivePremium = data.has_active_premium || false;
+                appState.activePremiumType = data.active_key_type || null;
+
+                // Se usuário é premium ativo, esconde a seção de upsell e mostra badge
+                const premiumSection = document.getElementById('premiumSection');
+                if (premiumSection) {
+                    if (appState.hasActivePremium) {
+                        // Substitui conteúdo por status premium
+                        premiumSection.innerHTML = `
+                            <div class="premium-active-banner">
+                                <span class="premium-badge-large">⭐ PREMIUM ATIVO</span>
+                                <p class="premium-status-text">
+                                    Você possui acesso <strong>${appState.activePremiumType?.toUpperCase()}</strong> ativo!
+                                </p>
+                                <p class="premium-status-sub">Suas keys são geradas instantaneamente, sem encurtador.</p>
+                            </div>
+                        `;
+                        premiumSection.style.display = 'block';
+                    } else {
+                        // Mostra seção de upsell normalmente
+                        premiumSection.style.display = 'block';
+                    }
+                }
+
+                // Adiciona keys premium à lista de exibição
+                renderPremiumKeysList();
+            }
+        } catch (error) {
+            console.error('Erro ao verificar status premium:', error);
+        }
+    }
+
+    // Renderiza keys premium na lista
+    function renderPremiumKeysList() {
+        if (!appState.userPremiumKeys || appState.userPremiumKeys.length === 0) return;
+
+        // Adiciona seção de keys premium acima das standard
+        let premiumSection = document.getElementById('premiumKeysSection');
+        if (!premiumSection) {
+            premiumSection = document.createElement('section');
+            premiumSection.id = 'premiumKeysSection';
+            premiumSection.className = 'keys-list-section premium-keys-section';
+            premiumSection.innerHTML = '<h2>⭐ Suas Keys Premium</h2><ul id="premiumKeysList"></ul>';
+
+            // Insere antes da seção de keys normais
+            const standardSection = document.querySelector('.keys-list-section');
+            if (standardSection) {
+                standardSection.parentNode.insertBefore(premiumSection, standardSection);
+            }
+        }
+
+        const listEl = document.getElementById('premiumKeysList');
+        if (listEl) {
+            listEl.innerHTML = '';
+            appState.userPremiumKeys.forEach(key => {
+                const li = document.createElement('li');
+                li.className = 'premium-key-item';
+
+                const statusBadge = key.status === 'active'
+                    ? `<span class="key-status active">✅ ${key.time_remaining || 'Ativo'}</span>`
+                    : key.status === 'unused'
+                        ? '<span class="key-status unused">🔑 Não usada</span>'
+                        : '<span class="key-status expired">❌ Expirada</span>';
+
+                li.innerHTML = `
+                    <span class="premium-key-value">${key.key}</span>
+                    <span class="premium-key-type">${key.type?.toUpperCase()}</span>
+                    ${statusBadge}
+                `;
+                listEl.appendChild(li);
+            });
+        }
+    }
+
     async function initiateShortenerRedirect(methodIndex = 1) {
         // Check if any button is disabled (cooldown or processing)
         if (appState.isInCooldown || appState.isProcessing) {
@@ -1129,7 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             const data = await response.json();
-            
+
             // Handle blocked IP (too many failed attempts)
             if (response.status === 429) {
                 const lang = appState.currentLanguage;
@@ -1137,7 +1250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 appState.isProcessing = false;
                 return;
             }
-            
+
             // Handle Turnstile rejection from backend
             if (response.status === 403 && data.message?.includes('Captcha')) {
                 showUIMessage('Verificação falhou. Tente novamente.', 'error');
@@ -1151,12 +1264,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
                 return;
             }
-            
+
             if (response.ok && data.status === 'success' && data.session_id) {
                 // === ANTI-BYPASS: Salva session_id para usar no retorno ===
                 localStorage.setItem(CONFIG.BYPASS_SESSION_KEY, data.session_id);
                 localStorage.setItem(CONFIG.BYPASS_STARTED_AT_KEY, Date.now().toString());
-                
+
                 showUIMessage(translations[appState.currentLanguage].redirecting_portal, 'info', 5000);
 
                 // Select the correct URL based on method
@@ -1200,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lang = appState.currentLanguage;
                 showUIMessage(translations[lang].verification_processing, 'info', 0);
                 window.history.replaceState({}, document.title, window.location.pathname);
-                
+
                 // === ANTI-BYPASS: Chama /verify-return para validar timing e obter challenge ===
                 try {
                     const response = await fetch(`${CONFIG.API_BASE_URL}/verify-return`, {
@@ -1208,9 +1321,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ session_id: sessionId })
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     // Handle bypass detection
                     if (data.bypass_detected) {
                         showUIMessage(translations[lang].challenge_bypass_detected, 'error', 10000);
@@ -1218,21 +1331,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (appState.soundEnabled) playSound(200, 500, 'sawtooth');
                         return;
                     }
-                    
+
                     // Handle blocked
                     if (response.status === 429) {
                         showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
                         clearBypassStorage();
                         return;
                     }
-                    
+
                     // Handle errors
                     if (!response.ok) {
                         showUIMessage(data.message || 'Erro na verificação.', 'error');
                         clearBypassStorage();
                         return;
                     }
-                    
+
                     // === SUCCESS: Recebeu challenge - Mostra modal ===
                     if (data.status === 'success' && data.challenge) {
                         appState.currentChallenge = {
@@ -1248,11 +1361,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearBypassStorage();
                 }
             }
-        } catch (e) { 
+        } catch (e) {
             console.error('[Anti-Bypass] Error in checkAndProcessShortenerReturn:', e);
         }
     }
-    
+
     // === ANTI-BYPASS: Limpa storage de verificação ===
     function clearBypassStorage() {
         localStorage.removeItem(CONFIG.BYPASS_SESSION_KEY);
@@ -1265,11 +1378,11 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.challengeTimerInterval = null;
         }
     }
-    
+
     // === ANTI-BYPASS: Mostra modal do challenge ===
     function showChallengeModal(challenge, timeoutSeconds = 120) {
         const lang = appState.currentLanguage;
-        
+
         // Cria modal dinamicamente se não existir
         let modal = elements.challengeModal;
         if (!modal) {
@@ -1302,7 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.challengeOptions = document.getElementById('challengeOptions');
             elements.challengeTimer = document.getElementById('challengeTimer');
             elements.challengeAttempts = document.getElementById('challengeAttempts');
-            
+
             // Impede fechar clicando fora (evita perder progresso)
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
@@ -1314,19 +1427,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        
+
         // Atualiza conteúdo do challenge
         renderChallenge(challenge);
-        
+
         // Inicia timer
         let remaining = timeoutSeconds;
         elements.challengeTimer.textContent = `${remaining}s`;
-        
+
         if (appState.challengeTimerInterval) clearInterval(appState.challengeTimerInterval);
         appState.challengeTimerInterval = setInterval(() => {
             remaining--;
             if (elements.challengeTimer) elements.challengeTimer.textContent = `${remaining}s`;
-            
+
             if (remaining <= 0) {
                 clearInterval(appState.challengeTimerInterval);
                 hideChallengeModal();
@@ -1334,7 +1447,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearBypassStorage();
             }
         }, 1000);
-        
+
         // Mostra modal
         modal.style.display = 'block';
         if (appState.soundEnabled) playSoundSequence([
@@ -1343,20 +1456,20 @@ document.addEventListener('DOMContentLoaded', () => {
             { freq: 660, duration: 150, type: 'sine' }
         ]);
     }
-    
+
     // === ANTI-BYPASS: Renderiza o challenge ===
     function renderChallenge(challenge, attemptsRemaining = 5) {
         const lang = appState.currentLanguage;
-        
+
         // Question - emoji grande e claro
         if (elements.challengeQuestion) {
             elements.challengeQuestion.innerHTML = `<span class="challenge-question-text">${challenge.question}</span>`;
         }
-        
+
         // Options
         if (elements.challengeOptions) {
             elements.challengeOptions.innerHTML = '';
-            
+
             if (challenge.type === 'color') {
                 // Color buttons - círculos coloridos
                 challenge.options.forEach(opt => {
@@ -1388,28 +1501,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
-        
+
         // Attempts
         if (elements.challengeAttempts) {
             elements.challengeAttempts.textContent = `${translations[lang].challenge_attempts} ${attemptsRemaining}/5`;
         }
     }
-    
+
     // === ANTI-BYPASS: Envia resposta do challenge ===
     async function submitChallengeAnswer(answer) {
         const lang = appState.currentLanguage;
-        
+
         if (!appState.currentChallenge) {
             showUIMessage('Erro: Challenge não encontrado.', 'error');
             return;
         }
-        
+
         // Desabilita botões enquanto processa
         const optionButtons = elements.challengeOptions?.querySelectorAll('button');
         optionButtons?.forEach(btn => btn.disabled = true);
-        
+
         showUIMessage(translations[lang].challenge_solving, 'info', 0);
-        
+
         try {
             const response = await fetch(`${CONFIG.API_BASE_URL}/solve-challenge`, {
                 method: 'POST',
@@ -1420,9 +1533,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     answer: String(answer)
                 })
             });
-            
+
             const data = await response.json();
-            
+
             // Handle bypass detection
             if (data.bypass_detected) {
                 hideChallengeModal();
@@ -1430,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearBypassStorage();
                 return;
             }
-            
+
             // Handle blocked
             if (response.status === 429) {
                 hideChallengeModal();
@@ -1438,12 +1551,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearBypassStorage();
                 return;
             }
-            
+
             // Handle wrong answer with new challenge
             if (data.new_challenge) {
                 showUIMessage(translations[lang].challenge_wrong, 'error', 2000);
                 if (appState.soundEnabled) playSound(200, 200, 'sawtooth');
-                
+
                 // Atualiza challenge
                 appState.currentChallenge = {
                     ...data.new_challenge,
@@ -1453,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderChallenge(data.new_challenge, data.attempts_remaining);
                 return;
             }
-            
+
             // Handle need to restart
             if (data.restart_required) {
                 hideChallengeModal();
@@ -1461,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearBypassStorage();
                 return;
             }
-            
+
             // Handle other errors
             if (!response.ok) {
                 hideChallengeModal();
@@ -1469,7 +1582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearBypassStorage();
                 return;
             }
-            
+
             // === SUCCESS: Challenge resolvido! ===
             if (data.status === 'success' && data.proof_token) {
                 hideChallengeModal();
@@ -1479,14 +1592,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     { freq: 659, duration: 100, type: 'sine' },
                     { freq: 784, duration: 200, type: 'sine' }
                 ]);
-                
+
                 // Salva proof token e gera key
                 appState.proofToken = data.proof_token;
                 localStorage.setItem(CONFIG.BYPASS_PROOF_TOKEN_KEY, data.proof_token);
-                
+
                 // Limpa session (não precisa mais)
                 localStorage.removeItem(CONFIG.BYPASS_SESSION_KEY);
-                
+
                 // Gera a key!
                 setTimeout(() => generateNewKey(), 500);
             }
@@ -1496,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', () => {
             optionButtons?.forEach(btn => btn.disabled = false);
         }
     }
-    
+
     // === ANTI-BYPASS: Esconde modal do challenge ===
     function hideChallengeModal() {
         if (elements.challengeModal) {
@@ -1628,11 +1741,11 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.btnOpenMethodMenu.addEventListener('click', () => {
                 if (elements.methodSelectionModal) {
                     elements.methodSelectionModal.style.display = 'block';
-                    
+
                     // Check if Turnstile token is still valid (< 4 minutes old)
                     const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
                     const TOKEN_MAX_AGE = 4 * 60 * 1000; // 4 minutes
-                    
+
                     if (appState.turnstileToken && tokenAge < TOKEN_MAX_AGE) {
                         // Token still valid, enable buttons
                         console.log('[Modal] Turnstile token still valid, enabling buttons');
@@ -1705,11 +1818,11 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
         appState.keyGenerationCount = parseInt(localStorage.getItem('keyGenerationCount') || '0');
         appState.lastKeyGenerationTime = parseInt(localStorage.getItem('lastKeyGenerationTime') || '0');
-        
+
         // Sistema de detecção de idioma automático
         const preferredLang = localStorage.getItem('preferredLanguage');
         let targetLang;
-        
+
         if (preferredLang && translations[preferredLang]) {
             // Usuário já escolheu um idioma antes
             targetLang = preferredLang;
@@ -1720,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', () => {
             targetLang = browserLang.toLowerCase().startsWith('pt') ? 'pt' : 'en';
             console.log(`[i18n] Browser language: ${browserLang} → Using: ${targetLang.toUpperCase()}`);
         }
-        
+
         // Aplica tradução (mesmo se for PT, para garantir consistência)
         applyTranslation(targetLang);
     }
@@ -1733,9 +1846,191 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAndProcessShortenerReturn();
         if (discordAuth.isAuthenticated) {
             checkCooldownOnLoad();
+            // Busca status premium (verifica se já é premium e atualiza UI)
+            fetchUserPremiumStatus();
         }
     });
     setupSessionWatcher();
+
+    // ==================== STRIPE PREMIUM CHECKOUT ====================
+    const premiumSection = document.getElementById('premiumSection');
+    const premiumSuccessModal = document.getElementById('premiumSuccessModal');
+    const premiumLoadingModal = document.getElementById('premiumLoadingModal');
+    const closePremiumModal = document.getElementById('closePremiumModal');
+    const premiumCopyBtn = document.getElementById('premiumCopyBtn');
+
+    // Função para mostrar seção premium após login
+    function showPremiumSection() {
+        if (premiumSection && discordAuth.isAuthenticated) {
+            premiumSection.style.display = 'block';
+            updatePremiumPrices();
+        }
+    }
+
+    // Atualiza preços baseado no idioma (BRL ou USD)
+    function updatePremiumPrices() {
+        const isEnglish = appState.currentLanguage === 'en';
+        const priceElements = document.querySelectorAll('.plan-price-value');
+
+        priceElements.forEach(el => {
+            const brl = parseFloat(el.dataset.priceBrl);
+            const usd = parseFloat(el.dataset.priceUsd);
+            const currency = el.querySelector('.currency');
+
+            if (isEnglish) {
+                currency.textContent = '$';
+                el.childNodes[el.childNodes.length - 1].textContent = ` ${usd.toFixed(2)}`;
+            } else {
+                currency.textContent = 'R$';
+                el.childNodes[el.childNodes.length - 1].textContent = ` ${brl.toFixed(2).replace('.', ',')}`;
+            }
+        });
+    }
+
+    // Observer para mostrar premium quando usuário logar
+    const authObserver = new MutationObserver(() => {
+        if (discordAuth.isAuthenticated) {
+            showPremiumSection();
+        }
+    });
+    if (elements.userContent) {
+        authObserver.observe(elements.userContent, { attributes: true, attributeFilter: ['style'] });
+    }
+
+    // Botões de compra (múltiplos planos)
+    document.querySelectorAll('.plan-buy-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const priceId = btn.dataset.priceId;
+            if (!priceId || priceId.includes('AQUI')) {
+                showUIMessage('⚠️ Plano em breve!', 'info');
+                return;
+            }
+
+            btn.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span>';
+
+            try {
+                // Pega dados do usuário logado para associar à key premium
+                const discordUsername = discordAuth.userData?.username || null;
+                const discordUserId = discordAuth.userData?.id || discordAuth.userData?.userId || null;
+
+                const response = await fetch(`${CONFIG.API_BASE_URL}/stripe/create-checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        price_id: priceId,
+                        discord_username: discordUsername,
+                        discord_user_id: discordUserId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.checkout_url) {
+                    window.location.href = data.checkout_url;
+                } else {
+                    throw new Error(data.message || 'Erro ao criar checkout');
+                }
+            } catch (error) {
+                console.error('Erro no checkout:', error);
+                showUIMessage('❌ Erro ao iniciar pagamento.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+    });
+
+    // Atualiza preços quando idioma mudar
+    const originalApplyTranslation = window.applyTranslation;
+    if (typeof originalApplyTranslation === 'function') {
+        window.applyTranslation = function (lang) {
+            originalApplyTranslation(lang);
+            updatePremiumPrices();
+        };
+    }
+
+    // Fechar modal premium
+    if (closePremiumModal) {
+        closePremiumModal.addEventListener('click', () => {
+            premiumSuccessModal.style.display = 'none';
+            // Limpa URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        });
+    }
+
+    // Copiar key premium
+    if (premiumCopyBtn) {
+        premiumCopyBtn.addEventListener('click', () => {
+            const key = document.getElementById('premiumKeyValue').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                premiumCopyBtn.textContent = '✅ COPIADO!';
+                premiumCopyBtn.classList.add('copied');
+                setTimeout(() => {
+                    premiumCopyBtn.textContent = '📋 COPIAR CHAVE';
+                    premiumCopyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+    }
+
+    // Verificar se veio de um checkout do Stripe
+    async function checkStripePayment() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+
+        if (!sessionId) return;
+
+        // Mostra loading
+        if (premiumLoadingModal) premiumLoadingModal.style.display = 'flex';
+
+        let attempts = 0;
+        const maxAttempts = 15;
+
+        async function tryVerify() {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/stripe/verify-payment?session_id=${sessionId}`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.key) {
+                    // Sucesso! Mostra a key
+                    if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
+                    if (premiumSuccessModal) {
+                        document.getElementById('premiumKeyValue').textContent = data.key;
+                        document.getElementById('premiumKeyType').textContent = `Premium ${data.hours}h`;
+                        premiumSuccessModal.style.display = 'flex';
+                    }
+                    // Limpa URL mantendo a key visível
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else if (data.status === 'processing' || data.status === 'pending') {
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        setTimeout(tryVerify, 2000);
+                    } else {
+                        if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
+                        showMessage('⏳ Pagamento em processamento. Atualize a página em alguns minutos.', 'info');
+                    }
+                } else {
+                    if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
+                    showMessage(data.message || '❌ Erro ao verificar pagamento.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao verificar pagamento:', error);
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(tryVerify, 2000);
+                } else {
+                    if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
+                    showMessage('❌ Erro de conexão. Tente atualizar a página.', 'error');
+                }
+            }
+        }
+
+        tryVerify();
+    }
+
+    // Verifica pagamento ao carregar a página
+    checkStripePayment();
 
     setTimeout(() => {
         if (appState.soundEnabled) {

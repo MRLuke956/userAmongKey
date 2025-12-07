@@ -96,7 +96,7 @@
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.discordapp.com; frame-src https://discord.com https://challenges.cloudflare.com; connect-src 'self' https://discord.com https://keygenx-1.onrender.com https://challenges.cloudflare.com https://cdn.jsdelivr.net;">
+    content="default-src 'self'; script-src 'self' https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.discordapp.com; frame-src https://discord.com https://challenges.cloudflare.com; connect-src 'self' https://discord.com https://keygenx-1.onrender.com https://challenges.cloudflare.com https://cdn.jsdelivr.net https://checkout.stripe.com;">
 </head>
 
 <body>
@@ -303,6 +303,57 @@
       </section>
     </div>
 
+    <!-- ==================== SEÇÃO PREMIUM (aparece após login) ==================== -->
+    <section class="premium-section" id="premiumSection" style="display: none;">
+      <div class="premium-header">
+        <span class="premium-badge-mini">⭐ PREMIUM</span>
+        <h3 class="premium-title-mini" data-translate-key="premium_title">Pule a verificação</h3>
+      </div>
+      
+      <div class="premium-plans">
+        <!-- Plano 48h -->
+        <div class="premium-plan" data-plan="48h">
+          <div class="plan-popular" data-translate-key="plan_popular">POPULAR</div>
+          <div class="plan-name" data-translate-key="plan_48h_name">48 Horas</div>
+          <div class="plan-price">
+            <span class="plan-price-value" data-price-brl="3.99" data-price-usd="0.79">
+              <span class="currency">R$</span> 3,99
+            </span>
+          </div>
+          <ul class="plan-features">
+            <li data-translate-key="feature_no_ads">✓ <span data-translate-key="feature_no_verification">Sem verificação</span></li>
+            <li>✓ <span data-translate-key="feature_unlimited">Keys ilimitadas</span></li>
+            <li>✓ <span data-translate-key="feature_instant">Ativação instantânea</span></li>
+          </ul>
+          <button class="plan-buy-btn" data-price-id="price_1SbRPoL0c7aNorLvkYYvw2Qd">
+            <span data-translate-key="buy_now">Comprar</span>
+          </button>
+        </div>
+        
+        <!-- Plano Mensal -->
+        <div class="premium-plan plan-featured" data-plan="monthly">
+          <div class="plan-best" data-translate-key="plan_best">MELHOR VALOR</div>
+          <div class="plan-name" data-translate-key="plan_monthly_name">30 Dias</div>
+          <div class="plan-price">
+            <span class="plan-price-value" data-price-brl="24.99" data-price-usd="4.99">
+              <span class="currency">R$</span> 24,99
+            </span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ <span data-translate-key="feature_no_verification">Sem verificação</span></li>
+            <li>✓ <span data-translate-key="feature_unlimited">Keys ilimitadas</span></li>
+            <li>✓ <span data-translate-key="feature_priority">Suporte prioritário</span></li>
+            <li>✓ <span data-translate-key="feature_updates">Acesso antecipado</span></li>
+          </ul>
+          <button class="plan-buy-btn btn-featured" data-price-id="price_1SbS4mL0c7aNorLvO27FTKSe">
+            <span data-translate-key="buy_now">Comprar</span>
+          </button>
+        </div>
+      </div>
+      
+      <p class="premium-secure-mini">🔒 <span data-translate-key="secure_payment">Pagamento seguro via Stripe</span></p>
+    </section>
+
     <div class="bottom-buttons">
       <button class="support-button" id="supportButton">
         <span data-translate-key="support_button">🆘 Suporte</span>
@@ -382,6 +433,44 @@
   <div class="overlay" id="overlay"></div>
   <div class="access-granted-overlay" id="accessGrantedOverlay">
     <div class="access-text" data-text="ACCESS GRANTED">ACCESS GRANTED</div>
+  </div>
+
+  <!-- Modal Premium Key Success -->
+  <div id="premiumSuccessModal" class="modal">
+    <div class="modal-content premium-success-modal">
+      <span class="close-modal" id="closePremiumModal">&times;</span>
+      <div class="premium-success-icon">🎉</div>
+      <h2 class="premium-success-title">Pagamento Confirmado!</h2>
+      <p class="premium-success-subtitle">Sua chave Premium está pronta!</p>
+      
+      <div class="premium-key-display">
+        <div class="premium-key-label">⭐ SUA CHAVE PREMIUM</div>
+        <div class="premium-key-value" id="premiumKeyValue">---</div>
+        <div class="premium-key-type" id="premiumKeyType">Premium 48h</div>
+      </div>
+      
+      <button class="premium-copy-btn" id="premiumCopyBtn">
+        📋 COPIAR CHAVE
+      </button>
+
+      <div class="premium-instructions">
+        <h4>📖 Como usar:</h4>
+        <ol>
+          <li>Abra o Among Us com o mod instalado</li>
+          <li>Pressione <strong>F1</strong> no menu principal</li>
+          <li>Cole a chave no campo de ativação</li>
+          <li>Aproveite o acesso Premium por 48h! 🚀</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Loading Modal -->
+  <div id="premiumLoadingModal" class="modal">
+    <div class="modal-content premium-loading-modal">
+      <div class="premium-spinner"></div>
+      <p>Verificando pagamento...</p>
+    </div>
   </div>
 
 

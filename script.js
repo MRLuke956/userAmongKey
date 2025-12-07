@@ -323,7 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
             feature_priority: 'Priority support',
             feature_updates: 'Early access',
             buy_now: 'Buy',
-            secure_payment: 'Secure payment via Stripe'
+            secure_payment: 'Secure payment via Stripe',
+            premium_active_title: '⭐ PREMIUM ACTIVE',
+            premium_active_text: 'You have active {type} access!',
+            premium_active_sub: 'Your key is unique and can be used unlimited times until it expires.',
+            premium_keys_title: '⭐ Your Premium Keys'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -433,7 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
             feature_priority: 'Suporte prioritário',
             feature_updates: 'Acesso antecipado',
             buy_now: 'Comprar',
-            secure_payment: 'Pagamento seguro via Stripe'
+            secure_payment: 'Pagamento seguro via Stripe',
+            premium_active_title: '⭐ PREMIUM ATIVO',
+            premium_active_text: 'Você possui acesso {type} ativo!',
+            premium_active_sub: 'Sua key é única e pode ser usada ilimitadamente até expirar.',
+            premium_keys_title: '⭐ Suas Keys Premium'
         }
     };
 
@@ -1128,14 +1136,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const premiumSection = document.getElementById('premiumSection');
                 if (premiumSection) {
                     if (appState.hasActivePremium) {
-                        // Substitui conteúdo por status premium
+                        // Substitui conteúdo por status premium (com suporte a tradução)
+                        const lang = appState.currentLanguage || 'pt';
+                        const t = translations[lang];
                         premiumSection.innerHTML = `
                             <div class="premium-active-banner">
-                                <span class="premium-badge-large">⭐ PREMIUM ATIVO</span>
+                                <span class="premium-badge-large">${t.premium_active_title}</span>
                                 <p class="premium-status-text">
-                                    Você possui acesso <strong>${appState.activePremiumType?.toUpperCase()}</strong> ativo!
+                                    ${t.premium_active_text.replace('{type}', `<strong>${appState.activePremiumType?.toUpperCase()}</strong>`)}
                                 </p>
-                                <p class="premium-status-sub">Suas keys são geradas instantaneamente, sem encurtador.</p>
+                                <p class="premium-status-sub">${t.premium_active_sub}</p>
                             </div>
                         `;
                         premiumSection.style.display = 'block';
@@ -1165,12 +1175,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Adiciona seção de keys premium acima das standard
+        const lang = appState.currentLanguage || 'pt';
+        const t = translations[lang];
         let premiumSection = document.getElementById('premiumKeysSection');
         if (!premiumSection) {
             premiumSection = document.createElement('section');
             premiumSection.id = 'premiumKeysSection';
             premiumSection.className = 'keys-list-section premium-keys-section';
-            premiumSection.innerHTML = '<h2>⭐ Suas Keys Premium</h2><ul id="premiumKeysList"></ul>';
+            premiumSection.innerHTML = `<h2>${t.premium_keys_title}</h2><ul id="premiumKeysList"></ul>`;
 
             // Insere antes da seção de keys normais
             const standardSection = document.querySelector('.keys-list-section');

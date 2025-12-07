@@ -1153,9 +1153,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Renderiza keys premium na lista
+    // Renderiza keys premium na lista (exclui expiradas)
     function renderPremiumKeysList() {
-        if (!appState.userPremiumKeys || appState.userPremiumKeys.length === 0) return;
+        // Filtra apenas keys que NÃO estão expiradas
+        const activeKeys = (appState.userPremiumKeys || []).filter(k => k.status !== 'expired');
+        if (activeKeys.length === 0) {
+            // Remove seção se não houver keys ativas
+            const existingSection = document.getElementById('premiumKeysSection');
+            if (existingSection) existingSection.remove();
+            return;
+        }
 
         // Adiciona seção de keys premium acima das standard
         let premiumSection = document.getElementById('premiumKeysSection');
@@ -1175,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listEl = document.getElementById('premiumKeysList');
         if (listEl) {
             listEl.innerHTML = '';
-            appState.userPremiumKeys.forEach(key => {
+            activeKeys.forEach(key => {
                 const li = document.createElement('li');
                 li.className = 'premium-key-item';
 
@@ -1661,6 +1668,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderKeysList();
         if (discordAuth.isAuthenticated) discordAuth.updateGenerateButton(discordAuth.userStats ? discordAuth.userStats.is_server_member : false);
         if (discordAuth.isAuthenticated) updateKeyLimitDisplay();
+
+        // Atualiza preços baseado no novo idioma (BRL/USD)
+        updatePremiumPrices();
     }
 
     function toggleTranslation() {

@@ -1315,6 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const action = urlParams.get('action');
             const status = urlParams.get('status');
+            const linkvertiseHash = urlParams.get('hash'); // Hash do Linkvertise Anti-Bypass
             const sessionId = localStorage.getItem(CONFIG.BYPASS_SESSION_KEY);
 
             // Se não tem session_id, não é um retorno válido
@@ -1333,12 +1334,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 showUIMessage(translations[lang].verification_processing, 'info', 0);
                 window.history.replaceState({}, document.title, window.location.pathname);
 
-                // === ANTI-BYPASS: Chama /verify-return para validar timing e obter challenge ===
+                // Log para debug (remover em produção se necessário)
+                if (linkvertiseHash) {
+                    console.log(`[Linkvertise] Hash recebido: ${linkvertiseHash.substring(0, 10)}...`);
+                } else {
+                    console.warn('[Linkvertise] Nenhum hash recebido na URL de retorno.');
+                }
+
+                // === ANTI-BYPASS: Chama /verify-return para validar timing, hash Linkvertise e obter challenge ===
                 try {
                     const response = await fetch(`${CONFIG.API_BASE_URL}/verify-return`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ session_id: sessionId })
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            linkvertise_hash: linkvertiseHash || null // Envia o hash do Linkvertise
+                        })
                     });
 
                     const data = await response.json();

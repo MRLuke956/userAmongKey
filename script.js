@@ -1941,14 +1941,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Atualiza preços quando idioma mudar
-    const originalApplyTranslation = window.applyTranslation;
-    if (typeof originalApplyTranslation === 'function') {
-        window.applyTranslation = function (lang) {
-            originalApplyTranslation(lang);
-            updatePremiumPrices();
-        };
-    }
+    // Atualiza preços imediatamente após carregar a página
+    updatePremiumPrices();
+
+    // Atualiza preços quando idioma mudar (após applyTranslation)
+    // Guarda referência à função original de tradução
+    const originalApplyTranslation = applyTranslation;
+    // Sobrescreve para adicionar atualização de preços
+    window.applyTranslation = function (lang) {
+        originalApplyTranslation(lang);
+        updatePremiumPrices();
+    };
 
     // Fechar modal premium
     if (closePremiumModal) {

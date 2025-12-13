@@ -3510,3 +3510,486 @@ button:focus-visible {
     word-break: break-all;
   }
 }
+
+/* ==================== CHALLENGE MODAL STYLES ==================== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  overflow-y: auto;
+  padding: 2rem 1rem;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #1a2433 0%, #0f1219 100%);
+  border: 2px solid #6a93c9;
+  border-radius: 16px;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0;
+  box-shadow: 0 0 50px rgba(106, 147, 201, 0.3), 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.challenge-modal-content {
+  overflow: hidden;
+}
+
+/* Challenge Header */
+.challenge-header {
+  background: linear-gradient(135deg, rgba(255, 203, 116, 0.15) 0%, rgba(255, 140, 0, 0.1) 100%);
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 203, 116, 0.3);
+  text-align: center;
+}
+
+.challenge-header h2 {
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 1.4rem;
+  color: #ffcb74;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(255, 203, 116, 0.5);
+}
+
+.challenge-header p {
+  color: #b0bec5;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Challenge Timer */
+.challenge-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(255, 100, 80, 0.05) 100%);
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  border-radius: 30px;
+  margin: 1rem 2rem 0 2rem;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+}
+
+.challenge-timer span:first-child {
+  color: #b0bec5;
+  font-size: 0.85rem;
+}
+
+#challengeTimer {
+  color: #e74c3c;
+  font-size: 1.1rem;
+  font-weight: bold;
+  min-width: 50px;
+  text-align: center;
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Challenge Body */
+.challenge-body {
+  padding: 2rem;
+  text-align: center;
+}
+
+/* Challenge Question */
+#challengeQuestion,
+.challenge-question {
+  margin-bottom: 2rem;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.challenge-instruction {
+  font-size: 1.3em !important;
+  color: #ffcb74;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-weight: 700 !important;
+  margin-bottom: 1.2rem !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 203, 116, 0.4);
+}
+
+.challenge-visual {
+  font-size: 3.5em !important;
+  letter-spacing: 0.3em !important;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1.2rem 2rem;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+  line-height: 1.3;
+}
+
+.challenge-question-text {
+  font-size: 1.2em;
+  line-height: 1.6;
+  color: #e8f1f8;
+}
+
+/* Challenge Options */
+#challengeOptions,
+.challenge-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.challenge-option {
+  background: linear-gradient(135deg, #2d3b52 0%, #1e2837 100%);
+  border: 2px solid rgba(106, 147, 201, 0.4);
+  color: #e8f1f8;
+  padding: 1.2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: var(--font-body, 'Space Grotesk', sans-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3), 0 6px 12px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.challenge-option:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3d4d66 0%, #2a3847 100%);
+  border-color: #6a93c9;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3), 0 10px 20px rgba(0, 0, 0, 0.25);
+}
+
+.challenge-option:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.challenge-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Emoji Options - Larger */
+.challenge-emoji-option {
+  font-size: 2.5rem !important;
+  padding: 1.5rem;
+  line-height: 1;
+  background: linear-gradient(135deg, rgba(45, 59, 82, 0.9) 0%, rgba(26, 36, 51, 0.95) 100%);
+}
+
+.challenge-emoji-option:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(61, 77, 102, 0.95) 0%, rgba(42, 56, 71, 1) 100%);
+  border-color: #ffcb74;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3), 0 0 25px rgba(255, 203, 116, 0.3);
+}
+
+/* Color Options */
+.challenge-color-option {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  padding: 0;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 6px 12px rgba(0, 0, 0, 0.3), inset 0 -3px 6px rgba(0, 0, 0, 0.2);
+  margin: 0 auto;
+}
+
+.challenge-color-option:hover:not(:disabled) {
+  border-color: #fff;
+  transform: scale(1.15);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4), 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 20px currentColor;
+}
+
+/* Challenge Footer */
+.challenge-footer {
+  padding: 1.2rem 2rem 1.5rem 2rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#challengeAttempts {
+  color: #b0bec5;
+  font-size: 0.9rem;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+}
+
+.challenge-hint {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Shake Animation (when trying to close) */
+.shake {
+  animation: shakeModal 0.5s ease;
+}
+
+@keyframes shakeModal {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-8px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(8px);
+  }
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .modal-content {
+    margin: 0 0.5rem;
+  }
+
+  .challenge-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .challenge-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .challenge-body {
+    padding: 1.5rem;
+  }
+
+  .challenge-visual {
+    font-size: 2.5em !important;
+    padding: 1rem 1.5rem;
+    letter-spacing: 0.15em !important;
+  }
+
+  .challenge-instruction {
+    font-size: 1.1em !important;
+  }
+
+  #challengeOptions {
+    gap: 0.8rem;
+  }
+
+  .challenge-emoji-option {
+    font-size: 2rem !important;
+    padding: 1rem;
+  }
+
+  .challenge-color-option {
+    width: 55px;
+    height: 55px;
+  }
+}
+
+/* Method Selection Modal Styles */
+.method-selection-content {
+  text-align: center;
+}
+
+.methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(45, 59, 82, 0.8) 0%, rgba(26, 36, 51, 0.9) 100%);
+  border: 2px solid rgba(106, 147, 201, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.method-option:hover:not(:disabled) {
+  border-color: #6a93c9;
+  background: linear-gradient(135deg, rgba(55, 72, 95, 0.9) 0%, rgba(35, 48, 65, 0.95) 100%);
+  transform: translateX(5px);
+}
+
+.method-option.recommended {
+  border-color: rgba(255, 203, 116, 0.5);
+  background: linear-gradient(135deg, rgba(255, 203, 116, 0.1) 0%, rgba(26, 36, 51, 0.9) 100%);
+}
+
+.method-option.recommended:hover:not(:disabled) {
+  border-color: #ffcb74;
+  box-shadow: 0 0 20px rgba(255, 203, 116, 0.2);
+}
+
+.method-option:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.method-icon {
+  font-size: 1.8rem;
+}
+
+.method-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.method-name {
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-weight: 700;
+  color: #e8f1f8;
+  font-size: 0.95rem;
+}
+
+.method-desc {
+  color: #7e8c9a;
+  font-size: 0.8rem;
+}
+
+.method-arrow {
+  font-size: 1.2rem;
+  color: #6a93c9;
+  transition: transform 0.3s ease;
+}
+
+.method-option:hover .method-arrow {
+  transform: translateX(5px);
+  color: #ffcb74;
+}
+
+/* Close Modal Button */
+.close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 2rem;
+  color: #7e8c9a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  z-index: 10;
+}
+
+.close-modal:hover {
+  color: #e74c3c;
+  transform: scale(1.1);
+}
+
+/* Tutorial Modal */
+.tutorial-content {
+  padding: 2rem;
+}
+
+.tutorial-content h2 {
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  color: #ffcb74;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.tutorial-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  border-left: 4px solid #6a93c9;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #6a93c9 0%, #4a73a9 100%);
+  color: white;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-content h4 {
+  color: #e8f1f8;
+  margin-bottom: 0.3rem;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 0.95rem;
+}
+
+.step-content p {
+  color: #b0bec5;
+  font-size: 0.85rem;
+  margin: 0;
+}

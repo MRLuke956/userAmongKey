@@ -1555,13 +1555,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderChallenge(challenge, attemptsRemaining = 5) {
         const lang = appState.currentLanguage;
 
-        // Question - emoji grande e claro
+        // Select question based on language
+        const questionText = lang === 'en' ? (challenge.question_en || challenge.question) : challenge.question;
+
+        // Split question into instruction and visual parts using || separator
+        // Format: "Instruction text||Visual content (emojis)"
+        const parts = questionText.split('||');
+        const instructionText = parts[0] || questionText;
+        const visualContent = parts[1] || '';
+
+        // Question - instruction and visual content separated for clarity
         if (elements.challengeQuestion) {
-            let content = `<span class="challenge-question-text">${challenge.question}</span>`;
-            if (challenge.visuals) {
-                content += `<div class="challenge-visuals" style="font-size: 1.5em; letter-spacing: 5px; margin-top: 10px; font-family: 'Segoe UI Emoji', 'Noto Color Emoji';">${challenge.visuals}</div>`;
-            }
-            elements.challengeQuestion.innerHTML = content;
+            elements.challengeQuestion.innerHTML = `
+                <div class="challenge-instruction" style="font-size: 1.2em; margin-bottom: 1rem; font-weight: 600;">${instructionText}</div>
+                ${visualContent ? `<div class="challenge-visual" style="font-size: 3em; letter-spacing: 0.2em;">${visualContent}</div>` : ''}
+            `;
         }
 
         // Options
@@ -1579,7 +1587,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.onclick = () => submitChallengeAnswer(opt.code);
                     elements.challengeOptions.appendChild(btn);
                 });
-            } else if (challenge.type === 'emoji_simple') {
+            } else if (challenge.type === 'visual_pattern' || challenge.type === 'emoji_simple') {
                 // Emoji buttons - grandes e clicáveis
                 challenge.options.forEach(opt => {
                     const btn = document.createElement('button');

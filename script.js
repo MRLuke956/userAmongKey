@@ -355,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_365days: '365 Days',
             plan_lifetime: 'Lifetime',
             plan_forever: 'Forever!',
+            plan_per_month: '~$2.50/month',
             verifying_payment: 'Verifying payment...',
             // Christmas
             christmas_premium_badge: '🎄 CHRISTMAS PREMIUM',
@@ -500,6 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_365days: '365 Dias',
             plan_lifetime: 'Lifetime',
             plan_forever: 'Para sempre!',
+            plan_per_month: '~R$12/mês',
             verifying_payment: 'Verificando pagamento...',
             // Christmas
             christmas_premium_badge: '🎄 NATAL PREMIUM',

@@ -55,8 +55,7 @@ body {
 
 body {
   font-family: var(--font-body);
-  background-color: transparent;
-  /* Changed: body transparent so starfield shows */
+  background-color: var(--background-color);
   color: var(--text-color-light);
   min-height: 100vh;
   padding: 1rem;
@@ -64,25 +63,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  opacity: 0;
-  animation: bootUp 2s ease-out forwards;
-}
-
-@keyframes bootUp {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  50% {
-    opacity: 0.5;
-    transform: scale(0.98);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
 }
 
 #starfield-canvas {
@@ -2767,7 +2747,7 @@ button:focus-visible {
       rgba(15, 18, 25, 0.95) 100%);
   border: 1px solid rgba(255, 215, 0, 0.2);
   border-radius: 16px;
-  padding: 1.25rem 1rem;
+  padding: 1.5rem 1rem 1.25rem;
   text-align: center;
   position: relative;
   transition: all 0.35s ease;
@@ -2811,9 +2791,8 @@ button:focus-visible {
 
 .premium-plan:hover {
   border-color: rgba(255, 215, 0, 0.4);
-  transform: translateY(-5px);
   box-shadow:
-    0 15px 30px rgba(0, 0, 0, 0.3),
+    0 8px 25px rgba(0, 0, 0, 0.3),
     0 0 20px rgba(255, 215, 0, 0.1);
 }
 
@@ -2871,7 +2850,7 @@ button:focus-visible {
   font-family: var(--font-title);
   font-size: 1rem;
   color: var(--text-color-light);
-  margin: 0.75rem 0 0.5rem;
+  margin: 1.25rem 0 0.5rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
@@ -2940,7 +2919,6 @@ button:focus-visible {
   background: linear-gradient(135deg, #3d4b62 0%, #2a3443 100%);
   border-color: rgba(255, 215, 0, 0.6);
   box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
-  transform: translateY(-2px);
 }
 
 .plan-buy-btn:hover::before {
@@ -2957,7 +2935,6 @@ button:focus-visible {
 .btn-featured:hover {
   background: linear-gradient(135deg, #ffdd33 0%, #ffa033 100%);
   box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6);
-  transform: translateY(-3px);
 }
 
 .plan-buy-btn:disabled {

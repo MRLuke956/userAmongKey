@@ -327,7 +327,26 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_active_title: '⭐ PREMIUM ACTIVE',
             premium_active_text: 'You have active {type} access!',
             premium_active_sub: 'Your key is unique and can be used unlimited times until it expires.',
-            premium_keys_title: '⭐ Your Premium Keys'
+            premium_keys_title: '⭐ Your Premium Keys',
+            // Plan Details (hover)
+            detail_no_verification: '✓ No verification',
+            detail_unlimited_keys: '✓ Unlimited keys',
+            detail_expires_48h: '⏱️ Expires in 48 hours',
+            detail_7days_access: '⏱️ 7 days of access',
+            detail_30days_access: '⏱️ 30 days of access',
+            detail_90days_access: '⏱️ 90 days of access',
+            detail_1year_access: '⏱️ 1 full year',
+            detail_never_expires: '♾️ NEVER expires',
+            detail_auto_renew: '🔄 Auto-renews',
+            detail_renew_3months: '🔄 Renews every 3 months',
+            detail_renew_yearly: '🔄 Renews annually',
+            detail_priority_support: '⚡ Priority support',
+            detail_vip_support: '⚡ VIP support',
+            detail_pay_once: '🎁 Pay once only',
+            detail_save_28: '💰 28% savings',
+            detail_save_20: '💰 20% savings',
+            detail_save_50: '💰 50% savings',
+            premium_features_shared: '✓ No verification • Unlimited keys • Priority support'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -441,7 +460,26 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_active_title: '⭐ PREMIUM ATIVO',
             premium_active_text: 'Você possui acesso {type} ativo!',
             premium_active_sub: 'Sua key é única e pode ser usada ilimitadamente até expirar.',
-            premium_keys_title: '⭐ Suas Keys Premium'
+            premium_keys_title: '⭐ Suas Keys Premium',
+            // Plan Details (hover)
+            detail_no_verification: '✓ Sem verificação',
+            detail_unlimited_keys: '✓ Keys ilimitadas',
+            detail_expires_48h: '⏱️ Expira em 48 horas',
+            detail_7days_access: '⏱️ 7 dias de acesso',
+            detail_30days_access: '⏱️ 30 dias de acesso',
+            detail_90days_access: '⏱️ 90 dias de acesso',
+            detail_1year_access: '⏱️ 1 ano completo',
+            detail_never_expires: '♾️ NUNCA expira',
+            detail_auto_renew: '🔄 Renova automático',
+            detail_renew_3months: '🔄 Renova a cada 3 meses',
+            detail_renew_yearly: '🔄 Renova anualmente',
+            detail_priority_support: '⚡ Suporte prioritário',
+            detail_vip_support: '⚡ Suporte VIP',
+            detail_pay_once: '🎁 Pague uma vez só',
+            detail_save_28: '💰 28% economia',
+            detail_save_20: '💰 20% economia',
+            detail_save_50: '💰 50% economia',
+            premium_features_shared: '✓ Sem verificação • Keys ilimitadas • Suporte prioritário'
         }
     };
 

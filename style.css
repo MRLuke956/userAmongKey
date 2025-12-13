@@ -55,7 +55,8 @@ body {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--background-color);
+  background-color: transparent;
+  /* Changed: body transparent so starfield shows */
   color: var(--text-color-light);
   min-height: 100vh;
   padding: 1rem;
@@ -92,6 +93,8 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: -1;
+  background-color: var(--background-color);
+  /* Added: background here so stars render on top */
 }
 
 .scanline-overlay {
@@ -531,6 +534,7 @@ button:focus-visible,
 
 /* Reduced motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -649,9 +653,12 @@ button.loading .button-text {
 }
 
 @keyframes pulseHint {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 3px 0px #27ae60, 0 5px 8px rgba(0, 0, 0, 0.2);
   }
+
   50% {
     box-shadow: 0 3px 0px #27ae60, 0 5px 20px rgba(46, 204, 113, 0.6), 0 0 30px rgba(46, 204, 113, 0.4);
   }
@@ -1550,7 +1557,7 @@ button.loading .button-text {
 }
 
 /* Success state animation for Turnstile */
-.cf-turnstile iframe[data-state="solved"] + .turnstile-success-indicator {
+.cf-turnstile iframe[data-state="solved"]+.turnstile-success-indicator {
   display: block;
 }
 
@@ -1825,8 +1832,8 @@ button:active:not([disabled]) {
   width: 90%;
   text-align: center;
   box-shadow: 0 0 40px rgba(106, 147, 201, 0.3),
-              0 0 80px rgba(106, 147, 201, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 80px rgba(106, 147, 201, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   animation: modalSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -1835,6 +1842,7 @@ button:active:not([disabled]) {
     transform: scale(0.8) translateY(-20px);
     opacity: 0;
   }
+
   100% {
     transform: scale(1) translateY(0);
     opacity: 1;
@@ -2013,9 +2021,26 @@ button:active:not([disabled]) {
 
 /* Shake animation when trying to close */
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .challenge-modal-content.shake {
@@ -2036,45 +2061,45 @@ button:active:not([disabled]) {
     margin: 0.5rem;
     max-width: 95%;
   }
-  
+
   .challenge-header h2 {
     font-size: 1.1rem;
   }
-  
+
   .challenge-header p {
     font-size: 0.8rem;
   }
-  
+
   .challenge-question-text {
     font-size: 2.5rem !important;
   }
-  
+
   .challenge-options {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-  
+
   .challenge-option {
     padding: 0.6rem 0.8rem;
     font-size: 0.9rem;
   }
-  
+
   .challenge-emoji-option {
     font-size: 2rem !important;
     min-width: 65px;
     min-height: 55px;
   }
-  
+
   .challenge-color-option {
     width: 55px;
     height: 55px;
   }
-  
+
   .challenge-timer {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }
-  
+
   .challenge-hint {
     font-size: 0.7rem;
   }
@@ -2090,9 +2115,12 @@ button:active:not([disabled]) {
 }
 
 @keyframes statusPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
   }
+
   50% {
     box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
   }
@@ -2114,8 +2142,15 @@ button:active:not([disabled]) {
 }
 
 @keyframes iconBounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.3); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
 }
 
 .method-option:hover:not([disabled]) .method-arrow {
@@ -2123,8 +2158,15 @@ button:active:not([disabled]) {
 }
 
 @keyframes arrowSlide {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
 }
 
 /* 3. Glow Effect na Key Gerada */
@@ -2140,6 +2182,7 @@ button:active:not([disabled]) {
   0% {
     text-shadow: 0 0 5px var(--key-id-color), 0 0 10px var(--key-id-color);
   }
+
   100% {
     text-shadow: 0 0 10px var(--key-id-color), 0 0 20px var(--key-id-color), 0 0 30px var(--key-id-color);
   }
@@ -2163,8 +2206,14 @@ button:active:not([disabled]) {
 }
 
 @keyframes messageShine {
-  0% { left: -100%; }
-  50%, 100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  50%,
+  100% {
+    left: 100%;
+  }
 }
 
 .message.show {
@@ -2176,6 +2225,7 @@ button:active:not([disabled]) {
     transform: translateY(-20px) scale(0.8);
     opacity: 0;
   }
+
   100% {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -2184,19 +2234,23 @@ button:active:not([disabled]) {
 
 /* 5. Loading Skeleton */
 .skeleton {
-  background: linear-gradient(90deg, 
-    var(--panel-bg-color) 25%, 
-    rgba(106, 147, 201, 0.1) 50%, 
-    var(--panel-bg-color) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--panel-bg-color) 25%,
+      rgba(106, 147, 201, 0.1) 50%,
+      var(--panel-bg-color) 75%);
   background-size: 200% 100%;
   animation: skeletonLoading 1.5s infinite;
   border-radius: 4px;
 }
 
 @keyframes skeletonLoading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton-key {
@@ -2221,9 +2275,18 @@ button:active:not([disabled]) {
 }
 
 @keyframes countUpdate {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); color: var(--crewmate-yellow); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+    color: var(--crewmate-yellow);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 7. Efeito Typing na Key */
@@ -2235,13 +2298,25 @@ button:active:not([disabled]) {
 }
 
 @keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
 }
 
 @keyframes blinkCursor {
-  from, to { border-color: transparent; }
-  50% { border-color: var(--key-id-color); }
+
+  from,
+  to {
+    border-color: transparent;
+  }
+
+  50% {
+    border-color: var(--key-id-color);
+  }
 }
 
 /* 8. Botão Copiar com Feedback */
@@ -2309,10 +2384,23 @@ button:active:not([disabled]) {
 }
 
 @keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.1); }
-  50% { transform: scale(1); }
-  75% { transform: scale(1.2); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.1);
+  }
+
+  50% {
+    transform: scale(1);
+  }
+
+  75% {
+    transform: scale(1.2);
+  }
 }
 
 .footer-links {
@@ -2361,17 +2449,32 @@ button:focus-visible {
   animation: keyListSlide 0.4s ease backwards;
 }
 
-#keysList li:nth-child(1) { animation-delay: 0.05s; }
-#keysList li:nth-child(2) { animation-delay: 0.1s; }
-#keysList li:nth-child(3) { animation-delay: 0.15s; }
-#keysList li:nth-child(4) { animation-delay: 0.2s; }
-#keysList li:nth-child(5) { animation-delay: 0.25s; }
+#keysList li:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+#keysList li:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+#keysList li:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+#keysList li:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+#keysList li:nth-child(5) {
+  animation-delay: 0.25s;
+}
 
 @keyframes keyListSlide {
   from {
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -2412,7 +2515,7 @@ button:focus-visible {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
   transform: scale(0);
   transition: transform 0.5s ease;
 }
@@ -2427,9 +2530,17 @@ button:focus-visible {
 }
 
 @keyframes successPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* 15. Tooltip Customizado */
@@ -2468,10 +2579,13 @@ button:focus-visible {
 }
 
 @keyframes pulseHint {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
   }
+
   50% {
     transform: scale(1.05);
     box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
@@ -2488,6 +2602,7 @@ button:focus-visible {
     opacity: 0;
     transform: scale(0.8);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -2500,8 +2615,15 @@ button:focus-visible {
 }
 
 @keyframes processingPulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* 19. Help Button Melhorado */
@@ -2532,11 +2654,11 @@ button:focus-visible {
   .site-footer {
     padding: 1.5rem 0.75rem;
   }
-  
+
   .footer-links {
     gap: 1rem;
   }
-  
+
   .footer-links a svg {
     width: 14px;
     height: 14px;
@@ -2575,7 +2697,7 @@ button:focus-visible {
 
 .premium-plans {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
 }
 
@@ -2599,7 +2721,8 @@ button:focus-visible {
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
 }
 
-.plan-popular, .plan-best {
+.plan-popular,
+.plan-best {
   position: absolute;
   top: -8px;
   left: 50%;
@@ -2691,17 +2814,167 @@ button:focus-visible {
 
 .premium-secure-mini {
   text-align: center;
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   color: var(--text-color-dark);
   font-size: 0.7rem;
 }
 
-/* Responsive Premium */
-@media (max-width: 400px) {
+/* Shared Features - shown below cards */
+.premium-features-shared {
+  text-align: center;
+  margin: 0.75rem 0 0.25rem;
+  padding: 0.5rem;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  color: var(--text-color-medium);
+  border: 1px dashed rgba(255, 215, 0, 0.3);
+}
+
+/* Compact Plans Layout */
+.premium-plans-compact .premium-plan {
+  padding: 0.75rem 0.5rem;
+}
+
+.premium-plans-compact .plan-name {
+  font-size: 0.8rem;
+  margin: 0.3rem 0;
+}
+
+.premium-plans-compact .plan-price-value {
+  font-size: 1.1rem;
+}
+
+.premium-plans-compact .plan-buy-btn {
+  padding: 0.4rem;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+}
+
+/* Plan Details - Hidden by default, shown on hover */
+.plan-details {
+  display: none;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem;
+  margin: 0.4rem 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  font-size: 0.65rem;
+  color: var(--text-color-medium);
+  text-align: left;
+  animation: slideDown 0.2s ease-out;
+}
+
+.plan-details span {
+  display: block;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Show details on hover */
+.premium-plan:hover .plan-details {
+  display: flex;
+}
+
+/* Keep card from jumping around */
+.premium-plan {
+  min-height: auto;
+  transition: all 0.3s ease;
+}
+
+/* New Plan Badges */
+.plan-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.plan-new {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.plan-economy {
+  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+  color: white;
+}
+
+.plan-crown {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: white;
+  animation: crownPulse 2s ease-in-out infinite;
+}
+
+@keyframes crownPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(155, 89, 182, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 15px rgba(155, 89, 182, 0.8);
+  }
+}
+
+/* Lifetime Plan Special Styling */
+.plan-lifetime {
+  background: linear-gradient(145deg, #1a2433 0%, #0d0a1a 100%);
+  border: 2px solid #9b59b6;
+  box-shadow: 0 0 20px rgba(155, 89, 182, 0.2);
+}
+
+.plan-lifetime:hover {
+  border-color: #9b59b6;
+  box-shadow: 0 0 30px rgba(155, 89, 182, 0.4);
+}
+
+.btn-lifetime {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  color: white;
+}
+
+.btn-lifetime:hover {
+  box-shadow: 0 4px 15px rgba(155, 89, 182, 0.5);
+}
+
+/* Price Hint */
+.plan-price-hint {
+  font-size: 0.65rem;
+  color: var(--text-color-medium);
+  margin-top: 0.2rem;
+  opacity: 0.8;
+}
+
+/* Responsive Premium - 3 tiers */
+@media (max-width: 700px) {
+  .premium-plans {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 450px) {
   .premium-plans {
     grid-template-columns: 1fr;
   }
-  
+
   .plan-featured {
     order: -1;
   }
@@ -2720,8 +2993,15 @@ button:focus-visible {
 }
 
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .premium-success-title {
@@ -2834,7 +3114,9 @@ button:focus-visible {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ==================== 23. PREMIUM ACTIVE BANNER ==================== */
@@ -2860,8 +3142,17 @@ button:focus-visible {
 }
 
 @keyframes premiumGlow {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.2); opacity: 0.6; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
 }
 
 .premium-badge-large {
@@ -2880,8 +3171,15 @@ button:focus-visible {
 }
 
 @keyframes badgePulse {
-  0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+  }
 }
 
 .premium-status-text {
@@ -2997,7 +3295,7 @@ button:focus-visible {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .premium-key-item .premium-key-value {
     width: 100%;
     font-size: 0.8rem;

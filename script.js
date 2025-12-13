@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_48h_name: '48 Hours',
             plan_monthly_name: '30 Days',
             feature_no_verification: 'No verification',
-            feature_unlimited: 'Unlimited keys',
+            feature_unlimited: 'Unlimited uses',
             feature_instant: 'Instant activation',
             feature_priority: 'Priority support',
             feature_updates: 'Early access',
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_keys_title: '⭐ Your Premium Keys',
             // Plan Details (hover)
             detail_no_verification: '✓ No verification',
-            detail_unlimited_keys: '✓ Unlimited keys',
+            detail_unlimited_keys: '✓ Unlimited uses',
             detail_expires_48h: '⏱️ Expires in 48 hours',
             detail_7days_access: '⏱️ 7 days of access',
             detail_30days_access: '⏱️ 30 days of access',
@@ -346,7 +346,19 @@ document.addEventListener('DOMContentLoaded', () => {
             detail_save_28: '💰 28% savings',
             detail_save_20: '💰 20% savings',
             detail_save_50: '💰 50% savings',
-            premium_features_shared: '✓ No verification • Unlimited keys • Priority support'
+            premium_features_shared: '✓ No verification • Unlimited uses • Priority support',
+            // Plan Names
+            plan_48h: '48h',
+            plan_7days: '7 Days',
+            plan_30days: '30 Days',
+            plan_90days: '90 Days',
+            plan_365days: '365 Days',
+            plan_lifetime: 'Lifetime',
+            plan_forever: 'Forever!',
+            verifying_payment: 'Verifying payment...',
+            // Christmas
+            christmas_premium_badge: '🎄 CHRISTMAS PREMIUM',
+            christmas_footer: '❄️ Happy Holidays! ❄️'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -451,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_48h_name: '48 Horas',
             plan_monthly_name: '30 Dias',
             feature_no_verification: 'Sem verificação',
-            feature_unlimited: 'Keys ilimitadas',
+            feature_unlimited: 'Uso ilimitado',
             feature_instant: 'Ativação instantânea',
             feature_priority: 'Suporte prioritário',
             feature_updates: 'Acesso antecipado',
@@ -463,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_keys_title: '⭐ Suas Keys Premium',
             // Plan Details (hover)
             detail_no_verification: '✓ Sem verificação',
-            detail_unlimited_keys: '✓ Keys ilimitadas',
+            detail_unlimited_keys: '✓ Uso ilimitado',
             detail_expires_48h: '⏱️ Expira em 48 horas',
             detail_7days_access: '⏱️ 7 dias de acesso',
             detail_30days_access: '⏱️ 30 dias de acesso',
@@ -479,7 +491,19 @@ document.addEventListener('DOMContentLoaded', () => {
             detail_save_28: '💰 28% economia',
             detail_save_20: '💰 20% economia',
             detail_save_50: '💰 50% economia',
-            premium_features_shared: '✓ Sem verificação • Keys ilimitadas • Suporte prioritário'
+            premium_features_shared: '✓ Sem verificação • Uso ilimitado • Suporte prioritário',
+            // Plan Names
+            plan_48h: '48h',
+            plan_7days: '7 Dias',
+            plan_30days: '30 Dias',
+            plan_90days: '90 Dias',
+            plan_365days: '365 Dias',
+            plan_lifetime: 'Lifetime',
+            plan_forever: 'Para sempre!',
+            verifying_payment: 'Verificando pagamento...',
+            // Christmas
+            christmas_premium_badge: '🎄 NATAL PREMIUM',
+            christmas_footer: '❄️ Boas Festas! ❄️'
         }
     };
 

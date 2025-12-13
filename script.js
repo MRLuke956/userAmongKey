@@ -1557,7 +1557,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Question - emoji grande e claro
         if (elements.challengeQuestion) {
-            elements.challengeQuestion.innerHTML = `<span class="challenge-question-text">${challenge.question}</span>`;
+            let content = `<span class="challenge-question-text">${challenge.question}</span>`;
+            if (challenge.visuals) {
+                content += `<div class="challenge-visuals" style="font-size: 1.5em; letter-spacing: 5px; margin-top: 10px; font-family: 'Segoe UI Emoji', 'Noto Color Emoji';">${challenge.visuals}</div>`;
+            }
+            elements.challengeQuestion.innerHTML = content;
         }
 
         // Options

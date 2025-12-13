@@ -1948,12 +1948,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const usd = parseFloat(el.dataset.priceUsd);
             const currency = el.querySelector('.currency');
 
-            if (isEnglish) {
-                currency.textContent = '$';
-                el.childNodes[el.childNodes.length - 1].textContent = ` ${usd.toFixed(2)}`;
+            // Skip elements without valid price data or missing currency child
+            if (isNaN(brl) || isNaN(usd)) return;
+
+            if (currency) {
+                // Element has a .currency child span - update it
+                if (isEnglish) {
+                    currency.textContent = '$';
+                    if (el.childNodes.length > 0) {
+                        el.childNodes[el.childNodes.length - 1].textContent = ` ${usd.toFixed(2)}`;
+                    }
+                } else {
+                    currency.textContent = 'R$';
+                    if (el.childNodes.length > 0) {
+                        el.childNodes[el.childNodes.length - 1].textContent = ` ${brl.toFixed(2).replace('.', ',')}`;
+                    }
+                }
             } else {
-                currency.textContent = 'R$';
-                el.childNodes[el.childNodes.length - 1].textContent = ` ${brl.toFixed(2).replace('.', ',')}`;
+                // Element doesn't have .currency child - update full text content
+                if (isEnglish) {
+                    el.textContent = `$ ${usd.toFixed(2)}`;
+                } else {
+                    el.textContent = `R$ ${brl.toFixed(2).replace('.', ',')}`;
+                }
             }
         });
     }

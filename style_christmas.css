@@ -1,5 +1,5 @@
 /* ============================================
-   🎄 CREWCORE - CHRISTMAS THEME 2024
+   🎄 CREWCORE - CHRISTMAS THEME 2025
    Efeitos e decorações natalinas
    Versão melhorada para conforto do usuário
    ============================================ */
@@ -255,11 +255,11 @@ header h1 {
 }
 
 .premium-plan:hover {
-    border-color: rgba(255, 215, 0, 0.4);
+    border-color: rgba(255, 215, 0, 0.5);
     box-shadow:
-        0 0 20px var(--christmas-gold-glow),
+        0 0 25px var(--christmas-gold-glow),
         inset 0 0 30px rgba(255, 215, 0, 0.03);
-    transform: translateY(-2px);
+    z-index: 10;
 }
 
 /* Badge "MELHOR VALOR" com estilo natalino */
@@ -295,6 +295,54 @@ header h1 {
     50% {
         transform: translateY(-2px) rotate(5deg);
     }
+}
+
+/* ❄️ Plano Featured (365 Dias) com destaque natalino especial */
+.plan-featured {
+    border: 2px solid rgba(255, 215, 0, 0.5) !important;
+    box-shadow:
+        0 0 25px rgba(255, 215, 0, 0.15),
+        0 0 50px rgba(196, 30, 58, 0.05),
+        inset 0 0 30px rgba(255, 215, 0, 0.02) !important;
+}
+
+.plan-featured::after {
+    content: '⭐';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.9em;
+    animation: star-twinkle 2s ease-in-out infinite;
+    opacity: 0.9;
+}
+
+@keyframes star-twinkle {
+
+    0%,
+    100% {
+        opacity: 0.9;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+}
+
+/* 🎄 Plano Lifetime com coroa natalina */
+.plan-lifetime {
+    border: 2px solid rgba(155, 89, 182, 0.5) !important;
+    background: linear-gradient(165deg,
+            rgba(60, 35, 80, 0.9) 0%,
+            rgba(35, 20, 50, 0.95) 100%) !important;
+}
+
+.plan-lifetime:hover {
+    box-shadow:
+        0 0 30px rgba(155, 89, 182, 0.25),
+        0 0 60px rgba(155, 89, 182, 0.1),
+        inset 0 0 30px rgba(155, 89, 182, 0.05) !important;
 }
 
 /* ============================================

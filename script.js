@@ -359,7 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
             verifying_payment: 'Verifying payment...',
             // Christmas
             christmas_premium_badge: '🎄 CHRISTMAS PREMIUM',
-            christmas_footer: '❄️ Happy Holidays! ❄️'
+            christmas_footer: '❄️ Happy Holidays! ❄️',
+            christmas_banner_text: '🎅 Merry Christmas! Enjoy our Premium plans! 🎁'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -505,7 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
             verifying_payment: 'Verificando pagamento...',
             // Christmas
             christmas_premium_badge: '🎄 NATAL PREMIUM',
-            christmas_footer: '❄️ Boas Festas! ❄️'
+            christmas_footer: '❄️ Boas Festas! ❄️',
+            christmas_banner_text: '🎅 Feliz Natal! Aproveite nossos planos Premium! 🎁'
         }
     };
 

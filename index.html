@@ -203,11 +203,10 @@
           <h2 data-translate-key="select_method_title">Selecione o Método</h2>
           <p data-translate-key="select_method_desc">Escolha uma das opções abaixo para iniciar a verificação:</p>
 
+          <!-- Turnstile Anti-Bot (rendered manually when modal opens) -->
           <div class="turnstile-container"
             style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
-            <div class="cf-turnstile" data-sitekey="0x4AAAAAACCiV6dd05O6ZjAs" data-callback="onTurnstileSuccess"
-              data-error-callback="onTurnstileError" data-expired-callback="onTurnstileExpired" data-theme="dark"
-              data-retry="auto" data-retry-interval="3000"></div>
+            <div id="methodTurnstile"></div>
             <p id="turnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;"
               data-translate-key="turnstile_hint">
               Complete a verificação acima para desbloquear os métodos

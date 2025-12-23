@@ -2227,7 +2227,8 @@ async function handleDownload(platform) {
     // Mapeamento de plataforma para arquivo no R2
     const DOWNLOAD_FILES = {
         'steam': '5.4.7-Steam.zip',
-        'epic': '5.4.7-EpicGames.zip'
+        'epic': '5.4.7.-EpicGames.zip',
+        'epicgames': '5.4.7.-EpicGames.zip'
     };
 
     const fileName = DOWNLOAD_FILES[platform];

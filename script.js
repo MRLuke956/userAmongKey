@@ -306,6 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
             platform_epic: 'Epic Games',
             turnstile_hint: 'Complete the verification above to unlock the methods',
             turnstile_success: '✅ Verified! Select a method below',
+            // === DOWNLOAD TURNSTILE ===
+            download_turnstile_hint: '🔒 Complete the verification to unlock download',
+            download_turnstile_success: '✅ Verified! Select platform below',
+            download_turnstile_error: '❌ Verification failed. Try reloading the page.',
+            download_turnstile_expired: '⚠️ Verification expired. Complete again.',
+            download_turnstile_required: '🔒 Complete Cloudflare verification first!',
             // === ANTI-BYPASS CHALLENGE ===
             challenge_title: '🔐 Security Verification',
             challenge_subtitle: 'Complete the challenge to prove you are human',
@@ -379,6 +385,18 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_step_2: 'Press <strong>F1</strong> in the main menu',
             premium_step_3: 'Paste the key in the activation field',
             premium_step_4: 'Enjoy Premium access for 48h! 🚀',
+            // === PREMIUM USER PANEL ===
+            premium_panel_badge: '👑 PREMIUM ACTIVE',
+            premium_panel_title: 'Manage Premium Key',
+            premium_label_key: '🔑 Key:',
+            premium_label_plan: '📦 Plan:',
+            premium_label_expires: '⏱️ Expires:',
+            premium_hwid_bound: 'Bound',
+            premium_hwid_unbound: 'Not bound',
+            premium_reset_hwid: 'Reset HWID',
+            premium_reset_cooldown: '1x per day',
+            premium_panel_hint: 'Use reset to switch devices. Available 1x every 24h.',
+            premium_available_in: 'Available in {hours}h',
             // Footer
             footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>'
         },
@@ -471,6 +489,12 @@ document.addEventListener('DOMContentLoaded', () => {
             platform_epic: 'Epic Games',
             turnstile_hint: 'Complete a verificação acima para desbloquear os métodos',
             turnstile_success: '✅ Verificado! Selecione um método abaixo',
+            // === DOWNLOAD TURNSTILE ===
+            download_turnstile_hint: '🔒 Complete a verificação para liberar o download',
+            download_turnstile_success: '✅ Verificado! Selecione a plataforma abaixo',
+            download_turnstile_error: '❌ Erro na verificação. Tente recarregar a página.',
+            download_turnstile_expired: '⚠️ Verificação expirada. Complete novamente.',
+            download_turnstile_required: '🔒 Complete a verificação Cloudflare primeiro!',
             // === ANTI-BYPASS CHALLENGE ===
             challenge_title: '🔐 Verificação de Segurança',
             challenge_subtitle: 'Complete o desafio para provar que você é humano',
@@ -544,6 +568,18 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_step_2: 'Pressione <strong>F1</strong> no menu principal',
             premium_step_3: 'Cole a chave no campo de ativação',
             premium_step_4: 'Aproveite o acesso Premium por 48h! 🚀',
+            // === PREMIUM USER PANEL ===
+            premium_panel_badge: '👑 PREMIUM ATIVO',
+            premium_panel_title: 'Gerenciar Key Premium',
+            premium_label_key: '🔑 Key:',
+            premium_label_plan: '📦 Plano:',
+            premium_label_expires: '⏱️ Expira:',
+            premium_hwid_bound: 'Vinculado',
+            premium_hwid_unbound: 'Não vinculado',
+            premium_reset_hwid: 'Resetar HWID',
+            premium_reset_cooldown: '1x por dia',
+            premium_panel_hint: 'Use o reset para mudar de dispositivo. Disponível 1x a cada 24h.',
+            premium_available_in: 'Disponível em {hours}h',
             // Footer
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
             download_client_title: 'Obter Cliente',
@@ -2218,11 +2254,97 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 
+// ==================== DOWNLOAD TURNSTILE CALLBACKS ====================
+window._downloadTurnstileToken = null;
+window._downloadTurnstileVerifiedAt = null;
+
+window.onDownloadTurnstileSuccess = function (token) {
+    console.log('[Download Turnstile] ✅ Verification successful');
+    window._downloadTurnstileToken = token;
+    window._downloadTurnstileVerifiedAt = Date.now();
+
+    // Enable download buttons
+    const steamBtn = document.getElementById('downloadSteamBtn');
+    const epicBtn = document.getElementById('downloadEpicBtn');
+
+    if (steamBtn) {
+        steamBtn.disabled = false;
+        steamBtn.style.opacity = '1';
+        steamBtn.style.pointerEvents = 'auto';
+    }
+    if (epicBtn) {
+        epicBtn.disabled = false;
+        epicBtn.style.opacity = '1';
+        epicBtn.style.pointerEvents = 'auto';
+    }
+
+    // Update hint
+    const hint = document.getElementById('downloadTurnstileHint');
+    if (hint) {
+        hint.textContent = '✅ Verificado! Selecione a plataforma abaixo';
+        hint.style.color = '#4CAF50';
+    }
+};
+
+window.onDownloadTurnstileError = function () {
+    console.error('[Download Turnstile] ❌ Verification failed');
+    window._downloadTurnstileToken = null;
+
+    const hint = document.getElementById('downloadTurnstileHint');
+    if (hint) {
+        hint.textContent = '❌ Erro na verificação. Tente recarregar a página.';
+        hint.style.color = '#f44336';
+    }
+};
+
+window.onDownloadTurnstileExpired = function () {
+    console.warn('[Download Turnstile] ⚠️ Token expired');
+    window._downloadTurnstileToken = null;
+
+    // Disable download buttons
+    const steamBtn = document.getElementById('downloadSteamBtn');
+    const epicBtn = document.getElementById('downloadEpicBtn');
+
+    if (steamBtn) {
+        steamBtn.disabled = true;
+        steamBtn.style.opacity = '0.5';
+        steamBtn.style.pointerEvents = 'none';
+    }
+    if (epicBtn) {
+        epicBtn.disabled = true;
+        epicBtn.style.opacity = '0.5';
+        epicBtn.style.pointerEvents = 'none';
+    }
+
+    // Reset hint
+    const hint = document.getElementById('downloadTurnstileHint');
+    if (hint) {
+        hint.textContent = '⚠️ Verificação expirada. Complete novamente.';
+        hint.style.color = '#ff9800';
+    }
+
+    // Reset the widget
+    if (window.turnstile) {
+        const widget = document.getElementById('downloadTurnstile');
+        if (widget) window.turnstile.reset(widget);
+    }
+};
+
 // ==================== DIRECT DOWNLOAD HANDLER ====================
-// Downloads directly from Cloudflare R2 via custom domain mira.crewcore.online
+// Downloads with Turnstile verification for anti-bot protection
 async function handleDownload(platform) {
     const btn = document.getElementById(platform === 'steam' ? 'downloadSteamBtn' : 'downloadEpicBtn');
     const originalContent = btn ? btn.innerHTML : '';
+
+    // === ANTI-BOT: Require Turnstile token ===
+    if (!window._downloadTurnstileToken) {
+        if (typeof showUIMessage === 'function') {
+            showUIMessage('🔒 Complete a verificação Cloudflare primeiro!', 'error');
+        } else {
+            alert('🔒 Complete a verificação Cloudflare primeiro!');
+        }
+        return;
+    }
 
     // Mapeamento de plataforma para arquivo no R2
     const DOWNLOAD_FILES = {
@@ -2249,9 +2371,27 @@ async function handleDownload(platform) {
             if (arrowEl) arrowEl.textContent = '⏳';
         }
 
-        // Direct download from R2 custom domain
-        const downloadUrl = `https://mira.crewcore.online/${fileName}`;
+        // === ANTI-BOT: Verify token on server before allowing download ===
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const verifyResponse = await fetch(`${apiUrl}/api/download/${platform}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Turnstile-Token': window._downloadTurnstileToken
+            }
+        });
+
+        const verifyData = await verifyResponse.json();
+
+        if (verifyData.status !== 'success') {
+            throw new Error(verifyData.message || 'Verificação falhou');
+        }
+
+        // Use signed URL from server (more secure) or direct R2 link
+        const downloadUrl = verifyData.url || `https://mira.crewcore.online/${fileName}`;
         window.location.href = downloadUrl;
+
+        console.log(`📥 [Download] Starting download for ${platform}: ${fileName}`);
 
         // Reset button state after a short delay
         setTimeout(() => {
@@ -2281,14 +2421,17 @@ async function handleDownload(platform) {
 
         // Show error message
         if (typeof showUIMessage === 'function') {
-            showUIMessage('❌ Erro ao iniciar download', 'error');
+            showUIMessage(`❌ ${error.message || 'Erro ao iniciar download'}`, 'error');
         } else {
-            alert('❌ Erro ao iniciar download');
+            alert(`❌ ${error.message || 'Erro ao iniciar download'}`);
         }
     }
 }
 
 // ==================== DOWNLOAD MODAL FUNCTIONS ====================
+// Track if download turnstile has been rendered
+window._downloadTurnstileRendered = false;
+
 function openDownloadModal() {
     const overlay = document.getElementById('downloadModalOverlay');
     if (overlay) {
@@ -2297,6 +2440,36 @@ function openDownloadModal() {
         requestAnimationFrame(() => {
             overlay.classList.add('active');
         });
+
+        // === FIX: Render Turnstile widget manually when modal opens ===
+        // Widgets inside hidden elements don't auto-render
+        if (window.turnstile && !window._downloadTurnstileRendered) {
+            const container = document.getElementById('downloadTurnstile');
+            if (container) {
+                // Clear any existing widget
+                container.innerHTML = '';
+
+                // Render the widget
+                window.turnstile.render(container, {
+                    sitekey: '0x4AAAAAACCiV6dd05O6ZjAs',
+                    callback: window.onDownloadTurnstileSuccess,
+                    'error-callback': window.onDownloadTurnstileError,
+                    'expired-callback': window.onDownloadTurnstileExpired,
+                    theme: 'dark',
+                    retry: 'auto',
+                    'retry-interval': 3000
+                });
+
+                window._downloadTurnstileRendered = true;
+                console.log('[Download Turnstile] Widget rendered manually');
+            }
+        } else if (window._downloadTurnstileToken) {
+            // If already verified, ensure buttons are enabled
+            const steamBtn = document.getElementById('downloadSteamBtn');
+            const epicBtn = document.getElementById('downloadEpicBtn');
+            if (steamBtn) steamBtn.disabled = false;
+            if (epicBtn) epicBtn.disabled = false;
+        }
     }
 }
 

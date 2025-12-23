@@ -344,16 +344,6 @@ header p.subtitle {
   width: 100%;
 }
 
-.auth-hint::before {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: var(--success-color);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--success-color);
-}
-
 /* Removed old bg/shine/inner elements that are replaced by simpler structure, 
    but ensuring we don't break if elements exist in HTML. 
    Ideally HTML structure should be simplified too, but CSS can hide/reset them. */

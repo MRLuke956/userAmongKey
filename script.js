@@ -295,7 +295,15 @@ document.addEventListener('DOMContentLoaded', () => {
             step_3_desc: 'Copy the key generated here and paste it into the mod activation field.',
             help_button_title: 'How to use?',
             view_keys_title: 'Consult Active Crewmate IDs',
-            download_mod_button: 'Download Mod Menu (GitHub)',
+            download_badge: '📡 DOWNLOAD STATION',
+            download_title: 'CrewCore Mod Menu',
+            version_latest: '✅ Latest version',
+            download_hint: '🔒 Secure download via Cloudflare',
+            download_client_title: 'Download Client',
+            download_client_subtitle: 'Mod v5.4.7 • Game v17.1.0',
+            download_now: 'Download Now',
+            platform_steam: 'Steam',
+            platform_epic: 'Epic Games',
             turnstile_hint: 'Complete the verification above to unlock the methods',
             turnstile_success: '✅ Verified! Select a method below',
             // === ANTI-BYPASS CHALLENGE ===
@@ -360,7 +368,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // Christmas
             christmas_premium_badge: '🎄 CHRISTMAS PREMIUM',
             christmas_footer: '❄️ Happy Holidays! ❄️',
-            christmas_banner_text: '🎅 Merry Christmas! Enjoy our Premium plans! 🎁'
+            christmas_banner_text: '🎅 Merry Christmas! Enjoy our Premium plans! 🎁',
+            // Premium Success Modal
+            premium_payment_confirmed: 'Payment Confirmed!',
+            premium_key_ready: 'Your Premium key is ready!',
+            premium_your_key: '⭐ YOUR PREMIUM KEY',
+            premium_copy_key: '📋 COPY KEY',
+            premium_how_to_use: '📖 How to use:',
+            premium_step_1: 'Open Among Us with the mod installed',
+            premium_step_2: 'Press <strong>F1</strong> in the main menu',
+            premium_step_3: 'Paste the key in the activation field',
+            premium_step_4: 'Enjoy Premium access for 48h! 🚀',
+            // Footer
+            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -442,7 +462,13 @@ document.addEventListener('DOMContentLoaded', () => {
             step_3_desc: 'Copie a key gerada aqui e cole no campo de ativação do mod.',
             help_button_title: 'Como usar?',
             view_keys_title: 'Consultar IDs de Tripulantes Ativos',
-            download_mod_button: 'Baixar Mod Menu (GitHub)',
+            download_badge: '📡 ESTAÇÃO DE DOWNLOAD',
+            download_title: 'CrewCore Mod Menu',
+            version_latest: '✅ Última versão',
+            download_hint: '🔒 Download seguro via Cloudflare',
+            download_now: 'Baixar Agora',
+            platform_steam: 'Steam',
+            platform_epic: 'Epic Games',
             turnstile_hint: 'Complete a verificação acima para desbloquear os métodos',
             turnstile_success: '✅ Verificado! Selecione um método abaixo',
             // === ANTI-BYPASS CHALLENGE ===
@@ -507,7 +533,21 @@ document.addEventListener('DOMContentLoaded', () => {
             // Christmas
             christmas_premium_badge: '🎄 NATAL PREMIUM',
             christmas_footer: '❄️ Boas Festas! ❄️',
-            christmas_banner_text: '🎅 Feliz Natal! Aproveite nossos planos Premium! 🎁'
+            christmas_banner_text: '🎅 Feliz Natal! Aproveite nossos planos Premium! 🎁',
+            // Premium Success Modal
+            premium_payment_confirmed: 'Pagamento Confirmado!',
+            premium_key_ready: 'Sua chave Premium está pronta!',
+            premium_your_key: '⭐ SUA CHAVE PREMIUM',
+            premium_copy_key: '📋 COPIAR CHAVE',
+            premium_how_to_use: '📖 Como usar:',
+            premium_step_1: 'Abra o Among Us com o mod instalado',
+            premium_step_2: 'Pressione <strong>F1</strong> no menu principal',
+            premium_step_3: 'Cole a chave no campo de ativação',
+            premium_step_4: 'Aproveite o acesso Premium por 48h! 🚀',
+            // Footer
+            footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
+            download_client_title: 'Obter Cliente',
+            download_client_subtitle: 'Mod v5.4.7 • Game v17.1.0',
         }
     };
 
@@ -1745,10 +1785,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyTranslation(lang) {
         if (!translations[lang]) return;
+        // Keys that contain HTML and need innerHTML instead of textContent
+        const htmlKeys = ['footer_made_with'];
+
         document.querySelectorAll('[data-translate-key]').forEach(el => {
             const key = el.getAttribute('data-translate-key');
             if (translations[lang][key]) {
-                el.textContent = translations[lang][key];
+                // Use innerHTML for keys that contain HTML tags
+                if (htmlKeys.includes(key)) {
+                    el.innerHTML = translations[lang][key];
+                } else {
+                    el.textContent = translations[lang][key];
+                }
                 // Atualiza também o data-text para efeitos de glitch/css
                 if (el.hasAttribute('data-text')) {
                     el.setAttribute('data-text', translations[lang][key]);
@@ -2169,3 +2217,245 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
+
+// ==================== PRESIGNED DOWNLOAD HANDLER ====================
+// Global function to handle downloads with expiring URLs
+async function handleDownload(platform) {
+    const btn = document.getElementById(platform === 'steam' ? 'downloadSteamBtn' : 'downloadEpicBtn');
+    const originalContent = btn ? btn.innerHTML : '';
+
+    try {
+        // Show loading state
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('loading');
+            const arrowEl = btn.querySelector('.platform-arrow');
+            if (arrowEl) arrowEl.textContent = '⏳';
+        }
+
+        // Request presigned URL from backend
+        const response = await fetch(`https://keygenx-1.onrender.com/api/download/${platform}`);
+        const data = await response.json();
+
+        if (data.status === 'success' && data.url) {
+            // Redirect to presigned URL
+            window.location.href = data.url;
+
+            // Reset button state after a short delay
+            setTimeout(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                    const arrowEl = btn.querySelector('.platform-arrow');
+                    if (arrowEl) arrowEl.textContent = '⬇';
+                }
+            }, 2000);
+        } else {
+            throw new Error(data.message || 'Erro ao gerar link de download');
+        }
+    } catch (error) {
+        console.error('Download error:', error);
+
+        // Reset button and show error
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            const arrowEl = btn.querySelector('.platform-arrow');
+            if (arrowEl) arrowEl.textContent = '❌';
+
+            // Restore arrow after 2s
+            setTimeout(() => {
+                if (arrowEl) arrowEl.textContent = '⬇';
+            }, 2000);
+        }
+
+        // Show error message (if showUIMessage exists)
+        if (typeof showUIMessage === 'function') {
+            showUIMessage('❌ ' + (error.message || 'Erro ao iniciar download'), 'error');
+        } else {
+            alert('❌ ' + (error.message || 'Erro ao iniciar download'));
+        }
+    }
+}
+
+// ==================== DOWNLOAD MODAL FUNCTIONS ====================
+function openDownloadModal() {
+    const overlay = document.getElementById('downloadModalOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        // Trigger animation
+        requestAnimationFrame(() => {
+            overlay.classList.add('active');
+        });
+    }
+}
+
+function closeDownloadModal(event) {
+    // If called with event, only close if clicking the overlay itself
+    if (event && event.target !== event.currentTarget) return;
+
+    const overlay = document.getElementById('downloadModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 300);
+    }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDownloadModal();
+});
+
+// ==================== PREMIUM USER PANEL ====================
+const premiumPanelElements = {
+    panel: document.getElementById('premiumUserPanel'),
+    activeKey: document.getElementById('premiumActiveKey'),
+    planType: document.getElementById('premiumPlanType'),
+    expiresAt: document.getElementById('premiumExpiresAt'),
+    hwidStatus: document.getElementById('premiumHwidStatus'),
+    resetBtn: document.getElementById('resetHwidBtn'),
+    cooldownText: document.getElementById('hwidResetCooldown'),
+    hint: document.getElementById('premiumPanelHint')
+};
+
+let currentPremiumKey = null;
+
+async function loadPremiumPanel() {
+    if (!premiumPanelElements.panel) return;
+
+    try {
+        const sessionId = localStorage.getItem('crewbot_session');
+        if (!sessionId) {
+            premiumPanelElements.panel.style.display = 'none';
+            return;
+        }
+
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const response = await fetch(`${apiUrl}/user_premium_keys`, {
+            headers: { 'X-Session-ID': sessionId }
+        });
+
+        if (!response.ok) {
+            premiumPanelElements.panel.style.display = 'none';
+            return;
+        }
+
+        const data = await response.json();
+
+        if (!data.has_active_premium || !data.premium_keys || data.premium_keys.length === 0) {
+            premiumPanelElements.panel.style.display = 'none';
+            return;
+        }
+
+        const activeKey = data.premium_keys.find(k => k.status === 'active');
+        if (!activeKey) {
+            premiumPanelElements.panel.style.display = 'none';
+            return;
+        }
+
+        currentPremiumKey = activeKey.key;
+        if (premiumPanelElements.activeKey) premiumPanelElements.activeKey.textContent = activeKey.key;
+        if (premiumPanelElements.planType) premiumPanelElements.planType.textContent = getPlanDisplayName(activeKey.type);
+        if (premiumPanelElements.expiresAt) premiumPanelElements.expiresAt.textContent = activeKey.time_remaining || 'Lifetime';
+
+        await updateKeyStatus(activeKey.key);
+        premiumPanelElements.panel.style.display = 'block';
+
+
+    } catch (error) {
+        console.error('[PremiumPanel] Error:', error);
+        premiumPanelElements.panel.style.display = 'none';
+    }
+}
+
+function getPlanDisplayName(type) {
+    const names = {
+        'daily': '⭐ 48 Horas',
+        'weekly': '⭐ 7 Dias',
+        'monthly': '⭐ 30 Dias',
+        'quarterly': '⭐ 90 Dias',
+        'yearly': '⭐ 365 Dias',
+        'lifetime': '👑 Lifetime'
+    };
+    return names[type] || '⭐ Premium';
+}
+
+async function updateKeyStatus(key) {
+    try {
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const response = await fetch(`${apiUrl}/key-status?key=${encodeURIComponent(key)}`);
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            if (premiumPanelElements.hwidStatus) {
+                premiumPanelElements.hwidStatus.textContent = data.hwid_bound ? '🔒 Vinculado' : '🔓 Não vinculado';
+            }
+
+            if (data.can_reset_hwid) {
+                if (premiumPanelElements.cooldownText) premiumPanelElements.cooldownText.textContent = '1x por dia';
+                if (premiumPanelElements.resetBtn) premiumPanelElements.resetBtn.disabled = false;
+            } else {
+                const nextReset = new Date(data.next_reset_at);
+                const hoursRemaining = Math.ceil((nextReset - new Date()) / (1000 * 60 * 60));
+                if (premiumPanelElements.cooldownText) premiumPanelElements.cooldownText.textContent = `Disponível em ${hoursRemaining}h`;
+                if (premiumPanelElements.resetBtn) premiumPanelElements.resetBtn.disabled = true;
+            }
+        }
+    } catch (error) {
+        console.error('[KeyStatus] Error:', error);
+    }
+}
+
+
+async function resetHwid() {
+    if (!currentPremiumKey || !premiumPanelElements.resetBtn) return;
+
+    const originalContent = premiumPanelElements.resetBtn.innerHTML;
+
+    try {
+        premiumPanelElements.resetBtn.disabled = true;
+        premiumPanelElements.resetBtn.innerHTML = '<span class="spinner"></span> Resetando...';
+
+        const sessionId = localStorage.getItem('crewbot_session');
+        if (!sessionId) throw new Error('Sessão expirada.');
+
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const response = await fetch(`${apiUrl}/premium/reset-hwid`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Session-ID': sessionId },
+            body: JSON.stringify({ key: currentPremiumKey })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            if (typeof showUIMessage === 'function') showUIMessage('✅ ' + data.message, 'success');
+            if (premiumPanelElements.hwidStatus) premiumPanelElements.hwidStatus.textContent = '🔓 Não vinculado';
+            if (data.next_reset_at) {
+                const hoursRemaining = Math.ceil((new Date(data.next_reset_at) - new Date()) / (1000 * 60 * 60));
+                if (premiumPanelElements.cooldownText) premiumPanelElements.cooldownText.textContent = `Disponível em ${hoursRemaining}h`;
+                if (premiumPanelElements.resetBtn) premiumPanelElements.resetBtn.disabled = true;
+            }
+        } else {
+            if (typeof showUIMessage === 'function') showUIMessage('❌ ' + data.message, 'error');
+            if (data.next_reset_at) {
+                const hoursRemaining = Math.ceil((new Date(data.next_reset_at) - new Date()) / (1000 * 60 * 60));
+                if (premiumPanelElements.cooldownText) premiumPanelElements.cooldownText.textContent = `Disponível em ${hoursRemaining}h`;
+            }
+        }
+    } catch (error) {
+        console.error('[ResetHwid] Error:', error);
+        if (typeof showUIMessage === 'function') showUIMessage('❌ Erro ao resetar HWID', 'error');
+    } finally {
+        if (premiumPanelElements.resetBtn) premiumPanelElements.resetBtn.innerHTML = originalContent;
+    }
+}
+
+
+if (premiumPanelElements.resetBtn) {
+    premiumPanelElements.resetBtn.addEventListener('click', resetHwid);
+}
+
+document.addEventListener('DOMContentLoaded', () => setTimeout(loadPremiumPanel, 1500));

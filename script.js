@@ -2218,11 +2218,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 
-// ==================== PRESIGNED DOWNLOAD HANDLER ====================
-// Global function to handle downloads with expiring URLs
+// ==================== DIRECT DOWNLOAD HANDLER ====================
+// Downloads directly from Cloudflare R2 via custom domain mira.crewcore.online
 async function handleDownload(platform) {
     const btn = document.getElementById(platform === 'steam' ? 'downloadSteamBtn' : 'downloadEpicBtn');
     const originalContent = btn ? btn.innerHTML : '';
+
+    // Mapeamento de plataforma para arquivo no R2
+    const DOWNLOAD_FILES = {
+        'steam': '5.4.7-Steam.zip',
+        'epic': '5.4.7-EpicGames.zip'
+    };
+
+    const fileName = DOWNLOAD_FILES[platform];
+    if (!fileName) {
+        console.error('Platform inválida:', platform);
+        if (typeof showUIMessage === 'function') {
+            showUIMessage('❌ Plataforma inválida', 'error');
+        }
+        return;
+    }
 
     try {
         // Show loading state
@@ -2233,26 +2248,20 @@ async function handleDownload(platform) {
             if (arrowEl) arrowEl.textContent = '⏳';
         }
 
-        // Request presigned URL from backend
-        const response = await fetch(`https://keygenx-1.onrender.com/api/download/${platform}`);
-        const data = await response.json();
+        // Direct download from R2 custom domain
+        const downloadUrl = `https://mira.crewcore.online/${fileName}`;
+        window.location.href = downloadUrl;
 
-        if (data.status === 'success' && data.url) {
-            // Redirect to presigned URL
-            window.location.href = data.url;
+        // Reset button state after a short delay
+        setTimeout(() => {
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                const arrowEl = btn.querySelector('.platform-arrow');
+                if (arrowEl) arrowEl.textContent = '⬇';
+            }
+        }, 2000);
 
-            // Reset button state after a short delay
-            setTimeout(() => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.classList.remove('loading');
-                    const arrowEl = btn.querySelector('.platform-arrow');
-                    if (arrowEl) arrowEl.textContent = '⬇';
-                }
-            }, 2000);
-        } else {
-            throw new Error(data.message || 'Erro ao gerar link de download');
-        }
     } catch (error) {
         console.error('Download error:', error);
 
@@ -2269,11 +2278,11 @@ async function handleDownload(platform) {
             }, 2000);
         }
 
-        // Show error message (if showUIMessage exists)
+        // Show error message
         if (typeof showUIMessage === 'function') {
-            showUIMessage('❌ ' + (error.message || 'Erro ao iniciar download'), 'error');
+            showUIMessage('❌ Erro ao iniciar download', 'error');
         } else {
-            alert('❌ ' + (error.message || 'Erro ao iniciar download'));
+            alert('❌ Erro ao iniciar download');
         }
     }
 }

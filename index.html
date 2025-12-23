@@ -443,39 +443,40 @@
     <!-- ==================== PREMIUM USER PANEL (shows when user has active premium) ==================== -->
     <section class="premium-user-panel" id="premiumUserPanel" style="display: none;">
       <div class="premium-panel-header">
-        <span class="premium-panel-badge">👑 PREMIUM ATIVO</span>
-        <h3 class="premium-panel-title">Gerenciar Key Premium</h3>
+        <span class="premium-panel-badge" data-translate-key="premium_panel_badge">👑 PREMIUM ATIVO</span>
+        <h3 class="premium-panel-title" data-translate-key="premium_panel_title">Gerenciar Key Premium</h3>
       </div>
 
       <div class="premium-panel-content">
         <div class="premium-key-info">
           <div class="info-row">
-            <span class="info-label">🔑 Key:</span>
+            <span class="info-label" data-translate-key="premium_label_key">🔑 Key:</span>
             <span class="info-value" id="premiumActiveKey">P-XXXX-XXXX-XXXX</span>
           </div>
           <div class="info-row">
-            <span class="info-label">📦 Plano:</span>
+            <span class="info-label" data-translate-key="premium_label_plan">📦 Plano:</span>
             <span class="info-value" id="premiumPlanType">--</span>
           </div>
           <div class="info-row">
-            <span class="info-label">⏱️ Expira:</span>
+            <span class="info-label" data-translate-key="premium_label_expires">⏱️ Expira:</span>
             <span class="info-value" id="premiumExpiresAt">--</span>
           </div>
           <div class="info-row">
             <span class="info-label">💻 HWID:</span>
-            <span class="info-value" id="premiumHwidStatus">Vinculado</span>
+            <span class="info-value" id="premiumHwidStatus" data-translate-key="premium_hwid_bound">Vinculado</span>
           </div>
         </div>
 
         <div class="premium-actions">
           <button class="premium-action-btn reset-hwid-btn" id="resetHwidBtn">
             <span class="btn-icon">🔄</span>
-            <span class="btn-text">Resetar HWID</span>
-            <span class="btn-subtitle" id="hwidResetCooldown">1x por dia</span>
+            <span class="btn-text" data-translate-key="premium_reset_hwid">Resetar HWID</span>
+            <span class="btn-subtitle" id="hwidResetCooldown" data-translate-key="premium_reset_cooldown">1x por
+              dia</span>
           </button>
         </div>
 
-        <p class="premium-panel-hint" id="premiumPanelHint">
+        <p class="premium-panel-hint" id="premiumPanelHint" data-translate-key="premium_panel_hint">
           Use o reset para mudar de dispositivo. Disponível 1x a cada 24h.
         </p>
       </div>
@@ -497,8 +498,18 @@
           </div>
         </div>
 
+        <!-- Turnstile Anti-Bot Protection (rendered manually when modal opens) -->
+        <div class="download-turnstile-container"
+          style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
+          <div id="downloadTurnstile"></div>
+          <p id="downloadTurnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;"
+            data-translate-key="download_turnstile_hint">
+            🔒 Complete a verificação para liberar o download
+          </p>
+        </div>
+
         <div class="download-platforms">
-          <button class="platform-btn steam-btn" id="downloadSteamBtn" data-platform="steam"
+          <button class="platform-btn steam-btn" id="downloadSteamBtn" data-platform="steam" disabled
             onclick="handleDownload('steam')">
             <div class="platform-icon">
               <!-- Steam Official Logo -->
@@ -514,7 +525,7 @@
             <div class="platform-arrow">⬇</div>
           </button>
 
-          <button class="platform-btn epic-btn" id="downloadEpicBtn" data-platform="epicgames"
+          <button class="platform-btn epic-btn" id="downloadEpicBtn" data-platform="epicgames" disabled
             onclick="handleDownload('epicgames')">
             <div class="platform-icon">
               <!-- Epic Games Official Logo -->

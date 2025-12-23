@@ -1932,10 +1932,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Method Menu Logic
+        // Track if method turnstile has been rendered
+        window._methodTurnstileRendered = false;
+
         if (elements.btnOpenMethodMenu) {
             elements.btnOpenMethodMenu.addEventListener('click', () => {
                 if (elements.methodSelectionModal) {
                     elements.methodSelectionModal.style.display = 'block';
+
+                    // === FIX: Render Turnstile widget manually when modal opens ===
+                    // Widgets inside hidden elements don't auto-render
+                    if (window.turnstile && !window._methodTurnstileRendered) {
+                        const container = document.getElementById('methodTurnstile');
+                        if (container) {
+                            // Clear any existing widget
+                            container.innerHTML = '';
+
+                            // Render the widget
+                            window.turnstile.render(container, {
+                                sitekey: '0x4AAAAAACCiV6dd05O6ZjAs',
+                                callback: (token) => {
+                                    console.log('[Method Turnstile] ✅ Verification successful');
+                                    appState.turnstileToken = token;
+                                    appState.turnstileVerifiedAt = Date.now();
+                                    enableMethodButtons();
+
+                                    // Update hint
+                                    const hint = document.getElementById('turnstileHint');
+                                    if (hint) {
+                                        const lang = appState.currentLanguage;
+                                        hint.textContent = translations[lang]?.turnstile_success || '✅ Verificado! Selecione um método abaixo';
+                                        hint.style.color = '#4CAF50';
+                                    }
+                                },
+                                'error-callback': () => {
+                                    console.error('[Method Turnstile] ❌ Verification failed');
+                                    appState.turnstileToken = null;
+                                    disableMethodButtons();
+
+                                    const hint = document.getElementById('turnstileHint');
+                                    if (hint) {
+                                        hint.textContent = '❌ Erro na verificação. Recarregue a página.';
+                                        hint.style.color = '#f44336';
+                                    }
+                                },
+                                'expired-callback': () => {
+                                    console.warn('[Method Turnstile] ⚠️ Token expired');
+                                    appState.turnstileToken = null;
+                                    disableMethodButtons();
+
+                                    const hint = document.getElementById('turnstileHint');
+                                    if (hint) {
+                                        hint.textContent = '⚠️ Verificação expirada. Complete novamente.';
+                                        hint.style.color = '#ff9800';
+                                    }
+                                },
+                                theme: 'dark',
+                                retry: 'auto',
+                                'retry-interval': 3000
+                            });
+
+                            window._methodTurnstileRendered = true;
+                            console.log('[Method Turnstile] Widget rendered manually');
+                        }
+                    }
 
                     // Check if Turnstile token is still valid (< 4 minutes old)
                     const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
@@ -1951,7 +2011,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         appState.turnstileToken = null;
                         disableMethodButtons();
                         if (window.turnstile) {
-                            const widget = document.querySelector('.cf-turnstile');
+                            const widget = document.getElementById('methodTurnstile');
                             if (widget) window.turnstile.reset(widget);
                         }
                     }

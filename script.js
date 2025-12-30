@@ -589,6 +589,191 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ==========================================
+    // NEW YEAR 2026 VISUAL EFFECTS
+    // ==========================================
+    function initNewYearEffects() {
+        // 1. Champagne Bubbles
+        const bubbleContainer = document.getElementById('champagneBubbles');
+        if (bubbleContainer) {
+            const createBubble = () => {
+                const bubble = document.createElement('div');
+                bubble.classList.add('c-bubble');
+
+                // Random properties
+                const size = Math.random() * 6 + 2; // 2px to 8px
+                const left = Math.random() * 100; // 0% to 100%
+                const duration = Math.random() * 4 + 4; // 4s to 8s
+                const wobble = (Math.random() - 0.5) * 50 + 'px'; // -25px to 25px
+                const delay = Math.random() * 5;
+
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${left}%`;
+                bubble.style.setProperty('--wobble', wobble);
+                bubble.style.animationDuration = `${duration}s`;
+                bubble.style.animationDelay = `${delay}s`;
+
+                bubbleContainer.appendChild(bubble);
+
+                // Remove after animation
+                setTimeout(() => {
+                    bubble.remove();
+                }, (duration + delay) * 1000);
+            };
+
+            // Spawn initial batch
+            for (let i = 0; i < 30; i++) createBubble();
+            // Continuous spawn
+            setInterval(createBubble, 300);
+        }
+
+        // 2. Button Interactive Effects & Magnetic Pull
+        const mainBtn = document.getElementById('btnOpenMethodMenu');
+        if (mainBtn) {
+            // Magnetic Effect Variables
+            const magnetStrength = 0.4; // How strong the pull is
+            const magnetRange = 100; // Pixels
+            let btnRect = mainBtn.getBoundingClientRect();
+
+            // Re-calculate rect on scroll/resize
+            window.addEventListener('scroll', () => { btnRect = mainBtn.getBoundingClientRect(); });
+            window.addEventListener('resize', () => { btnRect = mainBtn.getBoundingClientRect(); });
+
+            document.addEventListener('mousemove', (e) => {
+                // Accessibility: Disable if reduced motion is preferred
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+                // Return if button is hidden or disabled to save perf
+                if (mainBtn.offsetParent === null) return;
+
+                const dx = e.clientX - (btnRect.left + btnRect.width / 2);
+                const dy = e.clientY - (btnRect.top + btnRect.height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < magnetRange) {
+                    const tx = dx * magnetStrength;
+                    const ty = dy * magnetStrength;
+                    mainBtn.style.transform = `translate(${tx}px, ${ty}px) scale(1.05)`;
+
+                    // Sound: Low Sci-Fi Hum on enter
+                    if (!mainBtn.hasMagnetSoundPlayed && appState.soundEnabled) {
+                        playSound(100, 150, 'triangle'); // Low hum
+                        mainBtn.hasMagnetSoundPlayed = true;
+                    }
+
+                    // Throttle confetti inside the magnetic field
+                    if (dist < 40 && Math.random() > 0.92) {
+                        if (window.confetti) {
+                            const xRatio = (e.clientX - btnRect.left) / btnRect.width;
+                            const yRatio = (e.clientY - btnRect.top) / btnRect.height;
+                            window.confetti({
+                                particleCount: 2,
+                                spread: 20,
+                                origin: {
+                                    x: (btnRect.left + btnRect.width * xRatio) / window.innerWidth,
+                                    y: (btnRect.top + btnRect.height * yRatio) / window.innerHeight
+                                },
+                                colors: ['#FFD700', '#FFF8DC'],
+                                scalar: 0.4,
+                                gravity: 0.8,
+                                ticks: 30,
+                                disableForReducedMotion: true
+                            });
+                        }
+                    }
+                } else {
+                    mainBtn.style.transform = 'translate(0, 0) scale(1)';
+                    mainBtn.hasMagnetSoundPlayed = false;
+                }
+            });
+        }
+
+        // 3. Holographic 3D Tilt (Optimized with Caching & rAF)
+        const cards = document.querySelectorAll('.premium-plan');
+        if (cards.length > 0) {
+            let cardRects = [];
+            let isAnimating = false;
+            let mouseX = 0;
+            let mouseY = 0;
+
+            // Cache Rects to avoid layout thrashing
+            const updateCardRects = () => {
+                cardRects = Array.from(cards).map(card => ({
+                    element: card,
+                    rect: card.getBoundingClientRect()
+                }));
+            };
+
+            // Update rects on load, scroll, resize
+            updateCardRects();
+            window.addEventListener('scroll', updateCardRects, { passive: true });
+            window.addEventListener('resize', updateCardRects, { passive: true });
+
+            // Animation Loop
+            const animateCards = () => {
+                if (!isAnimating) return;
+
+                // Accessibility: Stop if reduced motion is preferred
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    isAnimating = false;
+                    return;
+                }
+
+                cardRects.forEach(({ element, rect }) => {
+                    const x = mouseX - rect.left;
+                    const y = mouseY - rect.top;
+
+                    // Check bounds with some padding
+                    if (x > -50 && x < rect.width + 50 && y > -50 && y < rect.height + 50) {
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+
+                        // Calculate rotation (Limit to ±10deg)
+                        const rotateX = ((y - centerY) / centerY) * -10;
+                        const rotateY = ((x - centerX) / centerX) * 10;
+
+                        element.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
+
+                        // Update shine position CSS vars
+                        const shineX = ((x / rect.width) * 100).toFixed(1) + '%';
+                        const shineY = ((y / rect.height) * 100).toFixed(1) + '%';
+
+                        element.style.setProperty('--shine-x', shineX);
+                        element.style.setProperty('--shine-y', shineY);
+                    } else {
+                        // Reset if active local style exists
+                        if (element.style.transform) {
+                            element.style.transform = '';
+                        }
+                    }
+                });
+
+                requestAnimationFrame(animateCards);
+            };
+
+            // Mouse Listener just updates coordinates and starts loop
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
+                if (!isAnimating) {
+                    isAnimating = true;
+                    requestAnimationFrame(animateCards);
+                }
+
+                // Optional: Stop animation if no mouse movement for a while (debounce or specific logic),
+                // but for now, constant rAF when mouse moves is standard for this effect.
+                // To save battery, we could use a timeout to set isAnimating = false.
+                clearTimeout(window.hoverTimeout);
+                window.hoverTimeout = setTimeout(() => { isAnimating = false; }, 500);
+            }, { passive: true });
+        }
+    }
+
+    // Initialize effects
+    initNewYearEffects();
+
     class DiscordAuthSystem {
         constructor() {
             this.sessionId = localStorage.getItem('crewbot_session');

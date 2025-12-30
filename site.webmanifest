@@ -4,8 +4,8 @@
   "description": "The best Among Us Mod Menu Utility for PC. Always Impostor, Skins & More.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a2433",
-  "theme_color": "#1a2433",
+  "background_color": "#020b1c",
+  "theme_color": "#020b1c",
   "icons": [
     {
       "src": "/favicon-16x16.png",

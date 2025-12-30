@@ -7,7 +7,7 @@
   <meta name="description"
     content="CrewCore: Best Among Us Mod Menu 2025/2026 (PC). Utility Tool with Always Impostor, Skin Unlocker & Custom Features. Safe & Free Download. / O Melhor Mod Menu Atualizado.">
   <meta name="keywords"
-    content="modmenucrew, crewcore, crew core, among us mod menu, among us menu pc, working mod menu 2026, mod menu 2025, among us utility, among us tools, unlock skins, always impostor, free mod menu, download crewcore, mod menu atualizado 2025, mod menu 2026 download, among us cheat safe">
+    content="among us mod menu 2026, mod menu among us 2025, crewcore 2026, modmenucrew, crewcore, crew core, among us mod menu, among us menu pc, working mod menu 2026, mod menu 2025, among us utility, among us tools, unlock skins, always impostor, free mod menu, download crewcore, mod menu atualizado 2025, mod menu 2026 download, among us cheat safe">
   <meta name="robots" content="index, follow">
   <meta name="author" content="MIRA HQ Team">
   <meta name="theme-color" content="#1a2433">
@@ -104,7 +104,7 @@
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
-  <link rel="stylesheet" href="style_christmas.css">
+  <link rel="stylesheet" href="style_newyear.css">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <meta http-equiv="Content-Security-Policy"
@@ -112,18 +112,20 @@
 </head>
 
 <body>
-  <!-- Snowflakes for Christmas Effect -->
-  <div class="snowflakes" aria-hidden="true">
-    <div class="snowflake">❄</div>
-    <div class="snowflake">❅</div>
-    <div class="snowflake">❆</div>
-    <div class="snowflake">❄</div>
-    <div class="snowflake">❅</div>
-    <div class="snowflake">❆</div>
-    <div class="snowflake">❄</div>
-    <div class="snowflake">❅</div>
-    <div class="snowflake">❆</div>
-    <div class="snowflake">❄</div>
+  <!-- Sparkles for New Year Effect -->
+  <div class="sparkles-container" aria-hidden="true">
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
   </div>
   <canvas id="starfield-canvas"></canvas>
   <div class="scanline-overlay"></div>
@@ -198,8 +200,12 @@
 
       <div class="button-group">
         <button id="btnOpenMethodMenu" class="action-button generate-button" disabled>
-          <span class="button-icon">🚀</span>
-          <span class="button-text" data-translate-key="generate_button">INICIAR TASK</span>
+          <span class="button-icon">�</span>
+          <span class="button-text-wrapper">
+            <span class="button-text" data-translate-key="generate_button">GERAR KEY DO MOD</span>
+            <span class="button-subtitle" data-translate-key="generate_button_hint">Clique aqui para ativar o
+              menu</span>
+          </span>
         </button>
         <button id="viewKeysBtn" title="Consultar IDs de Tripulantes Ativos" data-translate-title="view_keys_title">
           <span class="button-text" data-translate-key="view_keys_button">🛰️ LOG DE SISTEMA</span>
@@ -328,12 +334,13 @@
 
     <!-- ==================== SEÇÃO PREMIUM (aparece após login) ==================== -->
     <section class="premium-section" id="premiumSection" style="display: none;">
-      <!-- 🎄 Christmas Banner -->
-      <div class="christmas-banner" data-translate-key="christmas_banner_text">Feliz Natal! Aproveite nossos planos
-        Premium!</div>
+      <!-- 🎆 New Year Banner -->
+      <div class="newyear-banner" data-translate-key="newyear_banner_text">
+        2026: Seu Ano de Vitória / Your Year of Victory
+      </div>
 
       <div class="premium-header">
-        <span class="premium-badge-mini" data-translate-key="christmas_premium_badge">🎄 NATAL PREMIUM</span>
+        <span class="premium-badge-mini" data-translate-key="newyear_premium_badge">🎆 2026 PREMIUM</span>
         <h3 class="premium-title-mini" data-translate-key="premium_title">Pule a verificação</h3>
       </div>
 
@@ -703,7 +710,6 @@
   <div class="achievement-popup" id="achievementPopup"></div>
 
   <footer class="site-footer">
-    <p class="christmas-footer-msg" data-translate-key="christmas_footer">❄️ Boas Festas! ❄️</p>
     <p data-translate-key="footer_made_with">Made with <span class="footer-heart">❤️</span> by <a
         href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a></p>
     <div class="footer-links">
@@ -722,8 +728,9 @@
         Discord
       </a>
     </div>
-    <p style="margin-top: 0.75rem; font-size: 0.75rem; opacity: 0.5;">© 2025 CrewCore. Among Us is a trademark of
-      Innersloth LLC.</p>
+    <p class="newyear-footer-msg" style="margin-top: 0.75rem; font-size: 0.8rem;" data-translate-key="newyear_footer">©
+      2026 CrewCore • O Ano da Vitória começa agora 🎆</p>
+    <p style="font-size: 0.7rem; opacity: 0.4; margin-top: 0.3rem;">Among Us is a trademark of Innersloth LLC.</p>
   </footer>
 
   <script src="script.js" defer></script>

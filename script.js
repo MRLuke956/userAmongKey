@@ -227,7 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cooldown_subtitle: 'Wait for new request',
             key_limit_text: 'You have {count} active ID(s) (maximum: {max} per Discord account)',
             key_limit_helper: '💡 Use an ID to free up space for new ones.',
-            generate_button: '⚠️ START TASK: REGISTRATION',
+            generate_button: 'GENERATE MOD KEY',
+            generate_button_hint: 'Click here to activate the menu',
             view_keys_button: '🛰️ SYSTEM LOG',
             key_label: 'Assigned Crewmate ID:',
             copy_button: '📋 Copy ID',
@@ -371,10 +372,10 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_forever: 'Forever!',
             plan_per_month: '~$2.50/month',
             verifying_payment: 'Verifying payment...',
-            // Christmas
-            christmas_premium_badge: '🎄 CHRISTMAS PREMIUM',
-            christmas_footer: '❄️ Happy Holidays! ❄️',
-            christmas_banner_text: '🎅 Merry Christmas! Enjoy our Premium plans! 🎁',
+            // New Year
+            newyear_premium_badge: '🎆 2026 PREMIUM',
+            newyear_footer: '© 2026 CrewCore • The Year of Victory starts now 🎆',
+            newyear_banner_text: '2026: Your Year of Victory',
             // Premium Success Modal
             premium_payment_confirmed: 'Payment Confirmed!',
             premium_key_ready: 'Your Premium key is ready!',
@@ -412,7 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cooldown_subtitle: 'Aguarde para nova solicitação',
             key_limit_text: 'Você possui {count} ID{s} ativa{s} (máximo: {max} por conta Discord)',
             key_limit_helper: '💡 Use uma ID para liberar espaço para novas.',
-            generate_button: '⚠️ INICIAR TASK: REGISTRO',
+            generate_button: 'GERAR KEY DO MOD',
+            generate_button_hint: 'Clique aqui para ativar o menu',
             view_keys_button: '🛰️ LOG DE SISTEMA',
             key_label: 'ID de Tripulante Designada:',
             copy_button: '📋 Copiar ID',
@@ -554,10 +556,10 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_forever: 'Para sempre!',
             plan_per_month: '~R$12/mês',
             verifying_payment: 'Verificando pagamento...',
-            // Christmas
-            christmas_premium_badge: '🎄 NATAL PREMIUM',
-            christmas_footer: '❄️ Boas Festas! ❄️',
-            christmas_banner_text: '🎅 Feliz Natal! Aproveite nossos planos Premium! 🎁',
+            // New Year
+            newyear_premium_badge: '🎆 2026 PREMIUM',
+            newyear_footer: '© 2026 CrewCore • O Ano da Vitória começa agora 🎆',
+            newyear_banner_text: '2026: Seu Ano de Vitória',
             // Premium Success Modal
             premium_payment_confirmed: 'Pagamento Confirmado!',
             premium_key_ready: 'Sua chave Premium está pronta!',

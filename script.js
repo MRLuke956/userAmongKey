@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // New Year
             newyear_premium_badge: '🎆 2026 PREMIUM',
             newyear_footer: '© 2026 CrewCore • The Year of Victory starts now 🎆',
-            newyear_banner_text: '2026: Your Year of Victory',
+            newyear_banner_text: '🎆 2026: Your Year of Victory 🎆',
             // Premium Success Modal
             premium_payment_confirmed: 'Payment Confirmed!',
             premium_key_ready: 'Your Premium key is ready!',
@@ -559,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // New Year
             newyear_premium_badge: '🎆 2026 PREMIUM',
             newyear_footer: '© 2026 CrewCore • O Ano da Vitória começa agora 🎆',
-            newyear_banner_text: '2026: Seu Ano de Vitória',
+            newyear_banner_text: '🎆 2026: Seu Ano de Vitória 🎆',
             // Premium Success Modal
             premium_payment_confirmed: 'Pagamento Confirmado!',
             premium_key_ready: 'Sua chave Premium está pronta!',

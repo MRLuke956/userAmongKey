@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             version_latest: '✅ Latest version',
             download_hint: '🔒 Secure download via Cloudflare',
             download_client_title: 'Download Client',
-            download_client_subtitle: 'Mod v5.4.7 • Game v17.1.0',
+            download_client_subtitle: 'Mod V6 • Game v17.1.0',
             download_now: 'Download Now',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',
@@ -585,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Footer
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
             download_client_title: 'Obter Cliente',
-            download_client_subtitle: 'Mod v5.4.7 • Game v17.1.0',
+            download_client_subtitle: 'Mod V6 • Game v17.1.0',
         }
     };
 

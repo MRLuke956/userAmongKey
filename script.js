@@ -77,33 +77,44 @@ document.addEventListener('DOMContentLoaded', () => {
         // URL da API já definida para produção
         API_BASE_URL: 'https://keygenx-1.onrender.com',
         REQUEST_TIMEOUT: 15000, // 15 segundos timeout para requests
+        // === SISTEMA DE 2 PASSOS (2026) ===
         SHORTENER_URLS: {
-            1: 'https://link-target.net/63830/among-us-modmenu-key1',
-            2: 'https://link-target.net/63830/DXuC2z7SQT1o',
-            3: 'https://link-hub.net/63830/tQtGDD3vTskf'
+            step1: 'https://link-target.net/63830/among-us-modmenu-key1',  // Linkvertise
+            step2: 'https://link-hub.net/63830/tQtGDD3vTskf'              // DirectLink
         },
         MAX_KEY_LIMIT: 5,
         COOLDOWN_DURATION: 30000,
         SESSION_DURATION_MS: 24 * 60 * 60 * 1000, // 24 horas em ms
-        // === ANTI-BYPASS: Novas chaves de storage ===
-        BYPASS_SESSION_KEY: 'miraHqBypassSession',      // session_id da verificação
-        BYPASS_PROOF_TOKEN_KEY: 'miraHqProofToken',     // proof_token após challenge
-        BYPASS_STARTED_AT_KEY: 'miraHqBypassStartedAt', // timestamp de início
-        // Configuração dos Retornos (O que o site espera receber do encurtador)
+        // === ANTI-BYPASS: Storage keys ===
+        TWOSTEP_SESSION_KEY: 'crewTwoStepSession',       // session_id atual
+        TWOSTEP_STEP1_TOKEN_KEY: 'crewStep1Token',       // token após step1
+        TWOSTEP_CURRENT_STEP_KEY: 'crewCurrentStep',     // 1 ou 2
+        BYPASS_PROOF_TOKEN_KEY: 'miraHqProofToken',      // proof_token após challenge
+        BYPASS_STARTED_AT_KEY: 'miraHqBypassStartedAt',  // timestamp de início
+        // Configuração dos Retornos
         RETURN_CONFIG: {
-            1: { action: 'complete_m1', status: 'success' },
-            2: { action: 'complete_m2', status: 'success' },
-            3: { action: 'complete_m3', status: 'success' }
+            step1: { action: 'complete_step1', status: 'success' },
+            step2: { action: 'complete_step2', status: 'success' }
         }
     };
 
     const elements = {
         btnOpenMethodMenu: document.getElementById('btnOpenMethodMenu'),
-        methodSelectionModal: document.getElementById('methodSelectionModal'),
-        closeMethodModal: document.getElementById('closeMethodModal'),
-        btnMethod1: document.getElementById('btnMethod1'),
-        btnMethod2: document.getElementById('btnMethod2'),
-        btnMethod3: document.getElementById('btnMethod3'),
+        // === Two-Step Modal Elements (2026) ===
+        twoStepModal: document.getElementById('twoStepModal'),
+        closeTwoStepModal: document.getElementById('closeTwoStepModal'),
+        stepCard1: document.getElementById('stepCard1'),
+        stepCard2: document.getElementById('stepCard2'),
+        btnStep1: document.getElementById('btnStep1'),
+        btnStep2: document.getElementById('btnStep2'),
+        step1Status: document.getElementById('step1Status'),
+        step2Status: document.getElementById('step2Status'),
+        step2LockedOverlay: document.getElementById('step2LockedOverlay'),
+        stepIndicator1: document.getElementById('stepIndicator1'),
+        stepIndicator2: document.getElementById('stepIndicator2'),
+        twoStepTurnstile: document.getElementById('twoStepTurnstile'),
+        twoStepTurnstileHint: document.getElementById('twoStepTurnstileHint'),
+        // === Standard Elements ===
         btnView: document.getElementById('viewKeysBtn'),
         keyContainerEl: document.getElementById('keyContainer'),
         keyValueEl: document.getElementById('keyValue'),
@@ -150,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tutorialModal: document.getElementById('tutorialModal'),
         closeTutorialModal: document.getElementById('closeTutorialModal'),
         accessGrantedOverlay: document.getElementById('accessGrantedOverlay'),
-        // === ANTI-BYPASS: Challenge Modal Elements ===
+        // === Challenge Modal Elements ===
         challengeModal: document.getElementById('challengeModal'),
         challengeQuestion: document.getElementById('challengeQuestion'),
         challengeOptions: document.getElementById('challengeOptions'),
@@ -171,10 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLanguage: navigator.language.startsWith('pt') ? 'pt' : 'en',
         turnstileToken: window._turnstileToken || null,
         turnstileVerifiedAt: window._turnstileVerifiedAt || null,
-        // === ANTI-BYPASS STATE ===
+        // === TWO-STEP STATE (2026) ===
+        currentStep: 0,                    // 0 = not started, 1 = step1, 2 = step2
+        step1Token: null,                  // Token received after completing step1
+        step2SessionId: null,              // Session ID for step2
+        twoStepSessionId: null,            // Current session ID
+        // === CHALLENGE STATE ===
         currentChallenge: null,
         challengeTimerInterval: null,
-        bypassSessionId: null,
         proofToken: null
     };
 
@@ -398,6 +413,13 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_reset_cooldown: '1x per day',
             premium_panel_hint: 'Use reset to switch devices. Available 1x every 24h.',
             premium_available_in: 'Available in {hours}h',
+            // Delete Key
+            delete_key_button: '🗑️',
+            delete_key_confirm: 'Are you sure you want to delete this key?',
+            delete_key_deleting: '🗑️ Deleting...',
+            delete_key_success: '✅ Key deleted successfully!',
+            delete_key_error: '❌ Error deleting key',
+            session_expired: 'Session expired. Please login again.',
             // Footer
             footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>'
         },
@@ -582,6 +604,13 @@ document.addEventListener('DOMContentLoaded', () => {
             premium_reset_cooldown: '1x por dia',
             premium_panel_hint: 'Use o reset para mudar de dispositivo. Disponível 1x a cada 24h.',
             premium_available_in: 'Disponível em {hours}h',
+            // Delete Key
+            delete_key_button: '🗑️',
+            delete_key_confirm: 'Tem certeza que deseja excluir esta key?',
+            delete_key_deleting: '🗑️ Excluindo...',
+            delete_key_success: '✅ Key excluída com sucesso!',
+            delete_key_error: '❌ Erro ao excluir key',
+            session_expired: 'Sessão expirada. Faça login novamente.',
             // Footer
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
             download_client_title: 'Obter Cliente',
@@ -1162,10 +1191,63 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.userKeys.forEach(key => {
             if (validateKey(key)) {
                 const li = document.createElement('li');
-                li.textContent = key;
+                li.className = 'key-item';
+                li.innerHTML = `
+                    <span class="key-value">${key}</span>
+                    <button class="key-delete-btn" title="${translations[appState.currentLanguage].delete_key_confirm}" data-key="${key}">
+                        ${translations[appState.currentLanguage].delete_key_button}
+                    </button>
+                `;
+                // Add click listener for delete button
+                const deleteBtn = li.querySelector('.key-delete-btn');
+                deleteBtn.addEventListener('click', () => handleDeleteKey(key));
                 elements.keysListUl.appendChild(li);
             }
         });
+    }
+
+    // === DELETE KEY FUNCTION (SECURE) ===
+    async function handleDeleteKey(key) {
+        const lang = appState.currentLanguage;
+
+        // Confirmation dialog
+        if (!confirm(translations[lang].delete_key_confirm)) {
+            return;
+        }
+
+        try {
+            showUIMessage(translations[lang].delete_key_deleting, 'info', 0);
+            const headers = discordAuth.getAuthHeaders();
+            const response = await fetch(`${CONFIG.API_BASE_URL}/delete_key?key=${encodeURIComponent(key)}`, {
+                method: 'DELETE',
+                headers
+            });
+
+            if (response.status === 401) {
+                showUIMessage(translations[lang].session_expired, 'error');
+                await discordAuth.logout();
+                return;
+            }
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+                // Remove from local state and re-render
+                appState.userKeys = appState.userKeys.filter(k => k !== key);
+                renderKeysList();
+                updateKeyLimitDisplay();
+                await discordAuth.refreshStats();
+                showUIMessage(translations[lang].delete_key_success, 'success');
+                if (appState.soundEnabled) playSound(440, 150, 'sine');
+            } else {
+                showUIMessage(data.message || translations[lang].delete_key_error, 'error');
+                if (appState.soundEnabled) playSound(200, 300, 'sawtooth');
+            }
+        } catch (error) {
+            console.error('[DeleteKey] Error:', error);
+            showUIMessage(translations[lang].delete_key_error, 'error');
+            if (appState.soundEnabled) playSound(200, 300, 'sawtooth');
+        }
     }
 
     function createConfetti(x, y) {
@@ -1543,47 +1625,118 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function initiateShortenerRedirect(methodIndex = 1) {
-        // Check if any button is disabled (cooldown or processing)
-        if (appState.isInCooldown || appState.isProcessing) {
-            showUIMessage(translations[appState.currentLanguage].wait_cooldown, 'error');
-            if (appState.soundEnabled) playSound(200, 300, 'sawtooth');
-            return;
-        }
-        if (appState.userKeys.length >= CONFIG.MAX_KEY_LIMIT) {
-            showUIMessage(translations[appState.currentLanguage].limit_reached, 'error');
-            if (appState.soundEnabled) playSound(200, 500, 'sawtooth');
-            return;
-        }
-        appState.isProcessing = true;
-        try {
-            if (appState.soundEnabled) playSound(600, 100, 'square');
-            showUIMessage(translations[appState.currentLanguage].starting_verification, 'info', 0);
+    // ==================== SISTEMA DE 2 PASSOS (2026) ====================
+    // PASSO 1: Linkvertise → valida hash → libera Passo 2
+    // PASSO 2: DirectLink → challenge → key
+    // =====================================================================
 
-            if (!appState.turnstileToken) {
-                showUIMessage('Por favor, complete o captcha primeiro.', 'error');
-                appState.isProcessing = false;
-                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
-                return;
-            }
+    // Estado do Two-Step
+    const twoStepState = {
+        step: parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0,
+        sessionId: localStorage.getItem(CONFIG.TWOSTEP_SESSION_KEY) || null,
+        step1Token: localStorage.getItem(CONFIG.TWOSTEP_STEP1_TOKEN_KEY) || null
+    };
 
-            // Check token age before sending
-            const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
-            if (tokenAge > 4 * 60 * 1000) {
-                showUIMessage('Verificação expirada. Complete o captcha novamente.', 'error');
-                appState.turnstileToken = null;
-                appState.isProcessing = false;
-                disableMethodButtons();
-                if (window.turnstile) {
-                    const widget = document.querySelector('.cf-turnstile');
-                    if (widget) window.turnstile.reset(widget);
+    // Abre modal de 2 passos
+    function openTwoStepModal() {
+        if (!elements.twoStepModal) return;
+
+        // Sincroniza estado visual
+        updateTwoStepUI();
+
+        // Renderiza Turnstile no modal
+        if (window.turnstile && elements.twoStepTurnstile && !elements.twoStepTurnstile.hasChildNodes()) {
+            window.turnstile.render(elements.twoStepTurnstile, {
+                sitekey: window.TURNSTILE_SITE_KEY || '0x4AAAAAAAyJMvlWdQ3PY34K',
+                theme: 'dark',
+                callback: function (token) {
+                    appState.turnstileToken = token;
+                    appState.turnstileVerifiedAt = Date.now();
+                    enableStepButtons();
+                    if (elements.twoStepTurnstileHint) {
+                        elements.twoStepTurnstileHint.textContent = '✅ Verificado!';
+                        elements.twoStepTurnstileHint.style.color = '#00ff88';
+                    }
                 }
-                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
-                return;
-            }
+            });
+        }
 
-            // === ANTI-BYPASS: Inicia sessão de verificação ===
-            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-verification?method=${methodIndex}`, {
+        elements.twoStepModal.style.display = 'block';
+    }
+
+    // Atualiza UI dos passos
+    function updateTwoStepUI() {
+        const step1Complete = !!twoStepState.step1Token;
+
+        // Step 1 Card
+        if (elements.stepCard1) {
+            elements.stepCard1.classList.remove('current', 'completed', 'locked');
+            if (step1Complete) {
+                elements.stepCard1.classList.add('completed');
+                if (elements.step1Status) elements.step1Status.textContent = '✅';
+            } else {
+                elements.stepCard1.classList.add('current');
+                if (elements.step1Status) elements.step1Status.textContent = '⏳';
+            }
+        }
+
+        // Step 2 Card
+        if (elements.stepCard2) {
+            elements.stepCard2.classList.remove('current', 'completed', 'locked');
+            if (step1Complete) {
+                elements.stepCard2.classList.add('current');
+                if (elements.step2Status) elements.step2Status.textContent = '⏳';
+                if (elements.step2LockedOverlay) elements.step2LockedOverlay.style.display = 'none';
+                if (elements.btnStep2) elements.btnStep2.disabled = !appState.turnstileToken;
+            } else {
+                elements.stepCard2.classList.add('locked');
+                if (elements.step2Status) elements.step2Status.textContent = '🔒';
+                if (elements.step2LockedOverlay) elements.step2LockedOverlay.style.display = 'flex';
+                if (elements.btnStep2) elements.btnStep2.disabled = true;
+            }
+        }
+
+        // Step Indicators
+        if (elements.stepIndicator1) {
+            elements.stepIndicator1.classList.toggle('completed', step1Complete);
+        }
+        if (elements.stepIndicator2) {
+            elements.stepIndicator2.classList.toggle('active', step1Complete);
+        }
+    }
+
+    // Habilita botões após Turnstile
+    function enableStepButtons() {
+        const step1Complete = !!twoStepState.step1Token;
+        if (elements.btnStep1) elements.btnStep1.disabled = step1Complete;
+        if (elements.btnStep2) elements.btnStep2.disabled = !step1Complete;
+    }
+
+    // PASSO 1: Iniciar verificação
+    async function startStep1() {
+        if (appState.isProcessing) return;
+        if (!appState.turnstileToken) {
+            showUIMessage('Complete o captcha primeiro.', 'error');
+            return;
+        }
+
+        const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
+        if (tokenAge > 4 * 60 * 1000) {
+            showUIMessage('Captcha expirado. Complete novamente.', 'error');
+            if (window.turnstile && elements.twoStepTurnstile) {
+                window.turnstile.reset(elements.twoStepTurnstile);
+            }
+            return;
+        }
+
+        appState.isProcessing = true;
+        if (elements.btnStep1) setButtonLoading(elements.btnStep1, true);
+
+        try {
+            const lang = appState.currentLanguage;
+            showUIMessage(translations[lang].starting_verification, 'info', 0);
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step1`, {
                 method: 'GET',
                 headers: {
                     'X-Turnstile-Token': appState.turnstileToken
@@ -1591,145 +1744,226 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await response.json();
 
-            // Handle blocked IP (too many failed attempts)
             if (response.status === 429) {
-                const lang = appState.currentLanguage;
-                showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
+                showUIMessage(translations[lang].challenge_blocked || 'Muitas tentativas. Aguarde.', 'error', 15000);
                 appState.isProcessing = false;
-                return;
-            }
-
-            // Handle Turnstile rejection from backend
-            if (response.status === 403 && data.message?.includes('Captcha')) {
-                showUIMessage('Verificação falhou. Tente novamente.', 'error');
-                appState.turnstileToken = null;
-                disableMethodButtons();
-                if (window.turnstile) {
-                    const widget = document.querySelector('.cf-turnstile');
-                    if (widget) window.turnstile.reset(widget);
-                }
-                appState.isProcessing = false;
-                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'block';
+                if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
                 return;
             }
 
             if (response.ok && data.status === 'success' && data.session_id) {
-                // === ANTI-BYPASS: Salva session_id para usar no retorno ===
-                localStorage.setItem(CONFIG.BYPASS_SESSION_KEY, data.session_id);
+                // Salva sessão
+                localStorage.setItem(CONFIG.TWOSTEP_SESSION_KEY, data.session_id);
+                localStorage.setItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY, '1');
                 localStorage.setItem(CONFIG.BYPASS_STARTED_AT_KEY, Date.now().toString());
+                twoStepState.sessionId = data.session_id;
+                twoStepState.step = 1;
 
-                showUIMessage(translations[appState.currentLanguage].redirecting_portal, 'info', 5000);
+                showUIMessage(translations[lang].redirecting_portal || 'Redirecionando...', 'info', 3000);
 
-                // Select the correct URL based on method
-                let targetUrl = CONFIG.SHORTENER_URLS[methodIndex] || CONFIG.SHORTENER_URLS[1];
-
-                // Append method parameter for tracking
-                const urlObj = new URL(targetUrl);
-                urlObj.searchParams.append('method', methodIndex);
-
-                setTimeout(() => { window.location.href = urlObj.toString(); }, 1500);
+                // Redireciona para Linkvertise
+                setTimeout(() => {
+                    window.location.href = CONFIG.SHORTENER_URLS.step1;
+                }, 1500);
             } else {
-                throw new Error(data.message || translations[appState.currentLanguage].unknown_error);
+                throw new Error(data.message || 'Erro ao iniciar verificação');
             }
         } catch (error) {
-            showUIMessage(`❌ Falha ao iniciar: ${error.message}`, 'error');
-            setButtonLoading(elements.btnOpenMethodMenu, false);
+            showUIMessage(`❌ ${error.message}`, 'error');
             appState.isProcessing = false;
+            if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
         }
     }
 
-    // === ANTI-BYPASS: Verifica retorno do encurtador e inicia challenge ===
+    // PASSO 2: Iniciar verificação (só após step1 validado)
+    async function startStep2() {
+        if (appState.isProcessing) return;
+        if (!twoStepState.step1Token) {
+            showUIMessage('Complete o Passo 1 primeiro!', 'error');
+            return;
+        }
+
+        appState.isProcessing = true;
+        if (elements.btnStep2) setButtonLoading(elements.btnStep2, true);
+
+        try {
+            const lang = appState.currentLanguage;
+            showUIMessage(translations[lang].starting_verification || 'Iniciando...', 'info', 0);
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step2`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ step1_token: twoStepState.step1Token })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (data.message?.includes('expirado')) {
+                    // Token expirou, resetar
+                    clearTwoStepStorage();
+                    showUIMessage('Sessão expirada. Comece novamente.', 'error');
+                    updateTwoStepUI();
+                } else {
+                    throw new Error(data.message || 'Erro ao iniciar Passo 2');
+                }
+                appState.isProcessing = false;
+                if (elements.btnStep2) setButtonLoading(elements.btnStep2, false);
+                return;
+            }
+
+            if (data.status === 'success' && data.session_id) {
+                localStorage.setItem(CONFIG.TWOSTEP_SESSION_KEY, data.session_id);
+                localStorage.setItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY, '2');
+                twoStepState.sessionId = data.session_id;
+                twoStepState.step = 2;
+
+                showUIMessage(translations[lang].redirecting_portal || 'Redirecionando...', 'info', 3000);
+
+                setTimeout(() => {
+                    window.location.href = CONFIG.SHORTENER_URLS.step2;
+                }, 1500);
+            }
+        } catch (error) {
+            showUIMessage(`❌ ${error.message}`, 'error');
+            appState.isProcessing = false;
+            if (elements.btnStep2) setButtonLoading(elements.btnStep2, false);
+        }
+    }
+
+    // Verifica retorno do encurtador (Step 1 ou Step 2)
     async function checkAndProcessShortenerReturn() {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const action = urlParams.get('action');
             const status = urlParams.get('status');
-            const linkvertiseHash = urlParams.get('hash'); // Hash do Linkvertise Anti-Bypass
-            const sessionId = localStorage.getItem(CONFIG.BYPASS_SESSION_KEY);
+            const linkvertiseHash = urlParams.get('hash');
+            const sessionId = localStorage.getItem(CONFIG.TWOSTEP_SESSION_KEY);
+            const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
-            // Se não tem session_id, não é um retorno válido
-            if (!sessionId) return;
+            if (!sessionId || !currentStep) return;
 
-            // Check if any of the valid return configurations match
-            let isValidReturn = false;
-            let methodUsed = 0;
-
-            if (action === CONFIG.RETURN_CONFIG[1].action && status === CONFIG.RETURN_CONFIG[1].status) { isValidReturn = true; methodUsed = 1; }
-            else if (action === CONFIG.RETURN_CONFIG[2].action && status === CONFIG.RETURN_CONFIG[2].status) { isValidReturn = true; methodUsed = 2; }
-            else if (action === CONFIG.RETURN_CONFIG[3].action && status === CONFIG.RETURN_CONFIG[3].status) { isValidReturn = true; methodUsed = 3; }
-
-            if (isValidReturn) {
-                const lang = appState.currentLanguage;
-                showUIMessage(translations[lang].verification_processing, 'info', 0);
-                window.history.replaceState({}, document.title, window.location.pathname);
-
-                // Log para debug (remover em produção se necessário)
-                if (linkvertiseHash) {
-                    console.log(`[Linkvertise] Hash recebido: ${linkvertiseHash.substring(0, 10)}...`);
-                } else {
-                    console.warn('[Linkvertise] Nenhum hash recebido na URL de retorno.');
-                }
-
-                // === ANTI-BYPASS: Chama /verify-return para validar timing, hash Linkvertise e obter challenge ===
-                try {
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/verify-return`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            session_id: sessionId,
-                            linkvertise_hash: linkvertiseHash || null // Envia o hash do Linkvertise
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    // Handle bypass detection
-                    if (data.bypass_detected) {
-                        showUIMessage(translations[lang].challenge_bypass_detected, 'error', 10000);
-                        clearBypassStorage();
-                        if (appState.soundEnabled) playSound(200, 500, 'sawtooth');
-                        return;
-                    }
-
-                    // Handle blocked
-                    if (response.status === 429) {
-                        showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
-                        clearBypassStorage();
-                        return;
-                    }
-
-                    // Handle errors
-                    if (!response.ok) {
-                        showUIMessage(data.message || 'Erro na verificação.', 'error');
-                        clearBypassStorage();
-                        return;
-                    }
-
-                    // === SUCCESS: Recebeu challenge - Mostra modal ===
-                    if (data.status === 'success' && data.challenge) {
-                        appState.currentChallenge = {
-                            ...data.challenge,
-                            sessionId: sessionId,
-                            timeout: data.timeout_seconds || 120
-                        };
-                        showChallengeModal(data.challenge, data.timeout_seconds);
-                    }
-                } catch (error) {
-                    console.error('[Anti-Bypass] Erro no verify-return:', error);
-                    showUIMessage('Erro ao verificar retorno. Tente novamente.', 'error');
-                    clearBypassStorage();
-                }
+            // Verifica retorno do STEP 1
+            if (action === CONFIG.RETURN_CONFIG.step1.action && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
+                await handleStep1Return(sessionId, linkvertiseHash);
+            }
+            // Verifica retorno do STEP 2
+            else if (action === CONFIG.RETURN_CONFIG.step2.action && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
+                await handleStep2Return(sessionId, linkvertiseHash);
             }
         } catch (e) {
-            console.error('[Anti-Bypass] Error in checkAndProcessShortenerReturn:', e);
+            console.error('[2-Step] Error in checkAndProcessShortenerReturn:', e);
         }
     }
 
-    // === ANTI-BYPASS: Limpa storage de verificação ===
-    function clearBypassStorage() {
-        localStorage.removeItem(CONFIG.BYPASS_SESSION_KEY);
+    // Processa retorno do Passo 1
+    async function handleStep1Return(sessionId, linkvertiseHash) {
+        const lang = appState.currentLanguage;
+        showUIMessage(translations[lang].verification_processing || 'Processando...', 'info', 0);
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/verify-step1`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    linkvertise_hash: linkvertiseHash || null
+                })
+            });
+            const data = await response.json();
+
+            if (data.bypass_detected) {
+                showUIMessage(translations[lang].challenge_bypass_detected || 'Bypass detectado!', 'error', 10000);
+                clearTwoStepStorage();
+                return;
+            }
+
+            if (!response.ok) {
+                showUIMessage(data.message || 'Erro na verificação.', 'error');
+                clearTwoStepStorage();
+                return;
+            }
+
+            if (data.status === 'success' && data.step1_token) {
+                // PASSO 1 COMPLETO!
+                localStorage.setItem(CONFIG.TWOSTEP_STEP1_TOKEN_KEY, data.step1_token);
+                twoStepState.step1Token = data.step1_token;
+                twoStepState.step = 1;
+
+                showUIMessage('✅ Passo 1 concluído! Passo 2 liberado.', 'success', 5000);
+                if (appState.soundEnabled) playSoundSequence([
+                    { freq: 523, duration: 100, type: 'sine' },
+                    { freq: 659, duration: 100, type: 'sine' },
+                    { freq: 784, duration: 150, type: 'sine' }
+                ]);
+
+                // Atualiza UI e abre modal para Step 2
+                updateTwoStepUI();
+                setTimeout(() => openTwoStepModal(), 1000);
+            }
+        } catch (error) {
+            console.error('[2-Step] Erro no verify-step1:', error);
+            showUIMessage('Erro ao verificar. Tente novamente.', 'error');
+            clearTwoStepStorage();
+        }
+    }
+
+    // Processa retorno do Passo 2 (mostra challenge)
+    async function handleStep2Return(sessionId, linkvertiseHash) {
+        const lang = appState.currentLanguage;
+        showUIMessage(translations[lang].verification_processing || 'Processando...', 'info', 0);
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        try {
+            const response = await fetch(`${CONFIG.API_BASE_URL}/verify-step2`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    linkvertise_hash: linkvertiseHash || null
+                })
+            });
+            const data = await response.json();
+
+            if (data.bypass_detected) {
+                showUIMessage(translations[lang].challenge_bypass_detected || 'Bypass detectado!', 'error', 10000);
+                clearTwoStepStorage();
+                return;
+            }
+
+            if (!response.ok) {
+                showUIMessage(data.message || 'Erro na verificação.', 'error');
+                clearTwoStepStorage();
+                return;
+            }
+
+            // Recebeu challenge
+            if (data.status === 'success' && data.challenge) {
+                appState.currentChallenge = {
+                    ...data.challenge,
+                    sessionId: sessionId,
+                    timeout: data.timeout_seconds || 180,
+                    isTwoStep: true  // Flag para usar rota correta
+                };
+                showChallengeModal(data.challenge, data.timeout_seconds);
+            }
+        } catch (error) {
+            console.error('[2-Step] Erro no verify-step2:', error);
+            showUIMessage('Erro ao verificar. Tente novamente.', 'error');
+            clearTwoStepStorage();
+        }
+    }
+
+    // Limpa storage do sistema 2 passos
+    function clearTwoStepStorage() {
+        localStorage.removeItem(CONFIG.TWOSTEP_SESSION_KEY);
+        localStorage.removeItem(CONFIG.TWOSTEP_STEP1_TOKEN_KEY);
+        localStorage.removeItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY);
         localStorage.removeItem(CONFIG.BYPASS_STARTED_AT_KEY);
         localStorage.removeItem(CONFIG.BYPASS_PROOF_TOKEN_KEY);
+        twoStepState.step = 0;
+        twoStepState.sessionId = null;
+        twoStepState.step1Token = null;
         appState.currentChallenge = null;
         appState.proofToken = null;
         if (appState.challengeTimerInterval) {
@@ -1738,8 +1972,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === ANTI-BYPASS: Mostra modal do challenge ===
-    function showChallengeModal(challenge, timeoutSeconds = 120) {
+    // Manter compatibilidade com clearBypassStorage
+    function clearBypassStorage() {
+        clearTwoStepStorage();
+    }
+
+    // === CHALLENGE MODAL - User Friendly Version ===
+    function showChallengeModal(challenge, timeoutSeconds = 300) {
         const lang = appState.currentLanguage;
 
         // Cria modal dinamicamente se não existir
@@ -1751,11 +1990,11 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.innerHTML = `
                 <div class="modal-content challenge-modal-content">
                     <div class="challenge-header">
-                        <h2 data-translate-key="challenge_title">${translations[lang].challenge_title}</h2>
-                        <p data-translate-key="challenge_subtitle">${translations[lang].challenge_subtitle}</p>
+                        <h2>🎮 ${lang === 'pt' ? 'Último Passo!' : 'Final Step!'}</h2>
+                        <p style="color: #888; font-size: 0.9em;">${lang === 'pt' ? 'Responda corretamente para receber sua key' : 'Answer correctly to receive your key'}</p>
                     </div>
-                    <div class="challenge-timer">
-                        <span data-translate-key="challenge_timeout">${translations[lang].challenge_timeout}</span>
+                    <div class="challenge-timer" style="font-size: 0.85em; color: #666;">
+                        <span>⏱️</span>
                         <span id="challengeTimer">${timeoutSeconds}s</span>
                     </div>
                     <div class="challenge-body">
@@ -1763,8 +2002,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="challenge-options" id="challengeOptions"></div>
                     </div>
                     <div class="challenge-footer">
-                        <span id="challengeAttempts"></span>
-                        <p class="challenge-hint" id="challengeHint">${translations[lang].challenge_hint}</p>
+                        <span id="challengeAttempts" style="font-size: 0.85em; color: #888;"></span>
                     </div>
                 </div>
             `;
@@ -1775,14 +2013,13 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.challengeTimer = document.getElementById('challengeTimer');
             elements.challengeAttempts = document.getElementById('challengeAttempts');
 
-            // Impede fechar clicando fora (evita perder progresso)
+            // Permite fechar clicando fora
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    // Shake animation para indicar que não pode fechar
-                    modal.querySelector('.challenge-modal-content').classList.add('shake');
-                    setTimeout(() => {
-                        modal.querySelector('.challenge-modal-content').classList.remove('shake');
-                    }, 500);
+                    // Suave feedback visual
+                    const content = modal.querySelector('.challenge-modal-content');
+                    content.style.transform = 'scale(0.98)';
+                    setTimeout(() => { content.style.transform = ''; }, 150);
                 }
             });
         }
@@ -1790,112 +2027,122 @@ document.addEventListener('DOMContentLoaded', () => {
         // Atualiza conteúdo do challenge
         renderChallenge(challenge);
 
-        // Inicia timer
-        let remaining = timeoutSeconds;
-        elements.challengeTimer.textContent = `${remaining}s`;
+        // Inicia timer (mais generoso - 5 minutos)
+        let remaining = Math.max(timeoutSeconds, 300);
+        elements.challengeTimer.textContent = formatTime(remaining);
 
         if (appState.challengeTimerInterval) clearInterval(appState.challengeTimerInterval);
         appState.challengeTimerInterval = setInterval(() => {
             remaining--;
-            if (elements.challengeTimer) elements.challengeTimer.textContent = `${remaining}s`;
+            if (elements.challengeTimer) elements.challengeTimer.textContent = formatTime(remaining);
 
             if (remaining <= 0) {
                 clearInterval(appState.challengeTimerInterval);
                 hideChallengeModal();
-                showUIMessage(translations[lang].challenge_expired, 'error');
+                showUIMessage(lang === 'pt' ? '⏰ Tempo esgotado. Tente novamente!' : '⏰ Time expired. Try again!', 'info');
                 clearBypassStorage();
             }
         }, 1000);
 
         // Mostra modal
         modal.style.display = 'block';
-        if (appState.soundEnabled) playSoundSequence([
-            { freq: 440, duration: 100, type: 'sine' },
-            { freq: 550, duration: 100, type: 'sine' },
-            { freq: 660, duration: 150, type: 'sine' }
-        ]);
+        if (appState.soundEnabled) playSound(660, 150, 'sine');
     }
 
-    // === ANTI-BYPASS: Renderiza o challenge ===
-    function renderChallenge(challenge, attemptsRemaining = 5) {
+    // Helper para formatar tempo
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
+    }
+
+    // === Renderiza o challenge - Versão Simplificada ===
+    function renderChallenge(challenge, attemptsRemaining = 10) {
         const lang = appState.currentLanguage;
 
         // Select question based on language
         const questionText = lang === 'en' ? (challenge.question_en || challenge.question) : challenge.question;
 
         // Split question into instruction and visual parts using || separator
-        // Format: "Instruction text||Visual content (emojis)"
         const parts = questionText.split('||');
         const instructionText = parts[0] || questionText;
         const visualContent = parts[1] || '';
 
-        // Question - instruction and visual content separated for clarity
+        // Question - limpa e clara
         if (elements.challengeQuestion) {
             elements.challengeQuestion.innerHTML = `
-                <div class="challenge-instruction" style="font-size: 1.2em; margin-bottom: 1rem; font-weight: 600;">${instructionText}</div>
-                ${visualContent ? `<div class="challenge-visual" style="font-size: 3em; letter-spacing: 0.2em;">${visualContent}</div>` : ''}
+                <div class="challenge-instruction" style="font-size: 1.1em; margin-bottom: 1rem; font-weight: 500; color: #e0e0e0;">${instructionText}</div>
+                ${visualContent ? `<div class="challenge-visual" style="font-size: 2.5em; letter-spacing: 0.15em; padding: 10px;">${visualContent}</div>` : ''}
             `;
         }
 
-        // Options
+        // Options - botões maiores e mais fáceis de clicar
         if (elements.challengeOptions) {
             elements.challengeOptions.innerHTML = '';
+            elements.challengeOptions.style.cssText = 'display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 15px;';
+
+            const createButton = (content, answer, extraClass = '') => {
+                const btn = document.createElement('button');
+                btn.className = `challenge-option ${extraClass}`;
+                btn.style.cssText = 'min-width: 60px; min-height: 50px; font-size: 1.2em; border-radius: 10px; cursor: pointer; transition: all 0.2s; border: 2px solid #444; background: #2a2a2a;';
+                if (typeof content === 'object' && content.hex) {
+                    btn.style.setProperty('background', content.hex, 'important');
+                    btn.style.width = '60px';
+                    btn.style.height = '60px';
+                    btn.style.borderRadius = '50%';
+                    btn.title = content.name || '';
+                } else {
+                    btn.textContent = content;
+                    btn.style.padding = '12px 20px';
+                }
+                btn.onmouseenter = () => { btn.style.transform = 'scale(1.05)'; btn.style.borderColor = '#00ff88'; };
+                btn.onmouseleave = () => { btn.style.transform = ''; btn.style.borderColor = '#444'; };
+                btn.onclick = () => submitChallengeAnswer(answer);
+                return btn;
+            };
 
             if (challenge.type === 'color') {
-                // Color buttons - círculos coloridos
                 challenge.options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = 'challenge-option challenge-color-option';
-                    btn.style.setProperty('background', opt.hex, 'important');
-                    btn.title = opt.name || '';
-                    btn.dataset.answer = opt.code;
-                    btn.onclick = () => submitChallengeAnswer(opt.code);
-                    elements.challengeOptions.appendChild(btn);
-                });
-            } else if (challenge.type === 'visual_pattern' || challenge.type === 'emoji_simple') {
-                // Emoji buttons - grandes e clicáveis
-                challenge.options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = 'challenge-option challenge-emoji-option';
-                    btn.textContent = opt;
-                    btn.onclick = () => submitChallengeAnswer(opt);
-                    elements.challengeOptions.appendChild(btn);
+                    elements.challengeOptions.appendChild(createButton(opt, opt.code, 'challenge-color-option'));
                 });
             } else {
-                // Number/text buttons
                 challenge.options.forEach(opt => {
-                    const btn = document.createElement('button');
-                    btn.className = 'challenge-option';
-                    btn.textContent = opt;
-                    btn.onclick = () => submitChallengeAnswer(opt);
-                    elements.challengeOptions.appendChild(btn);
+                    elements.challengeOptions.appendChild(createButton(opt, opt, challenge.type === 'emoji_simple' ? 'challenge-emoji-option' : ''));
                 });
             }
         }
 
-        // Attempts
+        // Attempts - mais tentativas, menos pressão
         if (elements.challengeAttempts) {
-            elements.challengeAttempts.textContent = `${translations[lang].challenge_attempts} ${attemptsRemaining}/5`;
+            const attemptsText = lang === 'pt' ? `Tentativas: ${attemptsRemaining}` : `Attempts: ${attemptsRemaining}`;
+            elements.challengeAttempts.textContent = attemptsText;
         }
     }
 
-    // === ANTI-BYPASS: Envia resposta do challenge ===
+    // === Envia resposta do challenge - Versão Amigável ===
     async function submitChallengeAnswer(answer) {
         const lang = appState.currentLanguage;
 
         if (!appState.currentChallenge) {
-            showUIMessage('Erro: Challenge não encontrado.', 'error');
+            showUIMessage(lang === 'pt' ? 'Erro inesperado. Tente novamente.' : 'Unexpected error. Try again.', 'error');
             return;
         }
 
         // Desabilita botões enquanto processa
         const optionButtons = elements.challengeOptions?.querySelectorAll('button');
-        optionButtons?.forEach(btn => btn.disabled = true);
+        optionButtons?.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+        });
 
-        showUIMessage(translations[lang].challenge_solving, 'info', 0);
+        showUIMessage(lang === 'pt' ? '⏳ Verificando...' : '⏳ Checking...', 'info', 0);
 
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/solve-challenge`, {
+            const endpoint = appState.currentChallenge.isTwoStep
+                ? '/solve-challenge-step2'
+                : '/solve-challenge';
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1907,77 +2154,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
 
-            // Handle bypass detection
-            if (data.bypass_detected) {
-                hideChallengeModal();
-                showUIMessage(translations[lang].challenge_bypass_detected, 'error', 10000);
-                clearBypassStorage();
-                return;
-            }
-
-            // Handle blocked
+            // Rate limit - mais amigável
             if (response.status === 429) {
-                hideChallengeModal();
-                showUIMessage(translations[lang].challenge_blocked, 'error', 15000);
-                clearBypassStorage();
+                showUIMessage(lang === 'pt' ? '⏳ Aguarde um momento e tente novamente.' : '⏳ Please wait a moment and try again.', 'info', 5000);
+                setTimeout(() => {
+                    optionButtons?.forEach(btn => {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    });
+                }, 3000);
                 return;
             }
 
-            // Handle wrong answer with new challenge
+            // Resposta errada - novo challenge
             if (data.new_challenge) {
-                showUIMessage(translations[lang].challenge_wrong, 'error', 2000);
-                if (appState.soundEnabled) playSound(200, 200, 'sawtooth');
+                const wrongMsg = lang === 'pt' ? '❌ Ops! Tente novamente.' : '❌ Oops! Try again.';
+                showUIMessage(wrongMsg, 'info', 1500);
+                if (appState.soundEnabled) playSound(300, 100, 'sine');
 
-                // Atualiza challenge
+                // Atualiza challenge mantendo estado
                 appState.currentChallenge = {
                     ...data.new_challenge,
                     sessionId: appState.currentChallenge.sessionId,
-                    timeout: appState.currentChallenge.timeout
+                    timeout: appState.currentChallenge.timeout,
+                    isTwoStep: appState.currentChallenge.isTwoStep
                 };
-                renderChallenge(data.new_challenge, data.attempts_remaining);
+                
+                // Pequeno delay para feedback visual
+                setTimeout(() => {
+                    renderChallenge(data.new_challenge, data.attempts_remaining || 10);
+                }, 300);
                 return;
             }
 
-            // Handle need to restart
+            // Precisa reiniciar - mas de forma amigável
             if (data.restart_required) {
                 hideChallengeModal();
-                showUIMessage(data.message || 'Muitas tentativas. Inicie novamente.', 'error');
+                showUIMessage(lang === 'pt' ? '🔄 Sessão expirada. Clique em START TASK novamente.' : '🔄 Session expired. Click START TASK again.', 'info', 5000);
                 clearBypassStorage();
                 return;
             }
 
-            // Handle other errors
-            if (!response.ok) {
-                hideChallengeModal();
-                showUIMessage(data.message || 'Erro ao verificar resposta.', 'error');
-                clearBypassStorage();
+            // Outros erros
+            if (!response.ok && !data.proof_token) {
+                showUIMessage(data.message || (lang === 'pt' ? 'Erro. Tente novamente.' : 'Error. Try again.'), 'info', 3000);
+                optionButtons?.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
                 return;
             }
 
-            // === SUCCESS: Challenge resolvido! ===
+            // === SUCESSO! ===
             if (data.status === 'success' && data.proof_token) {
                 hideChallengeModal();
-                showUIMessage(translations[lang].challenge_success, 'success');
+                showUIMessage(lang === 'pt' ? '✅ Perfeito! Gerando sua key...' : '✅ Perfect! Generating your key...', 'success');
                 if (appState.soundEnabled) playSoundSequence([
-                    { freq: 523, duration: 100, type: 'sine' },
-                    { freq: 659, duration: 100, type: 'sine' },
-                    { freq: 784, duration: 200, type: 'sine' }
+                    { freq: 523, duration: 80, type: 'sine' },
+                    { freq: 659, duration: 80, type: 'sine' },
+                    { freq: 784, duration: 120, type: 'sine' }
                 ]);
 
-                // Salva proof token e gera key
                 appState.proofToken = data.proof_token;
                 localStorage.setItem(CONFIG.BYPASS_PROOF_TOKEN_KEY, data.proof_token);
-
-                // Limpa session (não precisa mais)
                 localStorage.removeItem(CONFIG.BYPASS_SESSION_KEY);
 
-                // Gera a key!
-                setTimeout(() => generateNewKey(), 500);
+                // Gera key imediatamente
+                setTimeout(() => generateNewKey(), 200);
             }
         } catch (error) {
-            console.error('[Anti-Bypass] Erro ao submeter challenge:', error);
-            showUIMessage('Erro de conexão. Tente novamente.', 'error');
-            optionButtons?.forEach(btn => btn.disabled = false);
+            console.error('[Challenge] Erro:', error);
+            showUIMessage(lang === 'pt' ? '⚠️ Erro de conexão. Tente novamente.' : '⚠️ Connection error. Try again.', 'info', 3000);
+            optionButtons?.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
         }
     }
 
@@ -2118,109 +2369,39 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.keyValueEl.addEventListener('click', copyToClipboard);
         }
 
-        // Method Menu Logic
-        // Track if method turnstile has been rendered
-        window._methodTurnstileRendered = false;
+        // === TWO-STEP MODAL LOGIC (2026) ===
+        window._twoStepTurnstileRendered = false;
 
         if (elements.btnOpenMethodMenu) {
             elements.btnOpenMethodMenu.addEventListener('click', () => {
-                if (elements.methodSelectionModal) {
-                    elements.methodSelectionModal.style.display = 'block';
-
-                    // === FIX: Render Turnstile widget manually when modal opens ===
-                    // Widgets inside hidden elements don't auto-render
-                    if (window.turnstile && !window._methodTurnstileRendered) {
-                        const container = document.getElementById('methodTurnstile');
-                        if (container) {
-                            // Clear any existing widget
-                            container.innerHTML = '';
-
-                            // Render the widget
-                            window.turnstile.render(container, {
-                                sitekey: '0x4AAAAAACCiV6dd05O6ZjAs',
-                                callback: (token) => {
-                                    console.log('[Method Turnstile] ✅ Verification successful');
-                                    appState.turnstileToken = token;
-                                    appState.turnstileVerifiedAt = Date.now();
-                                    enableMethodButtons();
-
-                                    // Update hint
-                                    const hint = document.getElementById('turnstileHint');
-                                    if (hint) {
-                                        const lang = appState.currentLanguage;
-                                        hint.textContent = translations[lang]?.turnstile_success || '✅ Verificado! Selecione um método abaixo';
-                                        hint.style.color = '#4CAF50';
-                                    }
-                                },
-                                'error-callback': () => {
-                                    console.error('[Method Turnstile] ❌ Verification failed');
-                                    appState.turnstileToken = null;
-                                    disableMethodButtons();
-
-                                    const hint = document.getElementById('turnstileHint');
-                                    if (hint) {
-                                        hint.textContent = '❌ Erro na verificação. Recarregue a página.';
-                                        hint.style.color = '#f44336';
-                                    }
-                                },
-                                'expired-callback': () => {
-                                    console.warn('[Method Turnstile] ⚠️ Token expired');
-                                    appState.turnstileToken = null;
-                                    disableMethodButtons();
-
-                                    const hint = document.getElementById('turnstileHint');
-                                    if (hint) {
-                                        hint.textContent = '⚠️ Verificação expirada. Complete novamente.';
-                                        hint.style.color = '#ff9800';
-                                    }
-                                },
-                                theme: 'dark',
-                                retry: 'auto',
-                                'retry-interval': 3000
-                            });
-
-                            window._methodTurnstileRendered = true;
-                            console.log('[Method Turnstile] Widget rendered manually');
-                        }
-                    }
-
-                    // Check if Turnstile token is still valid (< 4 minutes old)
-                    const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
-                    const TOKEN_MAX_AGE = 4 * 60 * 1000; // 4 minutes
-
-                    if (appState.turnstileToken && tokenAge < TOKEN_MAX_AGE) {
-                        // Token still valid, enable buttons
-                        console.log('[Modal] Turnstile token still valid, enabling buttons');
-                        enableMethodButtons();
-                    } else if (appState.turnstileToken && tokenAge >= TOKEN_MAX_AGE) {
-                        // Token expired, reset
-                        console.log('[Modal] Turnstile token expired, resetting');
-                        appState.turnstileToken = null;
-                        disableMethodButtons();
-                        if (window.turnstile) {
-                            const widget = document.getElementById('methodTurnstile');
-                            if (widget) window.turnstile.reset(widget);
-                        }
-                    }
-                    // If no token, Turnstile will handle it automatically
-                }
+                openTwoStepModal();
             });
         }
-        if (elements.closeMethodModal) {
-            elements.closeMethodModal.addEventListener('click', () => {
-                if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none';
+
+        // Close two-step modal
+        if (elements.closeTwoStepModal) {
+            elements.closeTwoStepModal.addEventListener('click', () => {
+                if (elements.twoStepModal) elements.twoStepModal.style.display = 'none';
             });
         }
-        if (elements.methodSelectionModal) {
+        if (elements.twoStepModal) {
             window.addEventListener('click', (e) => {
-                if (e.target === elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none';
+                if (e.target === elements.twoStepModal) elements.twoStepModal.style.display = 'none';
             });
         }
 
-        // Method Buttons in Modal
-        if (elements.btnMethod1) elements.btnMethod1.addEventListener('click', () => { if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(1); });
-        if (elements.btnMethod2) elements.btnMethod2.addEventListener('click', () => { if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(2); });
-        if (elements.btnMethod3) elements.btnMethod3.addEventListener('click', () => { if (elements.methodSelectionModal) elements.methodSelectionModal.style.display = 'none'; initiateShortenerRedirect(3); });
+        // Step Buttons in Modal
+        if (elements.btnStep1) {
+            elements.btnStep1.addEventListener('click', () => {
+                startStep1();
+            });
+        }
+        if (elements.btnStep2) {
+            elements.btnStep2.addEventListener('click', () => {
+                startStep2();
+            });
+        }
+
         if (elements.btnView) elements.btnView.addEventListener('click', () => { if (appState.soundEnabled) playSound(500, 100, 'square'); fetchUserKeyList(); });
         if (elements.translateButton) elements.translateButton.addEventListener('click', toggleTranslation);
         if (elements.supportButton) elements.supportButton.addEventListener('click', openDiscordWidget);

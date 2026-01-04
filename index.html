@@ -223,51 +223,85 @@
         </button>
       </div>
 
-      <!-- Method Selection Modal -->
-      <div id="methodSelectionModal" class="modal">
-        <div class="modal-content method-selection-content">
-          <span class="close-modal" id="closeMethodModal">&times;</span>
-          <h2 data-translate-key="select_method_title">Selecione o Método</h2>
-          <p data-translate-key="select_method_desc">Escolha uma das opções abaixo para iniciar a verificação:</p>
+      <!-- Two-Step Verification Modal (2026) -->
+      <div id="twoStepModal" class="modal">
+        <div class="modal-content two-step-content">
+          <span class="close-modal" id="closeTwoStepModal">&times;</span>
+          
+          <!-- Progress Header -->
+          <div class="two-step-header">
+            <h2 data-translate-key="twostep_title">🔐 Verificação em 2 Passos</h2>
+            <p data-translate-key="twostep_desc">Complete os dois passos para gerar sua key</p>
+          </div>
 
-          <!-- Turnstile Anti-Bot (rendered manually when modal opens) -->
-          <div class="turnstile-container"
-            style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
-            <div id="methodTurnstile"></div>
-            <p id="turnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;"
-              data-translate-key="turnstile_hint">
-              Complete a verificação acima para desbloquear os métodos
+          <!-- Progress Indicator -->
+          <div class="step-progress">
+            <div class="step-indicator" id="stepIndicator1">
+              <div class="step-number">1</div>
+              <div class="step-line"></div>
+            </div>
+            <div class="step-indicator" id="stepIndicator2">
+              <div class="step-number">2</div>
+            </div>
+          </div>
+
+          <!-- Turnstile Anti-Bot -->
+          <div class="turnstile-container" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
+            <div id="twoStepTurnstile"></div>
+            <p id="twoStepTurnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;" data-translate-key="turnstile_hint">
+              Complete a verificação acima para desbloquear
             </p>
           </div>
 
-          <div class="methods-list">
-            <button id="btnMethod1" class="method-option recommended" disabled>
-              <div class="method-icon">🔥</div>
-              <div class="method-info">
-                <span class="method-name" data-translate-key="method_1">Método 1 (Recomendado)</span>
-                <span class="method-desc" data-translate-key="method_1_desc">Mais rápido e estável</span>
+          <!-- Step Cards -->
+          <div class="step-cards">
+            <!-- Step 1 Card -->
+            <div class="step-card current" id="stepCard1">
+              <div class="step-card-header">
+                <span class="step-badge">PASSO 1</span>
+                <span class="step-status" id="step1Status">⏳</span>
               </div>
-              <div class="method-arrow">➜</div>
-            </button>
+              <div class="step-card-body">
+                <div class="step-icon">🔗</div>
+                <div class="step-info">
+                  <span class="step-name" data-translate-key="step1_name">Primeira Verificação</span>
+                  <span class="step-desc" data-translate-key="step1_desc">Complete o primeiro link</span>
+                </div>
+              </div>
+              <button id="btnStep1" class="step-btn" disabled>
+                <span data-translate-key="step1_btn">Iniciar Passo 1</span>
+                <span class="step-arrow">→</span>
+              </button>
+            </div>
 
-            <button id="btnMethod2" class="method-option" disabled>
-              <div class="method-icon">⚡</div>
-              <div class="method-info">
-                <span class="method-name" data-translate-key="method_2">Método 2</span>
-                <span class="method-desc" data-translate-key="method_2_desc">Alternativa rápida</span>
+            <!-- Step 2 Card -->
+            <div class="step-card locked" id="stepCard2">
+              <div class="step-card-header">
+                <span class="step-badge">PASSO 2</span>
+                <span class="step-status" id="step2Status">🔒</span>
               </div>
-              <div class="method-arrow">➜</div>
-            </button>
-
-            <button id="btnMethod3" class="method-option" disabled>
-              <div class="method-icon">💎</div>
-              <div class="method-info">
-                <span class="method-name" data-translate-key="method_3">Método 3</span>
-                <span class="method-desc" data-translate-key="method_3_desc">Servidor alternativo</span>
+              <div class="step-card-body">
+                <div class="step-icon">🎯</div>
+                <div class="step-info">
+                  <span class="step-name" data-translate-key="step2_name">Verificação Final</span>
+                  <span class="step-desc" data-translate-key="step2_desc">Complete para receber sua key</span>
+                </div>
               </div>
-              <div class="method-arrow">➜</div>
-            </button>
+              <button id="btnStep2" class="step-btn" disabled>
+                <span data-translate-key="step2_btn">Iniciar Passo 2</span>
+                <span class="step-arrow">→</span>
+              </button>
+              <div class="step-locked-overlay" id="step2LockedOverlay">
+                <span>🔒</span>
+                <p data-translate-key="step2_locked">Complete o Passo 1 primeiro</p>
+              </div>
+            </div>
           </div>
+
+          <!-- Footer Hint -->
+          <p class="two-step-hint" data-translate-key="twostep_hint">
+            ⏱️ Você tem 15 minutos para completar ambos os passos
+          </p>
         </div>
       </div>
 

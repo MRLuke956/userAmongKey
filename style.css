@@ -1853,16 +1853,28 @@ button:active:not([disabled]) {
 
 .challenge-header h2 {
   font-family: var(--font-title);
-  font-size: 1.5rem;
-  color: var(--crewmate-yellow);
+  font-size: 1.6rem;
+  color: #00ffc8;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 20px rgba(255, 203, 116, 0.5);
+  text-shadow: 0 0 20px rgba(0, 255, 200, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.challenge-header h2::before {
+  content: '🧑‍🚀';
+  font-size: 1.4rem;
 }
 
 .challenge-header p {
-  color: var(--text-color-medium);
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
   margin-bottom: 1rem;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 200, 0.1), transparent);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
 }
 
 .challenge-timer {
@@ -3156,40 +3168,54 @@ button:focus-visible {
   }
 }
 
-/* ===== LIFETIME PLAN - ULTRA PREMIUM ===== */
+/* ===== LIFETIME PLAN - ULTRA PREMIUM ENHANCED ===== */
 .plan-lifetime {
   background: linear-gradient(165deg,
-      rgba(65, 45, 85, 0.95) 0%,
-      rgba(45, 30, 65, 0.98) 50%,
-      rgba(30, 20, 45, 0.95) 100%);
-  border: 2px solid rgba(155, 89, 182, 0.6);
+      rgba(55, 40, 75, 0.95) 0%,
+      rgba(40, 28, 55, 0.98) 50%,
+      rgba(28, 18, 40, 0.95) 100%);
+  border: 2px solid rgba(155, 89, 182, 0.5);
   box-shadow:
-    0 10px 30px rgba(155, 89, 182, 0.2),
-    0 0 50px rgba(155, 89, 182, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 8px 25px rgba(155, 89, 182, 0.15),
+    0 0 40px rgba(155, 89, 182, 0.08);
   padding: 1.5rem 1.25rem !important;
+  animation: lifetimeFloat 5s ease-in-out infinite;
+  transform: scale(1.01);
+}
+
+@keyframes lifetimeFloat {
+
+  0%,
+  100% {
+    transform: scale(1.01) translateY(0);
+  }
+
+  50% {
+    transform: scale(1.01) translateY(-3px);
+  }
 }
 
 .plan-lifetime .plan-name {
   font-size: 1.15rem;
-  color: #c59bff;
+  color: #c9a0ff;
 }
 
 .plan-lifetime .plan-price-value {
   font-size: 1.8rem;
-  color: #a76bc4 !important;
+  color: #b080d0 !important;
 }
 
 .plan-lifetime::before {
-  background: linear-gradient(135deg, rgba(155, 89, 182, 0.4), transparent, rgba(255, 215, 0, 0.3));
+  background: linear-gradient(135deg, rgba(155, 89, 182, 0.5), transparent, rgba(255, 215, 0, 0.4));
 }
 
 .plan-lifetime:hover {
-  border-color: rgba(155, 89, 182, 0.9);
+  border-color: rgba(155, 89, 182, 0.8);
   box-shadow:
-    0 15px 40px rgba(155, 89, 182, 0.35),
-    0 0 60px rgba(155, 89, 182, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 12px 35px rgba(155, 89, 182, 0.2),
+    0 0 50px rgba(155, 89, 182, 0.1);
+  animation: none;
+  transform: scale(1.03) translateY(-4px);
 }
 
 .btn-lifetime {
@@ -3201,7 +3227,7 @@ button:focus-visible {
 
 .btn-lifetime:hover {
   background: linear-gradient(135deg, #a76bc4 0%, #9b59b6 100%);
-  box-shadow: 0 6px 25px rgba(155, 89, 182, 0.6);
+  box-shadow: 0 8px 30px rgba(155, 89, 182, 0.7);
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -4685,5 +4711,632 @@ button:focus-visible {
   .download-main-icon {
     width: 44px;
     height: 44px;
+  }
+}
+
+/* ==================== KEY ITEM LIST WITH DELETE ==================== */
+.key-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.key-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.key-item .key-value {
+  font-family: var(--font-monospace, 'Consolas', monospace);
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #00ffc8;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px rgba(0, 255, 200, 0.3);
+  flex: 1;
+  user-select: all;
+  word-break: break-all;
+}
+
+.key-delete-btn {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: rgba(239, 68, 68, 0.7);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  margin-left: 0.8rem;
+  flex-shrink: 0;
+  box-shadow: none;
+}
+
+.key-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+  transform: scale(1.05);
+}
+
+.key-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* No-keys message styling */
+.no-keys {
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* ==================== TWO-STEP VERIFICATION MODAL (2026) ==================== */
+.two-step-content {
+  background: linear-gradient(145deg, #1a2433 0%, #0d1117 100%);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 20px;
+  max-width: 520px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow:
+    0 0 60px rgba(255, 215, 0, 0.15),
+    0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Two-Step Header */
+.two-step-header {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 170, 0, 0.08) 100%);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.two-step-header h2 {
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 1.4rem;
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.two-step-header p {
+  color: #b0bec5;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Step Progress Indicator */
+.step-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 2rem;
+  gap: 0;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d3b52 0%, #1e2837 100%);
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #6b7a8f;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.step-line {
+  width: 100px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0 0.5rem;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #2ecc71);
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animated dots on step-line when pending */
+.step-line::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 50%;
+  animation: lineDotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes lineDotPulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Completed state */
+.step-indicator.completed .step-number {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  border-color: #2ecc71;
+  color: #fff;
+  box-shadow:
+    0 0 20px rgba(46, 204, 113, 0.4),
+    0 0 40px rgba(46, 204, 113, 0.2);
+  animation: completedPop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes completedPop {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Replace number with checkmark on completed */
+.step-indicator.completed .step-number::before {
+  content: '✓';
+  font-size: 1.4rem;
+  font-weight: bold;
+  animation: checkFadeIn 0.3s ease-out;
+}
+
+@keyframes checkFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.step-indicator.completed .step-line::after {
+  width: 100%;
+}
+
+.step-indicator.completed .step-line::before {
+  display: none;
+  /* Hide pulsing dot when complete */
+}
+
+.step-indicator.active .step-number {
+  border-color: #ffd700;
+  color: #ffd700;
+  animation: stepPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+@keyframes stepPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+/* Step Cards Container */
+.step-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* Step Card */
+.step-card {
+  background: linear-gradient(145deg, #1e2837 0%, #151c27 100%);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 215, 0, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Step Card States */
+.step-card.current {
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow:
+    0 0 30px rgba(255, 215, 0, 0.15),
+    inset 0 0 30px rgba(255, 215, 0, 0.05);
+  animation: currentStepGlow 2s ease-in-out infinite;
+}
+
+@keyframes currentStepGlow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 20px rgba(255, 215, 0, 0.1),
+      inset 0 0 20px rgba(255, 215, 0, 0.03);
+  }
+
+  50% {
+    box-shadow:
+      0 0 40px rgba(255, 215, 0, 0.25),
+      inset 0 0 30px rgba(255, 215, 0, 0.08);
+  }
+}
+
+.step-card.current::before {
+  opacity: 1;
+}
+
+.step-card.current .step-badge {
+  animation: badgePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.step-card.completed {
+  border-color: rgba(46, 204, 113, 0.6);
+  background: linear-gradient(145deg, rgba(46, 204, 113, 0.15) 0%, #151c27 100%);
+  box-shadow: 0 0 25px rgba(46, 204, 113, 0.15);
+}
+
+.step-card.completed .step-status {
+  animation: checkmarkBounce 0.5s ease-out;
+}
+
+@keyframes checkmarkBounce {
+  0% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.step-card.completed .step-badge {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.2));
+  color: #2ecc71;
+  border-color: rgba(46, 204, 113, 0.5);
+}
+
+.step-card.completed .step-name {
+  color: #2ecc71;
+}
+
+/* LOCKED STATE - Enhanced Visual Feedback */
+.step-card.locked {
+  opacity: 0.5;
+  filter: grayscale(0.5) brightness(0.8);
+  border-color: rgba(255, 255, 255, 0.05);
+  transform: scale(0.98);
+  transition: all 0.4s ease;
+}
+
+.step-card.locked:hover {
+  opacity: 0.6;
+  transform: scale(0.99);
+}
+
+.step-card.locked .step-btn {
+  pointer-events: none;
+}
+
+/* Step Card Header */
+.step-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.step-badge {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 170, 0, 0.1));
+  color: #ffd700;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.step-status {
+  font-size: 1.2rem;
+}
+
+/* Step Card Body */
+.step-card-body {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.step-card-body .step-icon {
+  font-size: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 12px;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.step-name {
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 1rem;
+  color: #e8f1f8;
+  font-weight: 600;
+}
+
+.step-desc {
+  font-size: 0.85rem;
+  color: #8892a0;
+}
+
+/* Step Button */
+.step-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+  color: #1a1a1a;
+  border: none;
+  padding: 0.9rem 1.5rem;
+  border-radius: 12px;
+  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.step-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(255, 215, 0, 0.5);
+}
+
+.step-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.step-btn:disabled {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  color: #718096;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.step-arrow {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.step-btn:hover:not(:disabled) .step-arrow {
+  transform: translateX(3px);
+}
+
+/* Locked Overlay - Enhanced Visual */
+.step-locked-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(15, 18, 25, 0.9) 0%, rgba(10, 12, 18, 0.95) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 14px;
+  z-index: 5;
+  backdrop-filter: blur(4px);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+.step-locked-overlay span {
+  font-size: 2.5rem;
+  animation: lockShake 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 100, 100, 0.3));
+}
+
+@keyframes lockShake {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  5% {
+    transform: rotate(-5deg);
+  }
+
+  10% {
+    transform: rotate(5deg);
+  }
+
+  15% {
+    transform: rotate(0deg);
+  }
+}
+
+.step-locked-overlay p {
+  color: #a0aec0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+  padding: 0.5rem 1.5rem;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 20px;
+  animation: lockedTextPulse 2s ease-in-out infinite;
+}
+
+@keyframes lockedTextPulse {
+
+  0%,
+  100% {
+    background: rgba(255, 215, 0, 0.05);
+    border-color: rgba(255, 215, 0, 0.15);
+  }
+
+  50% {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+}
+
+/* Chain link visual between steps */
+.step-locked-overlay::before {
+  content: '⛓️';
+  position: absolute;
+  top: -20px;
+  font-size: 1.5rem;
+  animation: chainDangle 1.5s ease-in-out infinite;
+}
+
+@keyframes chainDangle {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+
+  50% {
+    transform: translateY(3px) rotate(5deg);
+  }
+}
+
+/* Two-Step Hint */
+.two-step-hint {
+  text-align: center;
+  color: #8892a0;
+  font-size: 0.85rem;
+  padding: 0 1.5rem 1.5rem;
+  margin: 0;
+}
+
+/* Close Modal Button */
+.two-step-content .close-modal {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  color: #8892a0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  z-index: 10;
+  line-height: 1;
+}
+
+.two-step-content .close-modal:hover {
+  color: #ffd700;
+}
+
+/* Responsive */
+@media (max-width: 550px) {
+  .two-step-content {
+    margin: 0 0.5rem;
+    max-width: 100%;
+  }
+
+  .step-line {
+    width: 50px;
+  }
+
+  .step-cards {
+    padding: 0 1rem 1rem;
+  }
+
+  .step-card {
+    padding: 1rem;
   }
 }

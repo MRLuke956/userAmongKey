@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Configuração dos Retornos (suporta múltiplos formatos de URL)
         RETURN_CONFIG: {
             step1: { action: 'complete_step1', alternativeActions: ['complete_m1', 'step1_complete'], status: 'success' },
-            step2: { action: 'complete_step2', alternativeActions: ['complete_m2', 'step2_complete'], status: 'success' }
+            step2: { action: 'complete_step2', alternativeActions: ['complete_m2', 'complete_m3', 'step2_complete'], status: 'success' }
         }
     };
 

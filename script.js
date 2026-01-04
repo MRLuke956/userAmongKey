@@ -91,10 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
         TWOSTEP_CURRENT_STEP_KEY: 'crewCurrentStep',     // 1 ou 2
         BYPASS_PROOF_TOKEN_KEY: 'miraHqProofToken',      // proof_token após challenge
         BYPASS_STARTED_AT_KEY: 'miraHqBypassStartedAt',  // timestamp de início
-        // Configuração dos Retornos
+        // Configuração dos Retornos (suporta múltiplos formatos de URL)
         RETURN_CONFIG: {
-            step1: { action: 'complete_step1', status: 'success' },
-            step2: { action: 'complete_step2', status: 'success' }
+            step1: { action: 'complete_step1', alternativeActions: ['complete_m1', 'step1_complete'], status: 'success' },
+            step2: { action: 'complete_step2', alternativeActions: ['complete_m2', 'step2_complete'], status: 'success' }
         }
     };
 
@@ -1866,20 +1866,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const sessionId = localStorage.getItem(CONFIG.TWOSTEP_SESSION_KEY);
             const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
-            if (!sessionId || !currentStep) return;
+            console.log('[2-Step] Checking return - action:', action, 'status:', status, 'currentStep:', currentStep, 'sessionId:', sessionId ? 'present' : 'missing');
+
+            if (!sessionId || !currentStep) {
+                console.log('[2-Step] No session or step found, skipping return check');
+                return;
+            }
+
+            // Helper para verificar se a action corresponde (principal ou alternativa)
+            const matchesStep1Action = (a) => {
+                const cfg = CONFIG.RETURN_CONFIG.step1;
+                return a === cfg.action || (cfg.alternativeActions && cfg.alternativeActions.includes(a));
+            };
+            const matchesStep2Action = (a) => {
+                const cfg = CONFIG.RETURN_CONFIG.step2;
+                return a === cfg.action || (cfg.alternativeActions && cfg.alternativeActions.includes(a));
+            };
 
             // Verifica retorno do STEP 1
-            if (action === CONFIG.RETURN_CONFIG.step1.action && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
+            if (matchesStep1Action(action) && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
+                console.log('[2-Step] ✅ Step 1 return detected!');
                 await handleStep1Return(sessionId, linkvertiseHash);
             }
             // Verifica retorno do STEP 2
-            else if (action === CONFIG.RETURN_CONFIG.step2.action && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
+            else if (matchesStep2Action(action) && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
+                console.log('[2-Step] ✅ Step 2 return detected!');
                 await handleStep2Return(sessionId, linkvertiseHash);
+            } else {
+                console.log('[2-Step] No matching return action found');
             }
         } catch (e) {
             console.error('[2-Step] Error in checkAndProcessShortenerReturn:', e);
         }
     }
+
 
     // Processa retorno do Passo 1
     async function handleStep1Return(sessionId, linkvertiseHash) {

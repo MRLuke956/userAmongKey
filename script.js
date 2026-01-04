@@ -421,7 +421,20 @@ document.addEventListener('DOMContentLoaded', () => {
             delete_key_error: '❌ Error deleting key',
             session_expired: 'Session expired. Please login again.',
             // Footer
-            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>'
+            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
+            // === TWO-STEP VERIFICATION MODAL ===
+            twostep_title: '🔐 2-Step Verification',
+            twostep_desc: 'Complete both steps to generate your key',
+            step1_name: 'First Verification',
+            step1_desc: 'Complete the first link',
+            step1_btn: 'Start Step 1',
+            step2_name: 'Final Verification',
+            step2_desc: 'Complete to receive your key',
+            step2_btn: 'Start Step 2',
+            step2_locked: 'Complete Step 1 first',
+            twostep_hint: '⏱️ You have 15 minutes to complete both steps',
+            step1_badge: 'STEP 1',
+            step2_badge: 'STEP 2'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -615,6 +628,19 @@ document.addEventListener('DOMContentLoaded', () => {
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
             download_client_title: 'Obter Cliente',
             download_client_subtitle: 'Mod V6 • Game v17.1.0',
+            // === TWO-STEP VERIFICATION MODAL ===
+            twostep_title: '🔐 Verificação em 2 Passos',
+            twostep_desc: 'Complete os dois passos para gerar sua key',
+            step1_name: 'Primeira Verificação',
+            step1_desc: 'Complete o primeiro link',
+            step1_btn: 'Iniciar Passo 1',
+            step2_name: 'Verificação Final',
+            step2_desc: 'Complete para receber sua key',
+            step2_btn: 'Iniciar Passo 2',
+            step2_locked: 'Complete o Passo 1 primeiro',
+            twostep_hint: '⏱️ Você tem 15 minutos para completar ambos os passos',
+            step1_badge: 'PASSO 1',
+            step2_badge: 'PASSO 2'
         }
     };
 
@@ -2179,7 +2205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     timeout: appState.currentChallenge.timeout,
                     isTwoStep: appState.currentChallenge.isTwoStep
                 };
-                
+
                 // Pequeno delay para feedback visual
                 setTimeout(() => {
                     renderChallenge(data.new_challenge, data.attempts_remaining || 10);
@@ -2459,6 +2485,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Aplica tradução (mesmo se for PT, para garantir consistência)
         applyTranslation(targetLang);
+
+        // [NOVO] Busca configuração do servidor (Site Key)
+        fetch(`${CONFIG.API_BASE_URL}/config`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' && data.config) {
+                    window.TURNSTILE_SITE_KEY = data.config.turnstile_site_key;
+                    console.log('[Config] Loaded Site Key:', window.TURNSTILE_SITE_KEY);
+                }
+            })
+            .catch(err => console.error('[Config] Failed to load server config:', err));
     }
 
     initializeApp();
@@ -2879,7 +2916,7 @@ function openDownloadModal() {
 
                 // Render the widget
                 window.turnstile.render(container, {
-                    sitekey: '0x4AAAAAACCiV6dd05O6ZjAs',
+                    sitekey: window.TURNSTILE_SITE_KEY || '0x4AAAAAACCiV6dd05O6ZjAs',
                     callback: window.onDownloadTurnstileSuccess,
                     'error-callback': window.onDownloadTurnstileError,
                     'expired-callback': window.onDownloadTurnstileExpired,

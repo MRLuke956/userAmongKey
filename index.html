@@ -227,7 +227,7 @@
       <div id="twoStepModal" class="modal">
         <div class="modal-content two-step-content">
           <span class="close-modal" id="closeTwoStepModal">&times;</span>
-          
+
           <!-- Progress Header -->
           <div class="two-step-header">
             <h2 data-translate-key="twostep_title">🔐 Verificação em 2 Passos</h2>
@@ -246,9 +246,11 @@
           </div>
 
           <!-- Turnstile Anti-Bot -->
-          <div class="turnstile-container" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
+          <div class="turnstile-container"
+            style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
             <div id="twoStepTurnstile"></div>
-            <p id="twoStepTurnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;" data-translate-key="turnstile_hint">
+            <p id="twoStepTurnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;"
+              data-translate-key="turnstile_hint">
               Complete a verificação acima para desbloquear
             </p>
           </div>
@@ -258,7 +260,7 @@
             <!-- Step 1 Card -->
             <div class="step-card current" id="stepCard1">
               <div class="step-card-header">
-                <span class="step-badge">PASSO 1</span>
+                <span class="step-badge" data-translate-key="step1_badge">STEP 1</span>
                 <span class="step-status" id="step1Status">⏳</span>
               </div>
               <div class="step-card-body">
@@ -277,7 +279,7 @@
             <!-- Step 2 Card -->
             <div class="step-card locked" id="stepCard2">
               <div class="step-card-header">
-                <span class="step-badge">PASSO 2</span>
+                <span class="step-badge" data-translate-key="step2_badge">STEP 2</span>
                 <span class="step-status" id="step2Status">🔒</span>
               </div>
               <div class="step-card-body">

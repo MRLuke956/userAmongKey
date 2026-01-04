@@ -1647,7 +1647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Renderiza Turnstile no modal
         if (window.turnstile && elements.twoStepTurnstile && !elements.twoStepTurnstile.hasChildNodes()) {
             window.turnstile.render(elements.twoStepTurnstile, {
-                sitekey: window.TURNSTILE_SITE_KEY || '0x4AAAAAAAyJMvlWdQ3PY34K',
+                sitekey: window.TURNSTILE_SITE_KEY || '0x4AAAAAACCiV6dd05O6ZjAs',
                 theme: 'dark',
                 callback: function (token) {
                     appState.turnstileToken = token;

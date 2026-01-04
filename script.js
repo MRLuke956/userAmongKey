@@ -1664,8 +1664,42 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Abre modal de 2 passos
-    function openTwoStepModal() {
+    // [FIX 2026] Agora verifica cooldown e limite de keys ANTES de abrir
+    async function openTwoStepModal(skipChecks = false) {
         if (!elements.twoStepModal) return;
+
+        // === FIX: Verificar cooldown antes de abrir modal ===
+        if (!skipChecks && appState.isInCooldown) {
+            const lang = appState.currentLanguage;
+            showUIMessage(translations[lang].wait_cooldown || '⏱️ Aguarde o cooldown terminar.', 'error');
+            return;
+        }
+
+        // === FIX: Verificar limite de keys ANTES de abrir modal ===
+        // Busca lista atualizada do servidor para evitar bypass
+        if (!skipChecks) {
+            try {
+                const headers = discordAuth.getAuthHeaders();
+                const response = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        appState.userKeys = data.keys || [];
+                        updateKeyLimitDisplay();
+
+                        // Verifica limite
+                        if (appState.userKeys.length >= CONFIG.MAX_KEY_LIMIT) {
+                            const lang = appState.currentLanguage;
+                            showUIMessage(translations[lang].limit_reached || '⚠️ LIMITE: Máximo de 5 keys.', 'error');
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('[openTwoStepModal] Erro ao verificar keys:', e);
+                // Em caso de erro de rede, permite continuar (backend vai validar)
+            }
+        }
 
         // Sincroniza estado visual
         updateTwoStepUI();
@@ -1765,13 +1799,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step1`, {
                 method: 'GET',
                 headers: {
-                    'X-Turnstile-Token': appState.turnstileToken
+                    'X-Turnstile-Token': appState.turnstileToken,
+                    ...discordAuth.getAuthHeaders()  // [FIX] Envia credenciais de autenticação
                 }
             });
             const data = await response.json();
 
             if (response.status === 429) {
-                showUIMessage(translations[lang].challenge_blocked || 'Muitas tentativas. Aguarde.', 'error', 15000);
+                // [FIX] Tratar erros específicos de limite e cooldown
+                if (data.limit_reached) {
+                    showUIMessage(translations[lang].limit_reached || '⚠️ LIMITE: Máximo de 5 keys atingido.', 'error', 10000);
+                } else if (data.cooldown_active) {
+                    showUIMessage(`⏱️ Aguarde ${data.retry_after || 30} segundos.`, 'error', 5000);
+                } else {
+                    showUIMessage(translations[lang].challenge_blocked || 'Muitas tentativas. Aguarde.', 'error', 15000);
+                }
+                appState.isProcessing = false;
+                if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
+                // Fecha modal se limite atingido
+                if (data.limit_reached && elements.twoStepModal) {
+                    elements.twoStepModal.style.display = 'none';
+                }
+                return;
+            }
+
+            if (response.status === 401) {
+                showUIMessage('Sessão expirada. Faça login novamente.', 'error');
+                await discordAuth.logout();
                 appState.isProcessing = false;
                 if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
                 return;
@@ -1902,10 +1956,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Processa retorno do Passo 1
+    // [FIX 2026] Agora verifica limite de keys ANTES de continuar
     async function handleStep1Return(sessionId, linkvertiseHash) {
         const lang = appState.currentLanguage;
         showUIMessage(translations[lang].verification_processing || 'Processando...', 'info', 0);
         window.history.replaceState({}, document.title, window.location.pathname);
+
+        // === FIX: Buscar keys ANTES de continuar para evitar bypass ===
+        try {
+            const headers = discordAuth.getAuthHeaders();
+            const keysResponse = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
+            if (keysResponse.ok) {
+                const keysData = await keysResponse.json();
+                if (keysData.status === 'success') {
+                    appState.userKeys = keysData.keys || [];
+                    updateKeyLimitDisplay();
+
+                    // Verifica limite AGORA (antes de continuar)
+                    if (appState.userKeys.length >= CONFIG.MAX_KEY_LIMIT) {
+                        showUIMessage(translations[lang].limit_reached || '⚠️ LIMITE: Máximo de 5 keys atingido.', 'error');
+                        clearTwoStepStorage();
+                        return;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[handleStep1Return] Erro ao verificar keys:', e);
+        }
 
         try {
             const response = await fetch(`${CONFIG.API_BASE_URL}/verify-step1`, {
@@ -1943,9 +2020,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     { freq: 784, duration: 150, type: 'sine' }
                 ]);
 
-                // Atualiza UI e abre modal para Step 2
+                // Atualiza UI e abre modal para Step 2 (skipChecks pois já verificamos)
                 updateTwoStepUI();
-                setTimeout(() => openTwoStepModal(), 1000);
+                setTimeout(() => openTwoStepModal(true), 1000);
             }
         } catch (error) {
             console.error('[2-Step] Erro no verify-step1:', error);
@@ -2419,8 +2496,14 @@ document.addEventListener('DOMContentLoaded', () => {
         window._twoStepTurnstileRendered = false;
 
         if (elements.btnOpenMethodMenu) {
-            elements.btnOpenMethodMenu.addEventListener('click', () => {
-                openTwoStepModal();
+            elements.btnOpenMethodMenu.addEventListener('click', async () => {
+                // [FIX 2026] Verificação adicional antes de abrir modal
+                if (appState.isInCooldown) {
+                    const lang = appState.currentLanguage;
+                    showUIMessage(translations[lang].wait_cooldown || '⏱️ Aguarde o cooldown terminar.', 'error');
+                    return;
+                }
+                await openTwoStepModal();
             });
         }
 

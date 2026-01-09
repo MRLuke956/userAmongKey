@@ -74,8 +74,8 @@ window.onTurnstileExpired = function () {
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = {
-        // URL da API já definida para produção
-        API_BASE_URL: 'https://keygenx-1.onrender.com',
+        // URL da API já definida para produção (VPS Contabo)
+        API_BASE_URL: 'https://api.crewcore.online',
         REQUEST_TIMEOUT: 15000, // 15 segundos timeout para requests
         // === SISTEMA DE 2 PASSOS (2026) ===
         SHORTENER_URLS: {
@@ -91,11 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
         TWOSTEP_CURRENT_STEP_KEY: 'crewCurrentStep',     // 1 ou 2
         BYPASS_PROOF_TOKEN_KEY: 'miraHqProofToken',      // proof_token após challenge
         BYPASS_STARTED_AT_KEY: 'miraHqBypassStartedAt',  // timestamp de início
-        // Configuração dos Retornos (suporta múltiplos formatos de URL)
+        // Configuração dos Retornos
         RETURN_CONFIG: {
-            step1: { action: 'complete_step1', alternativeActions: ['complete_m1', 'step1_complete'], status: 'success' },
-            step2: { action: 'complete_step2', alternativeActions: ['complete_m2', 'complete_m3', 'step2_complete'], status: 'success' }
-        }
+            step1: { action: 'complete_step1', status: 'success' },
+            step2: { action: 'complete_step2', status: 'success' }
+        },
+        // Site Key do Cloudflare Turnstile (Produção)
+        TURNSTILE_SITE_KEY: '0x4AAAAAACCiV6dd05O6ZjAs'
     };
 
     const elements = {
@@ -421,20 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
             delete_key_error: '❌ Error deleting key',
             session_expired: 'Session expired. Please login again.',
             // Footer
-            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
-            // === TWO-STEP VERIFICATION MODAL ===
-            twostep_title: '🔐 2-Step Verification',
-            twostep_desc: 'Complete both steps to generate your key',
-            step1_name: 'First Verification',
-            step1_desc: 'Complete the first link',
-            step1_btn: 'Start Step 1',
-            step2_name: 'Final Verification',
-            step2_desc: 'Complete to receive your key',
-            step2_btn: 'Start Step 2',
-            step2_locked: 'Complete Step 1 first',
-            twostep_hint: '⏱️ You have 15 minutes to complete both steps',
-            step1_badge: 'STEP 1',
-            step2_badge: 'STEP 2'
+            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -628,19 +617,6 @@ document.addEventListener('DOMContentLoaded', () => {
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
             download_client_title: 'Obter Cliente',
             download_client_subtitle: 'Mod V6 • Game v17.1.0',
-            // === TWO-STEP VERIFICATION MODAL ===
-            twostep_title: '🔐 Verificação em 2 Passos',
-            twostep_desc: 'Complete os dois passos para gerar sua key',
-            step1_name: 'Primeira Verificação',
-            step1_desc: 'Complete o primeiro link',
-            step1_btn: 'Iniciar Passo 1',
-            step2_name: 'Verificação Final',
-            step2_desc: 'Complete para receber sua key',
-            step2_btn: 'Iniciar Passo 2',
-            step2_locked: 'Complete o Passo 1 primeiro',
-            twostep_hint: '⏱️ Você tem 15 minutos para completar ambos os passos',
-            step1_badge: 'PASSO 1',
-            step2_badge: 'PASSO 2'
         }
     };
 
@@ -1124,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // sanitizeInput removido pois textContent já é seguro e isso causava escape duplo.
 
-    function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9-]{19}$/.test(key); }
+    function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9P-]{19,23}$/.test(key); }
     function validateToken(token) { return typeof token === 'string' && /^[a-zA-Z0-9\-_]{20,}$/.test(token); }
 
     function initAudioContext() {
@@ -1664,42 +1640,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Abre modal de 2 passos
-    // [FIX 2026] Agora verifica cooldown e limite de keys ANTES de abrir
-    async function openTwoStepModal(skipChecks = false) {
+    function openTwoStepModal() {
         if (!elements.twoStepModal) return;
-
-        // === FIX: Verificar cooldown antes de abrir modal ===
-        if (!skipChecks && appState.isInCooldown) {
-            const lang = appState.currentLanguage;
-            showUIMessage(translations[lang].wait_cooldown || '⏱️ Aguarde o cooldown terminar.', 'error');
-            return;
-        }
-
-        // === FIX: Verificar limite de keys ANTES de abrir modal ===
-        // Busca lista atualizada do servidor para evitar bypass
-        if (!skipChecks) {
-            try {
-                const headers = discordAuth.getAuthHeaders();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        appState.userKeys = data.keys || [];
-                        updateKeyLimitDisplay();
-
-                        // Verifica limite
-                        if (appState.userKeys.length >= CONFIG.MAX_KEY_LIMIT) {
-                            const lang = appState.currentLanguage;
-                            showUIMessage(translations[lang].limit_reached || '⚠️ LIMITE: Máximo de 5 keys.', 'error');
-                            return;
-                        }
-                    }
-                }
-            } catch (e) {
-                console.warn('[openTwoStepModal] Erro ao verificar keys:', e);
-                // Em caso de erro de rede, permite continuar (backend vai validar)
-            }
-        }
 
         // Sincroniza estado visual
         updateTwoStepUI();
@@ -1707,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Renderiza Turnstile no modal
         if (window.turnstile && elements.twoStepTurnstile && !elements.twoStepTurnstile.hasChildNodes()) {
             window.turnstile.render(elements.twoStepTurnstile, {
-                sitekey: window.TURNSTILE_SITE_KEY || '0x4AAAAAACCiV6dd05O6ZjAs',
+                sitekey: CONFIG.TURNSTILE_SITE_KEY,
                 theme: 'dark',
                 callback: function (token) {
                     appState.turnstileToken = token;
@@ -1799,33 +1741,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step1`, {
                 method: 'GET',
                 headers: {
-                    'X-Turnstile-Token': appState.turnstileToken,
-                    ...discordAuth.getAuthHeaders()  // [FIX] Envia credenciais de autenticação
+                    'X-Turnstile-Token': appState.turnstileToken
                 }
             });
             const data = await response.json();
 
             if (response.status === 429) {
-                // [FIX] Tratar erros específicos de limite e cooldown
-                if (data.limit_reached) {
-                    showUIMessage(translations[lang].limit_reached || '⚠️ LIMITE: Máximo de 5 keys atingido.', 'error', 10000);
-                } else if (data.cooldown_active) {
-                    showUIMessage(`⏱️ Aguarde ${data.retry_after || 30} segundos.`, 'error', 5000);
-                } else {
-                    showUIMessage(translations[lang].challenge_blocked || 'Muitas tentativas. Aguarde.', 'error', 15000);
-                }
-                appState.isProcessing = false;
-                if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
-                // Fecha modal se limite atingido
-                if (data.limit_reached && elements.twoStepModal) {
-                    elements.twoStepModal.style.display = 'none';
-                }
-                return;
-            }
-
-            if (response.status === 401) {
-                showUIMessage('Sessão expirada. Faça login novamente.', 'error');
-                await discordAuth.logout();
+                showUIMessage(translations[lang].challenge_blocked || 'Muitas tentativas. Aguarde.', 'error', 15000);
                 appState.isProcessing = false;
                 if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
                 return;
@@ -1920,69 +1842,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const sessionId = localStorage.getItem(CONFIG.TWOSTEP_SESSION_KEY);
             const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
-            console.log('[2-Step] Checking return - action:', action, 'status:', status, 'currentStep:', currentStep, 'sessionId:', sessionId ? 'present' : 'missing');
-
-            if (!sessionId || !currentStep) {
-                console.log('[2-Step] No session or step found, skipping return check');
-                return;
-            }
-
-            // Helper para verificar se a action corresponde (principal ou alternativa)
-            const matchesStep1Action = (a) => {
-                const cfg = CONFIG.RETURN_CONFIG.step1;
-                return a === cfg.action || (cfg.alternativeActions && cfg.alternativeActions.includes(a));
-            };
-            const matchesStep2Action = (a) => {
-                const cfg = CONFIG.RETURN_CONFIG.step2;
-                return a === cfg.action || (cfg.alternativeActions && cfg.alternativeActions.includes(a));
-            };
+            if (!sessionId || !currentStep) return;
 
             // Verifica retorno do STEP 1
-            if (matchesStep1Action(action) && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
-                console.log('[2-Step] ✅ Step 1 return detected!');
+            if (action === CONFIG.RETURN_CONFIG.step1.action && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
                 await handleStep1Return(sessionId, linkvertiseHash);
             }
             // Verifica retorno do STEP 2
-            else if (matchesStep2Action(action) && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
-                console.log('[2-Step] ✅ Step 2 return detected!');
+            else if (action === CONFIG.RETURN_CONFIG.step2.action && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
                 await handleStep2Return(sessionId, linkvertiseHash);
-            } else {
-                console.log('[2-Step] No matching return action found');
             }
         } catch (e) {
             console.error('[2-Step] Error in checkAndProcessShortenerReturn:', e);
         }
     }
 
-
     // Processa retorno do Passo 1
-    // [FIX 2026] Agora verifica limite de keys ANTES de continuar
     async function handleStep1Return(sessionId, linkvertiseHash) {
         const lang = appState.currentLanguage;
         showUIMessage(translations[lang].verification_processing || 'Processando...', 'info', 0);
         window.history.replaceState({}, document.title, window.location.pathname);
-
-        // === FIX: Buscar keys ANTES de continuar para evitar bypass ===
-        try {
-            const headers = discordAuth.getAuthHeaders();
-            const keysResponse = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
-            if (keysResponse.ok) {
-                const keysData = await keysResponse.json();
-                if (keysData.status === 'success') {
-                    appState.userKeys = keysData.keys || [];
-                    updateKeyLimitDisplay();
-
-                    // Verifica limite AGORA (antes de continuar)
-                    if (appState.userKeys.length >= CONFIG.MAX_KEY_LIMIT) {
-                        showUIMessage(translations[lang].limit_reached || '⚠️ LIMITE: Máximo de 5 keys atingido.', 'error');
-                        clearTwoStepStorage();
-                        return;
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn('[handleStep1Return] Erro ao verificar keys:', e);
-        }
 
         try {
             const response = await fetch(`${CONFIG.API_BASE_URL}/verify-step1`, {
@@ -2020,9 +1899,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     { freq: 784, duration: 150, type: 'sine' }
                 ]);
 
-                // Atualiza UI e abre modal para Step 2 (skipChecks pois já verificamos)
+                // Atualiza UI e abre modal para Step 2
                 updateTwoStepUI();
-                setTimeout(() => openTwoStepModal(true), 1000);
+                setTimeout(() => openTwoStepModal(), 1000);
             }
         } catch (error) {
             console.error('[2-Step] Erro no verify-step1:', error);
@@ -2496,14 +2375,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window._twoStepTurnstileRendered = false;
 
         if (elements.btnOpenMethodMenu) {
-            elements.btnOpenMethodMenu.addEventListener('click', async () => {
-                // [FIX 2026] Verificação adicional antes de abrir modal
-                if (appState.isInCooldown) {
-                    const lang = appState.currentLanguage;
-                    showUIMessage(translations[lang].wait_cooldown || '⏱️ Aguarde o cooldown terminar.', 'error');
-                    return;
-                }
-                await openTwoStepModal();
+            elements.btnOpenMethodMenu.addEventListener('click', () => {
+                openTwoStepModal();
             });
         }
 
@@ -2588,17 +2461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Aplica tradução (mesmo se for PT, para garantir consistência)
         applyTranslation(targetLang);
-
-        // [NOVO] Busca configuração do servidor (Site Key)
-        fetch(`${CONFIG.API_BASE_URL}/config`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success' && data.config) {
-                    window.TURNSTILE_SITE_KEY = data.config.turnstile_site_key;
-                    console.log('[Config] Loaded Site Key:', window.TURNSTILE_SITE_KEY);
-                }
-            })
-            .catch(err => console.error('[Config] Failed to load server config:', err));
     }
 
     initializeApp();
@@ -3019,7 +2881,7 @@ function openDownloadModal() {
 
                 // Render the widget
                 window.turnstile.render(container, {
-                    sitekey: window.TURNSTILE_SITE_KEY || '0x4AAAAAACCiV6dd05O6ZjAs',
+                    sitekey: CONFIG.TURNSTILE_SITE_KEY,
                     callback: window.onDownloadTurnstileSuccess,
                     'error-callback': window.onDownloadTurnstileError,
                     'expired-callback': window.onDownloadTurnstileExpired,

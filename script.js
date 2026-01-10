@@ -2802,7 +2802,7 @@ async function handleDownload(platform) {
         }
 
         // === ANTI-BOT: Verify token on server before allowing download ===
-        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
         const verifyResponse = await fetch(`${apiUrl}/api/download/${platform}`, {
             method: 'POST',
             headers: {
@@ -2945,7 +2945,7 @@ async function loadPremiumPanel() {
             return;
         }
 
-        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
         const response = await fetch(`${apiUrl}/user_premium_keys`, {
             headers: { 'X-Session-ID': sessionId }
         });
@@ -2997,7 +2997,7 @@ function getPlanDisplayName(type) {
 
 async function updateKeyStatus(key) {
     try {
-        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
         const response = await fetch(`${apiUrl}/key-status?key=${encodeURIComponent(key)}`);
         const data = await response.json();
 
@@ -3034,7 +3034,7 @@ async function resetHwid() {
         const sessionId = localStorage.getItem('crewbot_session');
         if (!sessionId) throw new Error('Sessão expirada.');
 
-        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://keygenx-1.onrender.com';
+        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
         const response = await fetch(`${apiUrl}/premium/reset-hwid`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Session-ID': sessionId },

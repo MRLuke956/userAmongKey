@@ -91,10 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
         TWOSTEP_CURRENT_STEP_KEY: 'crewCurrentStep',     // 1 ou 2
         BYPASS_PROOF_TOKEN_KEY: 'miraHqProofToken',      // proof_token após challenge
         BYPASS_STARTED_AT_KEY: 'miraHqBypassStartedAt',  // timestamp de início
-        // Configuração dos Retornos
+        // Configuração dos Retornos (suporta múltiplos formatos)
         RETURN_CONFIG: {
-            step1: { action: 'complete_step1', status: 'success' },
-            step2: { action: 'complete_step2', status: 'success' }
+            step1: { action: 'complete_step1', alternativeActions: ['complete_m1', 'step1_complete'], status: 'success' },
+            step2: { action: 'complete_step2', alternativeActions: ['complete_m2', 'complete_m3', 'step2_complete'], status: 'success' }
         },
         // Site Key do Cloudflare Turnstile (Produção)
         TURNSTILE_SITE_KEY: '0x4AAAAAACCiV6dd05O6ZjAs'
@@ -1844,12 +1844,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!sessionId || !currentStep) return;
 
+            // Helper: verifica se action é válida (principal ou alternativa)
+            const isStep1Action = action === CONFIG.RETURN_CONFIG.step1.action ||
+                (CONFIG.RETURN_CONFIG.step1.alternativeActions || []).includes(action);
+            const isStep2Action = action === CONFIG.RETURN_CONFIG.step2.action ||
+                (CONFIG.RETURN_CONFIG.step2.alternativeActions || []).includes(action);
+
             // Verifica retorno do STEP 1
-            if (action === CONFIG.RETURN_CONFIG.step1.action && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
+            if (isStep1Action && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
                 await handleStep1Return(sessionId, linkvertiseHash);
             }
             // Verifica retorno do STEP 2
-            else if (action === CONFIG.RETURN_CONFIG.step2.action && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
+            else if (isStep2Action && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
                 await handleStep2Return(sessionId, linkvertiseHash);
             }
         } catch (e) {

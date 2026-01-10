@@ -70,6 +70,14 @@ window.onTurnstileExpired = function () {
 };
 
 // ============================================
+// GLOBAL CONFIG (accessible outside DOMContentLoaded)
+// ============================================
+const GLOBAL_CONFIG = {
+    TURNSTILE_SITE_KEY: '0x4AAAAAACCiV6dd05O6ZjAs',
+    API_BASE_URL: 'https://api.crewcore.online'
+};
+
+// ============================================
 // MAIN APPLICATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -2887,7 +2895,7 @@ function openDownloadModal() {
 
                 // Render the widget
                 window.turnstile.render(container, {
-                    sitekey: CONFIG.TURNSTILE_SITE_KEY,
+                    sitekey: GLOBAL_CONFIG.TURNSTILE_SITE_KEY,
                     callback: window.onDownloadTurnstileSuccess,
                     'error-callback': window.onDownloadTurnstileError,
                     'expired-callback': window.onDownloadTurnstileExpired,

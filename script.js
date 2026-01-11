@@ -893,10 +893,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const code = urlParams.get('code');
             const state = urlParams.get('state');
 
-            // NEW: Handle direct session_id from server redirect (2026)
-            const directSessionId = urlParams.get('session_id');
+            // NEW: Handle direct discord_session from server redirect (2026)
+            // Using discord_session (not session_id) to avoid conflict with Stripe payment verification
+            const directSessionId = urlParams.get('discord_session');
             const directUsername = urlParams.get('username');
             const directDiscordId = urlParams.get('discord_id');
+            const directAvatar = urlParams.get('avatar');
 
             if (directSessionId && directUsername) {
                 // Server already processed OAuth and sent us the session directly
@@ -905,7 +907,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     session_id: directSessionId,
                     user: {
                         id: directDiscordId,
-                        username: directUsername
+                        username: directUsername,
+                        avatar: directAvatar || null // Avatar hash, not URL
                     },
                     message: `👋 Bem-vindo, ${directUsername}!`
                 });

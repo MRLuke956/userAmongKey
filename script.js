@@ -2940,9 +2940,9 @@ async function handleDownload(platform) {
 
     // Mapeamento de plataforma para arquivo no R2
     const DOWNLOAD_FILES = {
-        'steam': 'V6-Steam.zip',
-        'epic': 'V6-EpicGames.zip',
-        'epicgames': 'V6-EpicGames.zip'
+        'steam': 'Steam V6.0.2.zip',
+        'epic': 'EpicGames V6.0.2.zip',
+        'epicgames': 'EpicGames V6.0.2.zip'
     };
 
     const fileName = DOWNLOAD_FILES[platform];

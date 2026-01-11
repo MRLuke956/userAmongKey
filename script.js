@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             version_latest: '✅ Latest version',
             download_hint: '🔒 Secure download via Cloudflare',
             download_client_title: 'Download Client',
-            download_client_subtitle: 'Mod V6 • Game v17.1.0',
+            download_client_subtitle: 'Mod V6.0.2 • Game v17.1.0',
             download_now: 'Download Now',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',

@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
             version_latest: '✅ Latest version',
             download_hint: '🔒 Secure download via Cloudflare',
             download_client_title: 'Download Client',
-            download_client_subtitle: 'Mod V6.0.2 • Game v17.1.0',
+            download_client_subtitle: 'Mod V6.0.3 • Game v17.1.0',
             download_now: 'Download Now',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',
@@ -422,6 +422,8 @@ document.addEventListener('DOMContentLoaded', () => {
             session_expired: 'Session expired. Please login again.',
             // Footer
             footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
+            donate_button: 'Donate ❤️',
+            donate_subtitle: '(support development, not premium)',
             // === TWO-STEP VERIFICATION MODAL ===
             twostep_title: '🔐 2-Step Verification',
             twostep_desc: 'Complete both steps to generate your key',
@@ -459,6 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
             records_title: 'Registros de IDs - Ciclo Atual',
             no_records: 'Nenhum registro de ID neste terminal para o ciclo atual.',
             support_button: '🆘 Suporte',
+            donate_button: 'Doar ❤️',
+            donate_subtitle: '(apoie o desenvolvimento, não é premium)',
             translate_button: '🇺🇸 Translate to English',
             widget_title: 'Suporte - Discord',
             stat_keys_today: 'Keys Hoje',
@@ -2940,9 +2944,9 @@ async function handleDownload(platform) {
 
     // Mapeamento de plataforma para arquivo no R2
     const DOWNLOAD_FILES = {
-        'steam': 'Steam V6.0.2.zip',
-        'epic': 'EpicGames V6.0.2.zip',
-        'epicgames': 'EpicGames V6.0.2.zip'
+        'steam': 'Steam V6.0.3.zip',
+        'epic': 'EpicGames V6.0.3.zip',
+        'epicgames': 'EpicGames V6.0.3.zip'
     };
 
     const fileName = DOWNLOAD_FILES[platform];

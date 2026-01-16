@@ -957,6 +957,99 @@ button.loading .button-text {
   box-shadow: 0 6px 20px rgba(106, 147, 201, 0.15);
 }
 
+/* Donate Button - Chamativo mas não exagerado */
+.donate-button {
+  background: linear-gradient(135deg, rgba(255, 107, 129, 0.15) 0%, rgba(200, 80, 180, 0.15) 50%, rgba(106, 147, 201, 0.15) 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ff9eb5;
+  border: 1px solid rgba(255, 107, 129, 0.35);
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  width: 100%;
+  justify-content: center;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.donate-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.donate-button:hover::before {
+  left: 100%;
+}
+
+.donate-button:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 129, 0.3) 0%, rgba(200, 80, 180, 0.25) 50%, rgba(106, 147, 201, 0.25) 100%);
+  border-color: rgba(255, 107, 129, 0.6);
+  color: #ffc4d0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(255, 107, 129, 0.25);
+}
+
+.donate-icon {
+  font-size: 1.1em;
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  14% {
+    transform: scale(1.15);
+  }
+
+  28% {
+    transform: scale(1);
+  }
+
+  42% {
+    transform: scale(1.1);
+  }
+
+  56% {
+    transform: scale(1);
+  }
+}
+
+.donate-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.donate-subtitle {
+  font-size: 0.65em;
+  opacity: 0.75;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .download-button {
   position: relative;
   background: rgba(30, 35, 45, 0.8);

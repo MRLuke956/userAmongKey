@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+/* Fonts are loaded via <link> in index.html (VT323, Varela Round) */
 
 :root {
   /* MOD MENU PALETTE */
@@ -18,8 +18,11 @@
   --success-color: #10b981;
   --danger-color: #ef4444;
 
-  --font-main: 'Inter', sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-main: 'Varela Round', sans-serif;
+  /* Chat/Body Text */
+  --font-display: 'VT323', monospace;
+  /* Headers/Impostor Text */
+  --font-title: 'VT323', monospace;
 
   /* Retaining some functional vars map to new theme */
   --panel-bg-color: #0a0a0a;
@@ -104,6 +107,41 @@ body {
   100% {
     background-position: 0 100px;
   }
+}
+
+/* 💨 VENT POP ANIMATION (Modal Entry) */
+@keyframes ventPop {
+  0% {
+    opacity: 0;
+    transform: translateY(100px) scale(0.8);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.05);
+    /* Bounce up */
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    /* Settle */
+  }
+}
+
+/* 🟩 TASK BAR STYLE (Segmented) */
+.progress-fill {
+  /* Iconic Among Us Task Bar: Green segments */
+  background: repeating-linear-gradient(90deg,
+      #43d31d,
+      #43d31d 18%,
+      transparent 18%,
+      transparent 20%);
+  box-shadow: 0 0 10px #43d31d;
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s steps(5);
+  /* Steps makes it fill by "chunks" */
+  border-radius: 2px;
 }
 
 /* Main Header Layout */
@@ -473,6 +511,11 @@ button {
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 0 5px 0px var(--shadow-color, #000), 0 8px 12px rgba(0, 0, 0, 0.3);
+  /* 2026 Mobile UX: Removes 300ms tap delay */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* Apple/Google Touch Target Guidelines */
+  min-height: 44px;
 }
 
 #generateBtn {
@@ -514,6 +557,12 @@ button[disabled] {
   cursor: not-allowed;
   box-shadow: 0 2px 0px rgba(0, 0, 0, 0.4) !important;
   pointer-events: none;
+}
+
+/* 2026 Mobile UX: Universal Active State for Touch Feedback */
+button:active:not([disabled]) {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 2px 0px var(--shadow-color, #000), 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Focus states for accessibility */
@@ -948,6 +997,50 @@ button.loading .button-text {
   letter-spacing: 0.5px;
 }
 
+/* 💖 DONATE BUTTON - Rose/Pink Theme */
+.donate-button {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  background: linear-gradient(135deg, rgba(255, 107, 129, 0.15) 0%, rgba(255, 71, 87, 0.1) 100%);
+  border: 1px solid rgba(255, 107, 129, 0.4);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  text-decoration: none;
+  color: #ff6b81;
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.donate-button:hover {
+  background: linear-gradient(135deg, rgba(255, 107, 129, 0.25) 0%, rgba(255, 71, 87, 0.2) 100%);
+  border-color: rgba(255, 107, 129, 0.7);
+  box-shadow: 0 0 20px rgba(255, 107, 129, 0.2);
+  transform: translateY(-2px);
+}
+
+.donate-icon {
+  font-size: 1.2rem;
+}
+
+.donate-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.donate-subtitle {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
 .support-button:hover,
 .translate-button:hover {
   background: linear-gradient(135deg, rgba(106, 147, 201, 0.2) 0%, rgba(15, 18, 25, 0.9) 100%);
@@ -955,99 +1048,6 @@ button.loading .button-text {
   color: var(--text-color-light);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(106, 147, 201, 0.15);
-}
-
-/* Donate Button - Chamativo mas não exagerado */
-.donate-button {
-  background: linear-gradient(135deg, rgba(255, 107, 129, 0.15) 0%, rgba(200, 80, 180, 0.15) 50%, rgba(106, 147, 201, 0.15) 100%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: #ff9eb5;
-  border: 1px solid rgba(255, 107, 129, 0.35);
-  padding: 0.8rem 1rem;
-  border-radius: 10px;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  width: 100%;
-  justify-content: center;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-decoration: none;
-  position: relative;
-  overflow: hidden;
-}
-
-.donate-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s ease;
-}
-
-.donate-button:hover::before {
-  left: 100%;
-}
-
-.donate-button:hover {
-  background: linear-gradient(135deg, rgba(255, 107, 129, 0.3) 0%, rgba(200, 80, 180, 0.25) 50%, rgba(106, 147, 201, 0.25) 100%);
-  border-color: rgba(255, 107, 129, 0.6);
-  color: #ffc4d0;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(255, 107, 129, 0.25);
-}
-
-.donate-icon {
-  font-size: 1.1em;
-  animation: heartbeat 2s ease-in-out infinite;
-}
-
-@keyframes heartbeat {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  14% {
-    transform: scale(1.15);
-  }
-
-  28% {
-    transform: scale(1);
-  }
-
-  42% {
-    transform: scale(1.1);
-  }
-
-  56% {
-    transform: scale(1);
-  }
-}
-
-.donate-text-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.2;
-}
-
-.donate-subtitle {
-  font-size: 0.65em;
-  opacity: 0.75;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
 }
 
 .download-button {
@@ -3762,7 +3762,7 @@ button:focus-visible {
 }
 
 .challenge-header h2 {
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 1.4rem;
   color: #ffcb74;
   margin-bottom: 0.5rem;
@@ -3788,7 +3788,7 @@ button:focus-visible {
   border: 1px solid rgba(231, 76, 60, 0.4);
   border-radius: 30px;
   margin: 1rem 2rem 0 2rem;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
 }
 
 .challenge-timer span:first-child {
@@ -3837,7 +3837,7 @@ button:focus-visible {
 .challenge-instruction {
   font-size: 1.3em !important;
   color: #ffcb74;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-weight: 700 !important;
   margin-bottom: 1.2rem !important;
   text-transform: uppercase;
@@ -3947,7 +3947,7 @@ button:focus-visible {
 #challengeAttempts {
   color: #b0bec5;
   font-size: 0.9rem;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
 }
 
 .challenge-hint {
@@ -4087,7 +4087,7 @@ button:focus-visible {
 }
 
 .method-name {
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-weight: 700;
   color: #e8f1f8;
   font-size: 0.95rem;
@@ -4133,7 +4133,7 @@ button:focus-visible {
 }
 
 .tutorial-content h2 {
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   color: #ffcb74;
   margin-bottom: 1.5rem;
   text-align: center;
@@ -4160,7 +4160,7 @@ button:focus-visible {
   height: 40px;
   background: linear-gradient(135deg, #6a93c9 0%, #4a73a9 100%);
   color: white;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-weight: bold;
   font-size: 1.2rem;
   border-radius: 50%;
@@ -4173,7 +4173,7 @@ button:focus-visible {
 .step-content h4 {
   color: #e8f1f8;
   margin-bottom: 0.3rem;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 0.95rem;
 }
 
@@ -4496,22 +4496,72 @@ button:focus-visible {
   opacity: 1;
 }
 
+/* 📉 DOWNLOAD: ADMIN MONITOR THEME */
 .download-modal {
-  background: linear-gradient(135deg, rgba(20, 30, 48, 0.95) 0%, rgba(10, 20, 35, 0.98) 100%);
-  border: 2px solid rgba(76, 219, 196, 0.4);
-  border-radius: 20px;
-  padding: 2rem;
+  background: #001205;
+  /* Deep CRT Green Black */
+  border: 8px solid #3f4a44;
+  /* Chunky Monitor Bezel */
+  outline: 2px solid #2f3a34;
+  /* Outer bezel edge */
+  border-radius: 4px;
+  /* CRT Monitors aren't very round */
   max-width: 500px;
   width: 90%;
+  padding: 0;
   position: relative;
-  box-shadow: 0 0 40px rgba(76, 219, 196, 0.2),
-    0 25px 50px rgba(0, 0, 0, 0.5),
-    inset 0 0 60px rgba(76, 219, 196, 0.03);
-  transform: scale(0.9) translateY(20px);
-  transition: transform 0.3s ease;
-  animation: modalSlideIn 0.3s ease forwards;
+  box-shadow: 0 0 60px rgba(67, 211, 29, 0.15);
+  /* Vent Animation Entry */
+  animation: ventPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  overflow: hidden;
 }
 
+/* CRT Scanline Overlay */
+.download-modal::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 10;
+  background-size: 100% 3px, 4px 100%;
+  pointer-events: none;
+}
+
+/* Modal Inner Structure */
+.download-modal .download-header {
+  background: #00220d;
+  padding: 1.5rem;
+  border-bottom: 2px solid #43d31d;
+  text-align: center;
+  margin: 0;
+  /* Override default margin */
+}
+
+.download-modal .download-title {
+  font-family: var(--font-display);
+  color: #43d31d;
+  /* Phosphor Green */
+  font-size: 2.2rem;
+  text-shadow: 0 0 8px #43d31d;
+  margin: 0.5rem 0;
+}
+
+.download-modal .download-badge {
+  font-family: var(--font-title);
+  color: #43d31d;
+  border: 1px solid #43d31d;
+  background: rgba(67, 211, 29, 0.1);
+  padding: 0.2rem 0.6rem;
+  font-size: 1rem;
+  border-radius: 0;
+  /* Pixel style */
+}
+
+/* Animation Ref (re-definition not needed if global, but ensuring context) */
 @keyframes modalSlideIn {
   from {
     transform: scale(0.9) translateY(20px);
@@ -4892,7 +4942,7 @@ button:focus-visible {
 }
 
 .two-step-header h2 {
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 1.4rem;
   color: #ffd700;
   margin-bottom: 0.5rem;
@@ -4930,7 +4980,7 @@ button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 1.1rem;
   font-weight: bold;
   color: #6b7a8f;
@@ -5202,7 +5252,7 @@ button:focus-visible {
 .step-badge {
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 170, 0, 0.1));
   color: #ffd700;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 0.7rem;
   font-weight: bold;
   padding: 0.3rem 0.8rem;
@@ -5237,7 +5287,7 @@ button:focus-visible {
 }
 
 .step-name {
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 1rem;
   color: #e8f1f8;
   font-weight: 600;
@@ -5260,7 +5310,7 @@ button:focus-visible {
   border: none;
   padding: 0.9rem 1.5rem;
   border-radius: 12px;
-  font-family: var(--font-title, 'Orbitron', sans-serif);
+  font-family: var(--font-title, 'VT323', monospace);
   font-size: 0.95rem;
   font-weight: bold;
   cursor: pointer;

@@ -1608,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="premium-active-banner">
                                 <span class="premium-badge-large">${t.premium_active_title}</span>
                                 <p class="premium-status-text">
-                                    ${t.premium_active_text.replace('{type}', `<strong>${appState.activePremiumType?.toUpperCase()}</strong>`)}
+                                    ${t.premium_active_text.replace('{type}', `<strong>${(appState.activePremiumType || '').toString().replace(/[<>\"'&]/g, '').toUpperCase()}</strong>`)}
                                 </p>
                                 <p class="premium-status-sub">${t.premium_active_sub}</p>
                             </div>
@@ -1939,19 +1939,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Verifica retorno do encurtador (Step 1 ou Step 2)
+    // ==================== TOKEN BURN PROTOCOL (FRONTEND 2026) ====================
+    // CRITICAL: This function captures the Linkvertise hash token and IMMEDIATELY
+    // sanitizes the URL to prevent token leakage. Success is determined ONLY by
+    // backend 200 OK response, NOT by URL parameters like status=success.
+    // =============================================================================
     async function checkAndProcessShortenerReturn() {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const action = urlParams.get('action');
-            const status = urlParams.get('status');
-            const linkvertiseHash = urlParams.get('hash');
             const sessionId = localStorage.getItem(CONFIG.TWOSTEP_SESSION_KEY);
             const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
-            console.log('[2-Step] Checking return - action:', action, 'status:', status, 'currentStep:', currentStep, 'sessionId:', sessionId ? 'present' : 'missing');
+            // ==================================================================
+            // 🔥 POLYMORPHIC TOKEN CAPTURE (ANTI-BYPASS 2026)
+            // ==================================================================
+            // Linkvertise may use different parameter names depending on config.
+            // We capture from ALL known variants to ensure robustness.
+            // ==================================================================
+            const linkvertiseHash = urlParams.get('linkvertise_hash')
+                || urlParams.get('hash')
+                || urlParams.get('token')
+                || urlParams.get('k')
+                || urlParams.get('lv_token')
+                || urlParams.get('t');
+
+            // ==================================================================
+            // 🛡️ IMMEDIATE URL SANITIZATION
+            // ==================================================================
+            // Remove sensitive parameters from URL BEFORE any processing.
+            // This prevents token leakage via browser history, referrer, etc.
+            // ==================================================================
+            if (action || linkvertiseHash) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                console.log('[TOKEN-BURN] URL sanitized immediately to prevent token leakage');
+            }
+
+            console.log('[TOKEN-BURN] Checking return:', {
+                action,
+                hasToken: !!linkvertiseHash,
+                tokenPreview: linkvertiseHash ? linkvertiseHash.substring(0, 8) + '...' : 'NONE',
+                currentStep,
+                hasSession: !!sessionId
+            });
 
             if (!sessionId || !currentStep) {
-                console.log('[2-Step] No session or step found, skipping return check');
+                console.log('[TOKEN-BURN] No session or step found, skipping return check');
                 return;
             }
 
@@ -1965,20 +1998,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 return a === cfg.action || (cfg.alternativeActions && cfg.alternativeActions.includes(a));
             };
 
+            // ==================================================================
+            // 🔥 TOKEN BURN: Success depends on BACKEND, not URL params
+            // ==================================================================
+            // We no longer check status=success. This was a vulnerability.
+            // The backend will validate the token and burn it atomically.
+            // ==================================================================
+
             // Verifica retorno do STEP 1
-            if (matchesStep1Action(action) && status === CONFIG.RETURN_CONFIG.step1.status && currentStep === 1) {
-                console.log('[2-Step] ✅ Step 1 return detected!');
+            if (matchesStep1Action(action) && currentStep === 1) {
+                console.log('[TOKEN-BURN] ✅ Step 1 return detected! Sending token to backend for validation and burn.');
                 await handleStep1Return(sessionId, linkvertiseHash);
             }
             // Verifica retorno do STEP 2
-            else if (matchesStep2Action(action) && status === CONFIG.RETURN_CONFIG.step2.status && currentStep === 2) {
-                console.log('[2-Step] ✅ Step 2 return detected!');
+            else if (matchesStep2Action(action) && currentStep === 2) {
+                console.log('[TOKEN-BURN] ✅ Step 2 return detected!');
                 await handleStep2Return(sessionId, linkvertiseHash);
-            } else {
-                console.log('[2-Step] No matching return action found');
+            } else if (action) {
+                console.log('[TOKEN-BURN] Action found but does not match current step:', { action, currentStep });
             }
         } catch (e) {
-            console.error('[2-Step] Error in checkAndProcessShortenerReturn:', e);
+            console.error('[TOKEN-BURN] Error in checkAndProcessShortenerReturn:', e);
         }
     }
 

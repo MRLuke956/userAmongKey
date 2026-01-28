@@ -3009,15 +3009,44 @@ async function handleDownload(platform) {
 
         // === ANTI-BOT: Verify token on server before allowing download ===
         const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
-        const verifyResponse = await fetch(`${apiUrl}/api/download/${platform}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Turnstile-Token': window._downloadTurnstileToken
+        
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
+        console.log(`[Download] Requesting presigned URL for ${platform}...`);
+        console.log(`[Download] Token present: ${!!window._downloadTurnstileToken}`);
+        
+        let verifyResponse;
+        try {
+            verifyResponse = await fetch(`${apiUrl}/api/download/${platform}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Turnstile-Token': window._downloadTurnstileToken
+                },
+                signal: controller.signal
+            });
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                throw new Error('Timeout - servidor não respondeu. Tente novamente.');
             }
-        });
+            throw new Error('Erro de conexão com o servidor.');
+        }
+        
+        clearTimeout(timeoutId);
+        
+        console.log(`[Download] Response status: ${verifyResponse.status}`);
+        
+        if (!verifyResponse.ok) {
+            const errorText = await verifyResponse.text();
+            console.error(`[Download] Server error: ${errorText}`);
+            throw new Error(`Erro do servidor (${verifyResponse.status})`);
+        }
 
         const verifyData = await verifyResponse.json();
+        console.log(`[Download] Response data:`, verifyData);
 
         if (verifyData.status !== 'success') {
             throw new Error(verifyData.message || 'Verificação falhou');

@@ -1952,6 +1952,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
             // ==================================================================
+            // 🔥 POLYMORPHIC TOKEN CAPTURE (ANTI-BYPASS 2026)
+            // ==================================================================
+            // Linkvertise may use different parameter names depending on config.
+            // We capture from ALL known variants to ensure robustness.
+            // ==================================================================
+            const linkvertiseHash = urlParams.get('linkvertise_hash')
+                || urlParams.get('hash')
+                || urlParams.get('token')
+                || urlParams.get('k')
+                || urlParams.get('lv_token')
+                || urlParams.get('t');
+
+            // ==================================================================
             // 🛡️ STRICT REFERRER WALL (ANTI-BYPASS 2026)
             // ==================================================================
             // Bypass services (and Copy/Paste users) often have empty referrer
@@ -1994,18 +2007,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // ==================================================================
-            // 🔥 POLYMORPHIC TOKEN CAPTURE (ANTI-BYPASS 2026)
-            // ==================================================================
-            // Linkvertise may use different parameter names depending on config.
-            // We capture from ALL known variants to ensure robustness.
-            // ==================================================================
-            const linkvertiseHash = urlParams.get('linkvertise_hash')
-                || urlParams.get('hash')
-                || urlParams.get('token')
-                || urlParams.get('k')
-                || urlParams.get('lv_token')
-                || urlParams.get('t');
+            // Moved up for scope availability
 
             // ==================================================================
             // 🛡️ IMMEDIATE URL SANITIZATION

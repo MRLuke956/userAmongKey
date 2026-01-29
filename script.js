@@ -1952,6 +1952,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
             // ==================================================================
+            // 🛡️ CLIENT-SIDE REFERRER CHECK (ANTI-BYPASS 2026)
+            // ==================================================================
+            // Immediate check to block known bypass services before API calls.
+            // ==================================================================
+            const referrer = document.referrer.toLowerCase();
+            const bypassBlocklist = [
+                'bypass.vip', 'bypass.city', 'bypass.lol', 'bypass.wtf',
+                'bypasslink', 'linkbypass', 'unlocklinkvertise',
+                'thebypasser', 'bypass-link', 'linkvertise-bypass',
+                'freebypass', 'instant-bypass', 'adlinkfly-bypass',
+                'unblocker', 'adblock-bypass', 'skip-link'
+            ];
+
+            if (bypassBlocklist.some(domain => referrer.includes(domain))) {
+                console.warn(`[Anti-Bypass] 🛡️ Blocked bypass service referrer: ${referrer}`);
+                showUIMessage('Bypass service detected. Please complete the shortener normally.', 'error', 10000);
+
+                // Clear state to force restart
+                clearTwoStepStorage();
+
+                // Remove params to prevent re-processing
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            // ==================================================================
             // 🔥 POLYMORPHIC TOKEN CAPTURE (ANTI-BYPASS 2026)
             // ==================================================================
             // Linkvertise may use different parameter names depending on config.
@@ -3009,14 +3035,14 @@ async function handleDownload(platform) {
 
         // === ANTI-BOT: Verify token on server before allowing download ===
         const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
-        
+
         // Create AbortController for timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-        
+
         console.log(`[Download] Requesting presigned URL for ${platform}...`);
         console.log(`[Download] Token present: ${!!window._downloadTurnstileToken}`);
-        
+
         let verifyResponse;
         try {
             verifyResponse = await fetch(`${apiUrl}/api/download/${platform}`, {
@@ -3034,11 +3060,11 @@ async function handleDownload(platform) {
             }
             throw new Error('Erro de conexão com o servidor.');
         }
-        
+
         clearTimeout(timeoutId);
-        
+
         console.log(`[Download] Response status: ${verifyResponse.status}`);
-        
+
         if (!verifyResponse.ok) {
             const errorText = await verifyResponse.text();
             console.error(`[Download] Server error: ${errorText}`);

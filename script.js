@@ -1952,29 +1952,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentStep = parseInt(localStorage.getItem(CONFIG.TWOSTEP_CURRENT_STEP_KEY)) || 0;
 
             // ==================================================================
-            // 🛡️ CLIENT-SIDE REFERRER CHECK (ANTI-BYPASS 2026)
+            // 🛡️ STRICT REFERRER WALL (ANTI-BYPASS 2026)
             // ==================================================================
-            // Immediate check to block known bypass services before API calls.
+            // Bypass services (and Copy/Paste users) often have empty referrer
+            // or a referrer that is not Linkvertise. We ENFORCE Whitelist.
             // ==================================================================
             const referrer = document.referrer.toLowerCase();
-            const bypassBlocklist = [
-                'bypass.vip', 'bypass.city', 'bypass.lol', 'bypass.wtf',
-                'bypasslink', 'linkbypass', 'unlocklinkvertise',
-                'thebypasser', 'bypass-link', 'linkvertise-bypass',
-                'freebypass', 'instant-bypass', 'adlinkfly-bypass',
-                'unblocker', 'adblock-bypass', 'skip-link'
+            const allowedReferrers = [
+                'linkvertise.com', 'link-hub.net', 'link-target.net',
+                'lnkload.com', 'direct-link.net', 'directlink.to',
+                'crewcore.online', // Self-allowed for internal redirects
+                'google.com', 'bing.com' // Allow search engines (optional, depends on flow)
             ];
 
-            if (bypassBlocklist.some(domain => referrer.includes(domain))) {
-                console.warn(`[Anti-Bypass] 🛡️ Blocked bypass service referrer: ${referrer}`);
-                showUIMessage('Bypass service detected. Please complete the shortener normally.', 'error', 10000);
+            // Only enforce if we are actually processing a return action
+            if (action && (linkvertiseHash || action.includes('complete'))) {
+                const isTrusted = allowedReferrers.some(d => referrer.includes(d));
 
-                // Clear state to force restart
-                clearTwoStepStorage();
+                // BLOCK if referrer is empty (Direct Entry/Copy-Paste) OR not trusted
+                if (!referrer || !isTrusted) {
+                    console.warn(`[Anti-Bypass] 🛡️ Suspicious Referrer blocked: '${referrer}' | Action: ${action}`);
 
-                // Remove params to prevent re-processing
-                window.history.replaceState({}, document.title, window.location.pathname);
-                return;
+                    // Show aggressive error message
+                    showUIMessage('⛔ Acesso Negado: Origem inválida.', 'error', 0);
+
+                    // Create modal to explain why
+                    const modalMsg = !referrer
+                        ? 'Você acessou o link diretamente (Copy/Paste). Isso não é permitido.<br>Clique no botão abaixo para recomeçar.'
+                        : 'Bypass detectado. Por favor, complete o encurtador corretamente.';
+
+                    document.body.innerHTML = `
+                        <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;flex-direction:column;text-align:center;">
+                            <h1 style="color:#ff3333;font-size:2em;margin-bottom:20px;">🚫 ACESSO BLOQUEADO</h1>
+                            <p style="font-size:1.2em;margin-bottom:30px;opacity:0.8;">${modalMsg}</p>
+                            <button onclick="window.location.href='/'" style="padding:15px 30px;background:#ff3333;border:none;color:#fff;font-weight:bold;cursor:pointer;border-radius:5px;font-size:1.1em;">VOLTAR AO INÍCIO</button>
+                        </div>
+                    `;
+
+                    clearTwoStepStorage();
+                    return;
+                }
             }
 
             // ==================================================================

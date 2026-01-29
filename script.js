@@ -1986,21 +1986,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!referrer || !isTrusted) {
                     console.warn(`[Anti-Bypass] 🛡️ Suspicious Referrer blocked: '${referrer}' | Action: ${action}`);
 
-                    // Show aggressive error message
-                    showUIMessage('⛔ Acesso Negado: Origem inválida.', 'error', 0);
-
-                    // Create modal to explain why
+                    // Show warning message instead of aggressive block
                     const modalMsg = !referrer
-                        ? 'Você acessou o link diretamente (Copy/Paste). Isso não é permitido.<br>Clique no botão abaixo para recomeçar.'
-                        : 'Bypass detectado. Por favor, complete o encurtador corretamente.';
-
-                    document.body.innerHTML = `
-                        <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;flex-direction:column;text-align:center;">
-                            <h1 style="color:#ff3333;font-size:2em;margin-bottom:20px;">🚫 ACESSO BLOQUEADO</h1>
-                            <p style="font-size:1.2em;margin-bottom:30px;opacity:0.8;">${modalMsg}</p>
-                            <button onclick="window.location.href='/'" style="padding:15px 30px;background:#ff3333;border:none;color:#fff;font-weight:bold;cursor:pointer;border-radius:5px;font-size:1.1em;">VOLTAR AO INÍCIO</button>
-                        </div>
-                    `;
+                        ? 'Direct access blocked (Copy/Paste). Please complete the shortener correctly.'
+                        : 'Bypass detected. Please complete the shortener correctly.';
+                    showUIMessage(modalMsg, 'error', 10000);
 
                     clearTwoStepStorage();
                     return;

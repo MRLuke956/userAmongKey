@@ -439,9 +439,9 @@ body {
 /* User Profile Pill - Fixed Top Right of Screen */
 .user-profile-header {
   position: fixed;
-  top: 2.8rem;
+  top: 0.45rem;
   right: 1rem;
-  z-index: 1000;
+  z-index: 101;
   display: flex;
   align-items: center;
   gap: 0.8rem;

@@ -123,37 +123,221 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=VT323&family=Varela+Round&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
-  <link rel="stylesheet" href="style_newyear.css">
+  <link rel="stylesheet" href="style_elite.css">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.discordapp.com; frame-src https://discord.com https://challenges.cloudflare.com; connect-src 'self' https://api.crewcore.online https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net https://checkout.stripe.com;">
+    content="default-src 'self'; script-src 'self' https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.discordapp.com https://cdn.jsdelivr.net; frame-src https://discord.com https://challenges.cloudflare.com; connect-src 'self' https://api.crewcore.online https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net https://checkout.stripe.com;">
 </head>
 
 <body>
-  <!-- Champagne Bubbles Effect -->
-  <div class="champagne-bubbles" aria-hidden="true" id="champagneBubbles"></div>
-  <!-- Sparkles for New Year Effect -->
-  <div class="sparkles-container" aria-hidden="true">
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
-    <div class="sparkle"></div>
+  <!-- Skip to content (accessibility) -->
+  <a href="#missionPanel" class="skip-link" data-translate-key="skip_to_content">Pular para o conteúdo</a>
+
+  <!-- Screen reader announcements -->
+  <div aria-live="polite" id="srAnnouncements" class="sr-only"></div>
+
+  <!-- SVG Sprite Sheet (hidden) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+    <defs>
+      <symbol id="icon-crewmate-standing" viewBox="0 0 64 64">
+        <title>Crewmate</title>
+        <path d="M25 8c-8 0-14 7-14 15v10c0 2-1 3-3 3h-1c-2 0-3 1.5-3 3.5v8c0 2 1.5 3.5 3 3.5h3v6c0 2 2 3 4 3h5v-10h20v10h5c2 0 4-1 4-3v-6h3c1.5 0 3-1.5 3-3.5v-8c0-2-1.5-3.5-3-3.5h-1c-2 0-3-1-3-3V23c0-8-6-15-14-15H25z" fill="currentColor"/>
+        <ellipse cx="36" cy="20" rx="9" ry="7" fill="rgba(200,230,255,0.3)" stroke="currentColor" stroke-width="1.5"/>
+      </symbol>
+      <symbol id="icon-impostor" viewBox="0 0 64 64">
+        <title>Impostor</title>
+        <path d="M25 8c-8 0-14 7-14 15v10c0 2-1 3-3 3h-1c-2 0-3 1.5-3 3.5v8c0 2 1.5 3.5 3 3.5h3v6c0 2 2 3 4 3h5v-10h20v10h5c2 0 4-1 4-3v-6h3c1.5 0 3-1.5 3-3.5v-8c0-2-1.5-3.5-3-3.5h-1c-2 0-3-1-3-3V23c0-8-6-15-14-15H25z" fill="currentColor"/>
+        <ellipse cx="36" cy="20" rx="9" ry="7" fill="rgba(255,100,100,0.3)" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M48 38l8-6 2 3-7 8z" fill="currentColor" opacity="0.8"/>
+      </symbol>
+      <symbol id="icon-crewmate-ghost" viewBox="0 0 64 64">
+        <title>Ghost</title>
+        <path d="M20 12c0-8 10-14 18-10 6 3 10 9 10 16v20c0 2-2 2-3 0l-3-4c-1-2-3-2-4 0l-3 4c-1 2-3 2-4 0l-3-4c-1-2-3-2-4 0l-3 4c-1 2-3 2-3 0V18c0-3-1-6 2-6z" fill="currentColor" opacity="0.6"/>
+        <ellipse cx="34" cy="18" rx="8" ry="6" fill="rgba(200,230,255,0.4)" stroke="currentColor" stroke-width="1"/>
+      </symbol>
+      <symbol id="icon-key-wrench" viewBox="0 0 24 24">
+        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.77 3.77z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-clipboard" viewBox="0 0 24 24">
+        <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-checkmark" viewBox="0 0 24 24">
+        <polyline points="20 6 9 17 4 12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" stroke-width="2"/>
+        <polyline points="12 6 12 12 16 14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-crown" viewBox="0 0 24 24">
+        <path d="M2 20h20L19 8l-4 4-3-6-3 6-4-4z" stroke="currentColor" fill="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-vent" viewBox="0 0 24 24">
+        <rect x="2" y="14" width="20" height="8" rx="2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <line x1="6" y1="14" x2="6" y2="22" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="10" y1="14" x2="10" y2="22" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="14" y1="14" x2="14" y2="22" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="18" y1="14" x2="18" y2="22" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 14V10a4 4 0 018 0v4" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-emergency-button" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" stroke-width="2"/>
+        <circle cx="12" cy="12" r="5" fill="currentColor"/>
+      </symbol>
+      <symbol id="icon-lock" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-unlock" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M7 11V7a5 5 0 019.9-1" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-shield" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-lightning" viewBox="0 0 24 24">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" fill="currentColor" stroke-width="1"/>
+      </symbol>
+      <symbol id="icon-hourglass" viewBox="0 0 24 24">
+        <path d="M5 22h14M5 2h14M17 22v-3a7 7 0 00-5-6.7M7 22v-3a7 7 0 015-6.7M17 2v3a7 7 0 01-5 6.7M7 2v3a7 7 0 005 6.7" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-fire" viewBox="0 0 24 24">
+        <path d="M12 2c0 4-4 6-4 10a4 4 0 008 0c0-4-4-6-4-10z" stroke="currentColor" fill="currentColor" stroke-width="1.5"/>
+        <path d="M12 10c0 2-1.5 3-1.5 5a1.5 1.5 0 003 0c0-2-1.5-3-1.5-5z" fill="rgba(255,200,0,0.6)"/>
+      </symbol>
+      <symbol id="icon-star" viewBox="0 0 24 24">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" stroke="currentColor" fill="currentColor" stroke-width="1"/>
+      </symbol>
+      <symbol id="icon-x-mark" viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-infinity" viewBox="0 0 24 24">
+        <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.74-8z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-diamond" viewBox="0 0 24 24">
+        <path d="M6 3h12l4 7-10 11L2 10z" stroke="currentColor" fill="none" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M2 10h20" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M12 21L8.5 10 6 3M12 21l3.5-11L18 3" stroke="currentColor" stroke-width="1.5"/>
+      </symbol>
+      <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <polyline points="12 5 19 12 12 19" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-rocket" viewBox="0 0 24 24">
+        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 3 0 3 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-3 0-3" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-satellite" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="2" stroke="currentColor" fill="currentColor" stroke-width="1.5"/>
+        <path d="M7 17l-4 4M17 7l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M16.24 7.76a6 6 0 010 8.49m-8.48-.01a6 6 0 010-8.49" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-task-wires" viewBox="0 0 24 24">
+        <path d="M2 6h6M2 10h6M2 14h6M2 18h6M16 6h6M16 10h6M16 14h6M16 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M8 6c2 0 4 4 8 4M8 10c2 0 4 8 8 8M8 14c2 0 4-4 8-4M8 18c2 0 4-8 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+      </symbol>
+      <symbol id="icon-task-scan" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+        <path d="M8 8v8M12 6v12M16 9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-medal-bronze" viewBox="0 0 24 24">
+        <circle cx="12" cy="14" r="7" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M8 2l4 5 4-5" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" font-weight="bold">B</text>
+      </symbol>
+      <symbol id="icon-medal-silver" viewBox="0 0 24 24">
+        <circle cx="12" cy="14" r="7" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M8 2l4 5 4-5" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" font-weight="bold">S</text>
+      </symbol>
+      <symbol id="icon-medal-gold" viewBox="0 0 24 24">
+        <circle cx="12" cy="14" r="7" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M8 2l4 5 4-5" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="12" y="17" text-anchor="middle" font-size="7" fill="currentColor" font-weight="bold">G</text>
+      </symbol>
+      <symbol id="icon-help" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="7 10 12 15 17 10" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-globe" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" stroke-width="2"/>
+        <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-heart" viewBox="0 0 24 24">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke="currentColor" fill="currentColor" stroke-width="1.5"/>
+      </symbol>
+      <symbol id="icon-gamepad" viewBox="0 0 24 24">
+        <line x1="6" y1="12" x2="10" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="8" y1="10" x2="8" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="15" y1="13" x2="15.01" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <line x1="18" y1="11" x2="18.01" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M17.32 5H6.68a4 4 0 00-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 003 3c1.11 0 2.08-.402 2.592-1.092L9 16h6l1.408 1.908C16.92 18.598 17.89 19 19 19a3 3 0 003-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0017.32 5z" stroke="currentColor" fill="none" stroke-width="2"/>
+      </symbol>
+      <symbol id="icon-trash" viewBox="0 0 24 24">
+        <polyline points="3 6 5 6 21 6" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24">
+        <polyline points="23 4 23 10 17 10" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-trophy" viewBox="0 0 24 24">
+        <path d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M6 3h12v6a6 6 0 01-12 0V3z" stroke="currentColor" fill="none" stroke-width="2"/>
+        <path d="M9 21h6M12 15v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Live Network Stats Bar -->
+  <div class="network-bar" id="networkBar">
+    <div class="network-bar-inner">
+      <div class="net-stat" id="statOnline">
+        <span class="net-pulse"></span>
+        <span class="net-value" id="netOnline">--</span>
+        <span class="net-label" data-translate-key="net_online">online agora</span>
+      </div>
+      <div class="net-divider"></div>
+      <div class="net-stat">
+        <span class="net-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-key-wrench"/></svg></span>
+        <span class="net-value" id="netKeysToday">--</span>
+        <span class="net-label" data-translate-key="net_keys_today">keys hoje</span>
+      </div>
+      <div class="net-divider"></div>
+      <div class="net-stat">
+        <span class="net-icon"><svg width="14" height="11" viewBox="0 0 71 55" fill="#5865F2"><path d="M60.1 4.9c-4.5-2.1-9.4-3.6-14.5-4.5-.6 1.1-1.3 2.5-1.8 3.7-5.5-.8-10.9-.8-16.3 0-.5-1.2-1.2-2.6-1.8-3.7-5.1.9-10 2.4-14.5 4.5C1.6 18.7-.9 32.1.3 45.4c6.1 4.5 12 7.2 17.8 9 1.4-1.9 2.6-3.8 3.6-5.9-2-.8-3.8-1.7-5.6-2.7.4-.3.8-.6 1.1-.9 11.6 5.3 24.2 5.3 35.7 0 .4.3.7.6 1.1.9-1.8 1-3.6 1.9-5.6 2.7 1.1 2.1 2.3 4 3.6 5.9 5.8-1.8 11.7-4.5 17.8-9 1.5-15.4-2.5-28.7-10.4-40.5z"/></svg></span>
+        <span class="net-value" id="netTotalUsers">--</span>
+        <span class="net-label" data-translate-key="net_members">no Discord</span>
+      </div>
+      <div class="net-divider"></div>
+      <div class="net-stat">
+        <span class="net-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-lightning"/></svg></span>
+        <span class="net-value" id="netUptime">--</span>
+        <span class="net-label" data-translate-key="net_uptime">hrs uptime</span>
+      </div>
+    </div>
   </div>
-  <canvas id="starfield-canvas"></canvas>
-  <div class="scanline-overlay"></div>
+  <canvas id="starfield-canvas" aria-hidden="true"></canvas>
+  <div class="scanline-overlay" aria-hidden="true"></div>
 
   <div class="main-header">
     <div class="header-content">
@@ -176,9 +360,48 @@
 
   <main class="container">
     <div class="status-indicator glass-panel">
-      <div class="status-dot pulse-green"></div>
+      <div class="status-dot online"></div>
       <span data-translate-key="status_online">Sistema MIRA HQ Online</span>
     </div>
+
+    <!-- Welcome Flow Guide -->
+    <div class="welcome-flow" id="welcomeFlow">
+      <p class="welcome-headline" data-translate-key="welcome_headline">Gere sua key e jogue Among Us com mods em minutos</p>
+      <div class="flow-steps-mini">
+        <div class="flow-step-mini">
+          <span class="flow-step-icon">1</span>
+          <span data-translate-key="flow_step1">Login</span>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step-mini">
+          <span class="flow-step-icon">2</span>
+          <span data-translate-key="flow_step2">Gerar Key</span>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step-mini">
+          <span class="flow-step-icon">3</span>
+          <span data-translate-key="flow_step3">Baixar Mod</span>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step-mini">
+          <span class="flow-step-icon">4</span>
+          <span data-translate-key="flow_step4">Jogar!</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="mission-panel glass-panel" id="missionPanel" aria-live="polite">
+      <div class="mission-header">
+        <span class="mission-kicker" data-translate-key="mission_kicker">CrewCore Pulse</span>
+        <h2 class="mission-title" data-translate-key="mission_title">Sua jornada começa aqui</h2>
+      </div>
+      <p class="mission-greeting" id="missionGreeting">Conecte seu Discord para personalizar sua experiência.</p>
+      <div class="mission-chips">
+        <span class="mission-chip" id="missionAuthChip">Sessão: visitante</span>
+        <span class="mission-chip" id="missionServerChip">Servidor: pendente</span>
+        <span class="mission-chip" id="missionPremiumChip">Plano: gratuito</span>
+      </div>
+    </section>
 
     <section id="authSection" class="auth-section">
       <p class="auth-subtitle" data-translate-key="auth_section_subtitle">Autentique-se para gerar sua key de acesso</p>
@@ -202,36 +425,33 @@
     </section>
 
     <div id="userContent" class="user-content-wrapper" style="display: none;">
-      <div class="controls-section">
-        <!-- Botão de som removido ou estilizado melhor se desejar -->
-      </div>
-
       <div class="cooldown-section" id="cooldownSection" style="display: none;">
         <div class="cooldown-timer">
-          <div data-translate-key="cooldown_title">⚠️ SISTEMA EM COOLDOWN</div>
-          <div id="cooldownTime">30s</div>
-          <div style="font-size: 0.8em; margin-top: 0.5rem;" data-translate-key="cooldown_subtitle">Aguarde para nova
-            solicitação</div>
+          <div class="cooldown-icon" aria-hidden="true"><svg class="icon" width="24" height="24"><use href="#icon-hourglass"/></svg></div>
+          <div id="cooldownTime" class="cooldown-value">30s</div>
+          <div class="cooldown-label" data-translate-key="cooldown_subtitle">Aguarde para nova solicitação</div>
+          <div class="cooldown-progress"><div class="cooldown-progress-fill" id="cooldownProgressFill"></div></div>
         </div>
       </div>
 
       <div class="key-limit-section" id="keyLimitSection" style="display: none;">
         <div class="key-limit-info" id="keyLimitInfo">
           <div id="keyLimitText"></div>
-          <div style="font-size: 0.85em; margin-top: 0.5rem;" id="keyLimitHelper" data-translate-key="key_limit_helper">
+          <div class="key-limit-helper-text" id="keyLimitHelper" data-translate-key="key_limit_helper">
+            💡 Máximo de 5 keys ativas por vez. Use ou delete uma para gerar mais — infinitamente!
           </div>
         </div>
       </div>
 
       <div class="button-group">
         <button id="btnOpenMethodMenu" class="action-button generate-button" disabled>
-          <span class="button-icon">🔑</span>
+          <span class="button-icon" aria-hidden="true"><svg class="icon" width="18" height="18"><use href="#icon-key-wrench"/></svg></span>
           <span class="button-text-wrapper">
             <span class="button-text" data-translate-key="generate_button">🚀 START TASK</span>
             <span class="button-subtitle" data-translate-key="generate_button_hint">Gere sua key do mod aqui</span>
           </span>
         </button>
-        <button id="viewKeysBtn" title="Consultar IDs de Tripulantes Ativos" data-translate-title="view_keys_title">
+        <button id="viewKeysBtn" class="action-button" title="Consultar IDs de Tripulantes Ativos" data-translate-title="view_keys_title">
           <span class="button-text" data-translate-key="view_keys_button">🛰️ LOG DE SISTEMA</span>
           <span class="spinner"></span>
         </button>
@@ -240,7 +460,7 @@
       <!-- Two-Step Verification Modal (2026) -->
       <div id="twoStepModal" class="modal">
         <div class="modal-content two-step-content">
-          <span class="close-modal" id="closeTwoStepModal">&times;</span>
+          <span class="close-modal" id="closeTwoStepModal" role="button" tabindex="0" aria-label="Fechar">&times;</span>
 
           <!-- Progress Header -->
           <div class="two-step-header">
@@ -260,10 +480,9 @@
           </div>
 
           <!-- Turnstile Anti-Bot -->
-          <div class="turnstile-container"
-            style="display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;">
+          <div class="turnstile-container twostep-turnstile-wrapper">
             <div id="twoStepTurnstile"></div>
-            <p id="twoStepTurnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;"
+            <p id="twoStepTurnstileHint" class="turnstile-hint-text"
               data-translate-key="turnstile_hint">
               Complete a verificação acima para desbloquear
             </p>
@@ -275,10 +494,10 @@
             <div class="step-card current" id="stepCard1">
               <div class="step-card-header">
                 <span class="step-badge" data-translate-key="step1_badge">STEP 1</span>
-                <span class="step-status" id="step1Status">⏳</span>
+                <span class="step-status" id="step1Status"><svg class="icon" width="16" height="16"><use href="#icon-hourglass"/></svg></span>
               </div>
               <div class="step-card-body">
-                <div class="step-icon">🔗</div>
+                <div class="step-icon" aria-hidden="true"><svg class="icon" width="20" height="20"><use href="#icon-task-wires"/></svg></div>
                 <div class="step-info">
                   <span class="step-name" data-translate-key="step1_name">Primeira Verificação</span>
                   <span class="step-desc" data-translate-key="step1_desc">Complete o primeiro link</span>
@@ -294,10 +513,10 @@
             <div class="step-card locked" id="stepCard2">
               <div class="step-card-header">
                 <span class="step-badge" data-translate-key="step2_badge">STEP 2</span>
-                <span class="step-status" id="step2Status">🔒</span>
+                <span class="step-status" id="step2Status"><svg class="icon" width="16" height="16"><use href="#icon-lock"/></svg></span>
               </div>
               <div class="step-card-body">
-                <div class="step-icon">🎯</div>
+                <div class="step-icon" aria-hidden="true"><svg class="icon" width="20" height="20"><use href="#icon-task-scan"/></svg></div>
                 <div class="step-info">
                   <span class="step-name" data-translate-key="step2_name">Verificação Final</span>
                   <span class="step-desc" data-translate-key="step2_desc">Complete para receber sua key</span>
@@ -308,7 +527,7 @@
                 <span class="step-arrow">→</span>
               </button>
               <div class="step-locked-overlay" id="step2LockedOverlay">
-                <span>🔒</span>
+                <span><svg class="icon" width="20" height="20"><use href="#icon-lock"/></svg></span>
                 <p data-translate-key="step2_locked">Complete o Passo 1 primeiro</p>
               </div>
             </div>
@@ -324,7 +543,7 @@
       <!-- Tutorial Modal -->
       <div id="tutorialModal" class="modal">
         <div class="modal-content tutorial-content">
-          <span class="close-modal" id="closeTutorialModal">&times;</span>
+          <span class="close-modal" id="closeTutorialModal" role="button" tabindex="0" aria-label="Fechar">&times;</span>
           <h2 data-translate-key="tutorial_title">Como Ativar o Mod</h2>
 
           <div class="tutorial-steps">
@@ -358,13 +577,14 @@
 
       <section class="key-display-area">
         <div class="key-container" id="keyContainer">
-          <div class="key-value-label"
-            style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          <div class="key-value-label">
             <span data-translate-key="key_label">ID de Tripulante Designada:</span>
             <button id="helpButton" class="help-button" title="Como usar?"
-              data-translate-title="help_button_title">?</button>
+              data-translate-title="help_button_title" aria-label="Como usar a key">?</button>
           </div>
-          <div class="key-value" id="keyValue"></div>
+          <div class="key-value" id="keyValue">
+            <span class="key-empty-state" data-translate-key="key_empty_state">Clique em START TASK para gerar sua key</span>
+          </div>
           <div class="key-actions" id="keyActions" style="display: none;">
             <button class="copy-button" id="copyButton">
               <span data-translate-key="copy_button">📋 Copiar ID</span>
@@ -374,6 +594,10 @@
             <div><span data-translate-key="generated_at">📅 Gerada em:</span> <span id="keyTimestamp"></span></div>
             <div data-translate-key="key_type">🔑 Tipo: Acesso MIRA HQ</div>
             <div data-translate-key="key_status">⏱️ Status: Ativa</div>
+          </div>
+          <div class="key-next-steps" id="keyNextSteps" style="display: none;">
+            <p class="next-steps-label" data-translate-key="next_steps_label">Próximo passo:</p>
+            <p class="next-steps-text" data-translate-key="next_steps_text">Copie a key acima, baixe o mod e cole no ativador do jogo</p>
           </div>
           <div class="progress-bar" id="progressBar" style="display: none;">
             <div class="progress-fill" id="progressFill"></div>
@@ -389,19 +613,57 @@
         <h2 data-translate-key="records_title">Registros de IDs - Ciclo Atual</h2>
         <ul id="keysList">
         </ul>
+        <div class="keys-empty-state" id="keysEmptyState">
+          <span class="keys-empty-icon" aria-hidden="true"><svg class="icon" width="32" height="32"><use href="#icon-crewmate-ghost"/></svg></span>
+          <p data-translate-key="keys_empty_msg">Nenhuma key gerada ainda. Clique em START TASK para começar!</p>
+        </div>
       </section>
     </div>
 
     <!-- ==================== SEÇÃO PREMIUM (aparece após login) ==================== -->
     <section class="premium-section" id="premiumSection" style="display: none;">
-      <!-- 🎆 New Year Banner -->
-      <div class="newyear-banner" data-translate-key="newyear_banner_text">
-        🎆 2026: Seu Ano de Vitória 🎆
+      <div class="prem-header">
+        <span class="prem-badge" data-translate-key="premium_badge">⚡ ELITE ACCESS</span>
+        <h3 class="prem-title" data-translate-key="prem_title">Pare de sofrer com links</h3>
+        <p class="prem-subtitle" data-translate-key="prem_subtitle">Jogue sem interrupções, com features exclusivas</p>
       </div>
 
-      <div class="premium-header">
-        <span class="premium-badge-mini" data-translate-key="newyear_premium_badge">🎆 2026 PREMIUM</span>
-        <h3 class="premium-title-mini" data-translate-key="premium_title">Pule a verificação</h3>
+      <!-- Free vs Premium Comparison -->
+      <div class="prem-compare">
+        <div class="prem-compare-col prem-compare-free">
+          <div class="prem-col-header prem-col-free-header">
+            <span class="prem-col-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-x-mark"/></svg></span>
+            <span data-translate-key="prem_free_label">Gratuito</span>
+          </div>
+          <ul class="prem-col-list">
+            <li class="prem-col-item prem-col-negative"><span class="prem-x">✗</span> <span data-translate-key="prem_free_1">2 links por key</span></li>
+            <li class="prem-col-item prem-col-negative"><span class="prem-x">✗</span> <span data-translate-key="prem_free_2">Expira ao fechar o jogo</span></li>
+            <li class="prem-col-item prem-col-negative"><span class="prem-x">✗</span> <span data-translate-key="prem_free_3">Máximo 5 keys ativas por vez</span></li>
+            <li class="prem-col-item prem-col-negative"><span class="prem-x">✗</span> <span data-translate-key="prem_free_4">Sem features exclusivas</span></li>
+          </ul>
+        </div>
+        <div class="prem-compare-col prem-compare-premium">
+          <div class="prem-col-header prem-col-premium-header">
+            <span class="prem-col-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-crown"/></svg></span>
+            <span data-translate-key="prem_premium_label">Premium</span>
+          </div>
+          <ul class="prem-col-list">
+            <li class="prem-col-item prem-col-positive"><span class="prem-check">✓</span> <span data-translate-key="prem_pro_1">Key instantânea, zero links</span></li>
+            <li class="prem-col-item prem-col-positive"><span class="prem-check">✓</span> <span data-translate-key="prem_pro_2">Ativa até o plano expirar</span></li>
+            <li class="prem-col-item prem-col-positive"><span class="prem-check">✓</span> <span data-translate-key="prem_pro_3">Uso ilimitado</span></li>
+            <li class="prem-col-item prem-col-positive prem-col-highlight"><span class="prem-check">✓</span> <span data-translate-key="prem_pro_4">🎨 Todos da mesma cor</span></li>
+            <li class="prem-col-item prem-col-positive prem-col-highlight"><span class="prem-check">✓</span> <span data-translate-key="prem_pro_5">🐍 Sempre Viper / Phantom</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Social Proof -->
+      <div class="prem-social-proof">
+        <span class="prem-social-dot"></span>
+        <span data-translate-key="prem_social_proof"><strong id="premiumActiveCount">--</strong> jogadores usam Premium agora</span>
+      </div>
+      <div class="prem-urgency">
+        <span data-translate-key="prem_urgency">🔥 Preços promocionais — podem aumentar a qualquer momento</span>
       </div>
 
       <div class="premium-plans premium-plans-compact">
@@ -412,24 +674,23 @@
             <span class="plan-price-value" data-price-brl="3.99" data-price-usd="0.74">R$ 3,99</span>
           </div>
           <div class="plan-details">
-            <span data-translate-key="detail_no_verification">✓ Sem verificação</span>
-            <span data-translate-key="detail_unlimited_keys">✓ Uso ilimitado</span>
+            <span data-translate-key="prem_card_instant">⚡ Key instantânea</span>
+            <span data-translate-key="prem_card_nolinks">🚫 Zero links</span>
             <span data-translate-key="detail_expires_48h">⏱️ Expira em 48 horas</span>
           </div>
           <button class="plan-buy-btn" data-price-id="price_1SbRPoL0c7aNorLvkYYvw2Qd"
-            data-translate-key="buy_now">Comprar</button>
+            data-translate-key="prem_try">Experimentar</button>
         </div>
 
         <!-- Plano Semanal -->
         <div class="premium-plan" data-plan="weekly">
-          <div class="plan-badge plan-new">🆕</div>
           <div class="plan-name" data-translate-key="plan_7days">7 Dias</div>
           <div class="plan-price">
             <span class="plan-price-value" data-price-brl="9.99" data-price-usd="1.84">R$ 9,99</span>
           </div>
           <div class="plan-details">
-            <span data-translate-key="detail_no_verification">✓ Sem verificação</span>
-            <span data-translate-key="detail_unlimited_keys">✓ Uso ilimitado</span>
+            <span data-translate-key="prem_card_allfeatures">✨ Todas as features</span>
+            <span data-translate-key="prem_card_nolinks">🚫 Zero links</span>
             <span data-translate-key="detail_7days_access">⏱️ 7 dias de acesso</span>
             <span data-translate-key="detail_save_28">💰 28% economia</span>
           </div>
@@ -437,35 +698,36 @@
             data-translate-key="buy_now">Comprar</button>
         </div>
 
-        <!-- Plano Mensal -->
-        <div class="premium-plan" data-plan="monthly">
-          <div class="plan-popular">⭐</div>
+        <!-- Plano Mensal — MAIS POPULAR -->
+        <div class="premium-plan plan-featured" data-plan="monthly">
+          <div class="plan-popular-tag" data-translate-key="prem_most_popular">⭐ MAIS POPULAR</div>
           <div class="plan-name" data-translate-key="plan_30days">30 Dias</div>
           <div class="plan-price">
             <span class="plan-price-value" data-price-brl="24.99" data-price-usd="4.61">R$ 24,99</span>
+            <div class="plan-price-hint" data-translate-key="prem_per_day_30">~R$0,83/dia</div>
           </div>
           <div class="plan-details">
-            <span data-translate-key="detail_no_verification">✓ Sem verificação</span>
-            <span data-translate-key="detail_unlimited_keys">✓ Uso ilimitado</span>
-            <span data-translate-key="detail_30days_access">⏱️ 30 dias de acesso</span>
+            <span data-translate-key="prem_card_allfeatures">✨ Todas as features</span>
+            <span data-translate-key="prem_card_colors">🎨 Mesma cor p/ todos</span>
+            <span data-translate-key="prem_card_roles">🐍 Sempre Viper/Phantom</span>
             <span data-translate-key="detail_auto_renew">🔄 Renova automático</span>
           </div>
-          <button class="plan-buy-btn" data-price-id="price_1SbS4mL0c7aNorLvO27FTKSe"
+          <button class="plan-buy-btn btn-featured" data-price-id="price_1SbS4mL0c7aNorLvO27FTKSe"
             data-translate-key="buy_now">Comprar</button>
         </div>
 
         <!-- Plano Trimestral -->
         <div class="premium-plan" data-plan="quarterly">
-          <div class="plan-badge plan-economy">💰</div>
+          <div class="plan-badge plan-economy" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-star"/></svg></div>
           <div class="plan-name" data-translate-key="plan_90days">90 Dias</div>
           <div class="plan-price">
             <span class="plan-price-value" data-price-brl="59.99" data-price-usd="11.07">R$ 59,99</span>
+            <div class="plan-price-hint" data-translate-key="prem_per_day_90">~R$0,66/dia</div>
           </div>
           <div class="plan-details">
-            <span data-translate-key="detail_no_verification">✓ Sem verificação</span>
-            <span data-translate-key="detail_unlimited_keys">✓ Uso ilimitado</span>
-            <span data-translate-key="detail_90days_access">⏱️ 90 dias de acesso</span>
-            <span data-translate-key="detail_renew_3months">🔄 Renova a cada 3 meses</span>
+            <span data-translate-key="prem_card_allfeatures">✨ Todas as features</span>
+            <span data-translate-key="prem_card_colors">🎨 Mesma cor p/ todos</span>
+            <span data-translate-key="prem_card_roles">🐍 Sempre Viper/Phantom</span>
             <span data-translate-key="detail_save_20">💰 20% economia</span>
           </div>
           <button class="plan-buy-btn" data-price-id="price_1SdzWuL0c7aNorLvr43hyhSn"
@@ -473,36 +735,32 @@
         </div>
 
         <!-- Plano Anual - MELHOR VALOR -->
-        <div class="premium-plan plan-featured" data-plan="yearly">
-          <div class="plan-best">🏆 MELHOR</div>
+        <div class="premium-plan" data-plan="yearly">
+          <div class="plan-best" data-translate-key="prem_best_value">🏆 MELHOR VALOR</div>
           <div class="plan-name" data-translate-key="plan_365days">365 Dias</div>
           <div class="plan-price">
             <span class="plan-price-value" data-price-brl="149.99" data-price-usd="27.68">R$ 149,99</span>
             <div class="plan-price-hint" data-translate-key="plan_per_month">~R$12/mês</div>
           </div>
           <div class="plan-details">
-            <span data-translate-key="detail_no_verification">✓ Sem verificação</span>
-            <span data-translate-key="detail_unlimited_keys">✓ Uso ilimitado</span>
-            <span data-translate-key="detail_1year_access">⏱️ 1 ano completo</span>
-            <span data-translate-key="detail_renew_yearly">🔄 Renova anualmente</span>
+            <span data-translate-key="prem_card_allfeatures">✨ Todas as features</span>
             <span data-translate-key="detail_priority_support">⚡ Suporte prioritário</span>
+            <span data-translate-key="detail_renew_yearly">🔄 Renova anualmente</span>
             <span data-translate-key="detail_save_50">💰 50% economia</span>
           </div>
-          <button class="plan-buy-btn btn-featured" data-price-id="price_1SdzZgL0c7aNorLvCRmPDb0O"
+          <button class="plan-buy-btn" data-price-id="price_1SdzZgL0c7aNorLvCRmPDb0O"
             data-translate-key="buy_now">Comprar</button>
         </div>
 
         <!-- Plano Lifetime -->
         <div class="premium-plan plan-lifetime" data-plan="lifetime">
-          <div class="plan-badge plan-crown">👑</div>
+          <div class="plan-badge plan-crown" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-crown"/></svg></div>
           <div class="plan-name" data-translate-key="plan_lifetime">Lifetime</div>
           <div class="plan-price">
             <span class="plan-price-value" data-price-brl="299.99" data-price-usd="55.35">R$ 299,99</span>
             <div class="plan-price-hint" data-translate-key="plan_forever">Para sempre!</div>
           </div>
           <div class="plan-details">
-            <span data-translate-key="detail_no_verification">✓ Sem verificação</span>
-            <span data-translate-key="detail_unlimited_keys">✓ Uso ilimitado</span>
             <span data-translate-key="detail_never_expires">♾️ NUNCA expira</span>
             <span data-translate-key="detail_vip_support">⚡ Suporte VIP</span>
             <span data-translate-key="detail_pay_once">🎁 Pague uma vez só</span>
@@ -512,9 +770,10 @@
         </div>
       </div>
 
-      <p class="premium-features-shared" data-translate-key="premium_features_shared">✓ Sem verificação • Uso
-        ilimitado • Suporte prioritário</p>
-      <p class="premium-secure-mini">🔒 <span data-translate-key="secure_payment">Pagamento seguro via Stripe</span></p>
+      <div class="prem-trust-footer">
+        <p class="prem-secure">🔒 <span data-translate-key="secure_payment">Pagamento seguro via Stripe</span></p>
+        <p class="prem-guarantee" data-translate-key="prem_guarantee">✅ Ativação instantânea após pagamento • Suporte via Discord</p>
+      </div>
     </section>
 
     <!-- ==================== PREMIUM USER PANEL (shows when user has active premium) ==================== -->
@@ -546,7 +805,7 @@
 
         <div class="premium-actions">
           <button class="premium-action-btn reset-hwid-btn" id="resetHwidBtn">
-            <span class="btn-icon">🔄</span>
+            <span class="btn-icon" aria-hidden="true"><svg class="icon" width="16" height="16"><use href="#icon-refresh"/></svg></span>
             <span class="btn-text" data-translate-key="premium_reset_hwid">Resetar HWID</span>
             <span class="btn-subtitle" id="hwidResetCooldown" data-translate-key="premium_reset_cooldown">1x por
               dia</span>
@@ -561,68 +820,108 @@
 
 
 
-    <!-- Download Modal (hidden by default) -->
-    <div class="download-modal-overlay" id="downloadModalOverlay" onclick="closeDownloadModal(event)">
-      <div class="download-modal" onclick="event.stopPropagation()">
-        <button class="download-modal-close" onclick="closeDownloadModal()">&times;</button>
+    <!-- Download Station Modal (Redesigned 2026) -->
+    <div class="dl-overlay" id="downloadModalOverlay" onclick="closeDownloadModal(event)">
+      <div class="dl-station-wrap" onclick="event.stopPropagation()">
+        <div class="dl-station">
+        <button class="dl-close" onclick="closeDownloadModal()" aria-label="Close">&times;</button>
 
-        <div class="download-header">
-          <div class="download-badge" data-translate-key="download_badge">📡 DOWNLOAD STATION</div>
-          <h3 class="download-title" data-translate-key="download_title">CrewCore Mod Menu</h3>
-          <div class="download-version">
-            <span class="version-badge">V6.0.5</span>
-            <span class="version-status" data-translate-key="version_latest">✅ Latest version</span>
+        <!-- Hero Header -->
+        <div class="dl-hero">
+          <div class="dl-hero-bg"></div>
+          <div class="dl-hero-content">
+            <div class="dl-logo-ring">
+              <img id="dlServerIcon" class="dl-server-icon" src="/favicon-96x96.png" alt="ModMenuCrew" width="44" height="44">
+            </div>
+            <h2 class="dl-title">ModMenuCrew</h2>
+            <div class="dl-version-row">
+              <span class="dl-version-tag">V6.0.5</span>
+              <span class="dl-version-dot"></span>
+              <span class="dl-version-game">Among Us v17.1.0</span>
+              <span class="dl-version-dot"></span>
+              <span class="dl-version-status" data-translate-key="version_latest">✅ Última versão</span>
+            </div>
           </div>
         </div>
 
-        <!-- Turnstile Anti-Bot Protection (rendered manually when modal opens) -->
-        <div class="download-turnstile-container"
-          style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
-          <div id="downloadTurnstile"></div>
-          <p id="downloadTurnstileHint" style="font-size: 0.8em; color: #888; margin-top: 8px; text-align: center;"
-            data-translate-key="download_turnstile_hint">
+        <!-- Feature Chips -->
+        <div class="dl-features">
+          <div class="dl-chip"><span class="dl-chip-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-shield"/></svg></span> Anti-Ban</div>
+          <div class="dl-chip"><span class="dl-chip-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-lightning"/></svg></span> <span data-translate-key="dl_chip_instant">Ativação Instantânea</span></div>
+          <div class="dl-chip"><span class="dl-chip-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-lock"/></svg></span> <span data-translate-key="dl_chip_undetected">Indetectável</span></div>
+          <div class="dl-chip"><span class="dl-chip-icon" aria-hidden="true"><svg class="icon" width="14" height="14"><use href="#icon-gamepad"/></svg></span> <span data-translate-key="dl_chip_easy">Fácil de Usar</span></div>
+        </div>
+
+        <!-- Turnstile Verification -->
+        <div class="dl-verify-section">
+          <div class="dl-verify-label" data-translate-key="dl_verify_label">Verificação necessária para download</div>
+          <div class="dl-turnstile-wrap">
+            <div id="downloadTurnstile"></div>
+          </div>
+          <p id="downloadTurnstileHint" class="dl-verify-hint" data-translate-key="download_turnstile_hint">
             🔒 Complete a verificação para liberar o download
           </p>
         </div>
 
-        <div class="download-platforms">
-          <button class="platform-btn steam-btn" id="downloadSteamBtn" data-platform="steam" disabled
-            onclick="handleDownload('steam')">
-            <div class="platform-icon">
-              <!-- Steam Official Logo -->
-              <svg viewBox="0 0 256 259" fill="currentColor" width="28" height="28">
-                <path
-                  d="M127.779 0C60.357 0 5.24 52.126.559 117.879l68.359 28.238c5.854-4.001 12.916-6.345 20.523-6.345.689 0 1.37.02 2.045.056l30.705-44.461v-.623c0-27.032 22.003-49.027 49.051-49.027 27.04 0 49.043 21.995 49.043 49.059 0 27.032-22.003 49.027-49.043 49.027h-1.122l-43.708 31.182c0 .541.024 1.082.024 1.613 0 20.267-16.469 36.752-36.737 36.752-17.916 0-32.893-12.876-36.105-29.877L2.792 159.939C20.21 215.893 72.294 256.001 134.095 256.001c76.952 0 139.327-62.391 139.327-139.327C273.422 62.391 211.047 0 134.095 0h-6.316Z" />
+        <!-- Platform Cards -->
+        <div class="dl-platforms">
+          <button class="dl-platform-card" id="downloadSteamBtn" data-platform="steam" disabled onclick="handleDownload('steam')">
+            <div class="dl-platform-left">
+              <div class="dl-platform-icon dl-steam-icon">
+                <svg viewBox="0 0 256 259" fill="currentColor" width="24" height="24">
+                  <path d="M127.779 0C60.357 0 5.24 52.126.559 117.879l68.359 28.238c5.854-4.001 12.916-6.345 20.523-6.345.689 0 1.37.02 2.045.056l30.705-44.461v-.623c0-27.032 22.003-49.027 49.051-49.027 27.04 0 49.043 21.995 49.043 49.059 0 27.032-22.003 49.027-49.043 49.027h-1.122l-43.708 31.182c0 .541.024 1.082.024 1.613 0 20.267-16.469 36.752-36.737 36.752-17.916 0-32.893-12.876-36.105-29.877L2.792 159.939C20.21 215.893 72.294 256.001 134.095 256.001c76.952 0 139.327-62.391 139.327-139.327C273.422 62.391 211.047 0 134.095 0h-6.316Z"/>
+                </svg>
+              </div>
+              <div class="dl-platform-info">
+                <span class="dl-platform-name" data-translate-key="platform_steam">Steam</span>
+                <span class="dl-platform-meta">Windows 10/11 • 31.5 MB</span>
+              </div>
+            </div>
+            <div class="dl-platform-action">
+              <span class="dl-download-label" data-translate-key="download_now">BAIXAR AGORA</span>
+              <svg class="dl-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <div class="platform-info">
-              <span class="platform-name" data-translate-key="platform_steam">Steam</span>
-              <span class="platform-size">31.5 MB</span>
-            </div>
-            <div class="platform-arrow">⬇</div>
           </button>
 
-          <button class="platform-btn epic-btn" id="downloadEpicBtn" data-platform="epicgames" disabled
-            onclick="handleDownload('epicgames')">
-            <div class="platform-icon">
-              <!-- Epic Games Official Logo -->
-              <svg viewBox="0 0 512 512" fill="currentColor" width="28" height="28">
-                <path
-                  d="M106.667 0C47.786 0 0 47.786 0 106.667v298.666C0 464.214 47.786 512 106.667 512h298.666C464.214 512 512 464.214 512 405.333V106.667C512 47.786 464.214 0 405.333 0H106.667zm74.666 106.667h149.334c17.673 0 32 14.327 32 32v21.333c0 17.673-14.327 32-32 32h-85.334v42.667h74.667c17.673 0 32 14.327 32 32v21.333c0 17.673-14.327 32-32 32h-74.667v42.667h85.334c17.673 0 32 14.327 32 32v21.333c0 17.673-14.327 32-32 32H181.333c-17.673 0-32-14.327-32-32V138.667c0-17.673 14.327-32 32-32z" />
+          <button class="dl-platform-card" id="downloadEpicBtn" data-platform="epicgames" disabled onclick="handleDownload('epicgames')">
+            <div class="dl-platform-left">
+              <div class="dl-platform-icon dl-epic-icon">
+                <svg viewBox="0 0 512 512" fill="currentColor" width="24" height="24">
+                  <path d="M106.667 0C47.786 0 0 47.786 0 106.667v298.666C0 464.214 47.786 512 106.667 512h298.666C464.214 512 512 464.214 512 405.333V106.667C512 47.786 464.214 0 405.333 0H106.667zm74.666 106.667h149.334c17.673 0 32 14.327 32 32v21.333c0 17.673-14.327 32-32 32h-85.334v42.667h74.667c17.673 0 32 14.327 32 32v21.333c0 17.673-14.327 32-32 32h-74.667v42.667h85.334c17.673 0 32 14.327 32 32v21.333c0 17.673-14.327 32-32 32H181.333c-17.673 0-32-14.327-32-32V138.667c0-17.673 14.327-32 32-32z"/>
+                </svg>
+              </div>
+              <div class="dl-platform-info">
+                <span class="dl-platform-name" data-translate-key="platform_epic">Epic Games</span>
+                <span class="dl-platform-meta">Windows 10/11 • 34.4 MB</span>
+              </div>
+            </div>
+            <div class="dl-platform-action">
+              <span class="dl-download-label" data-translate-key="download_now">BAIXAR AGORA</span>
+              <svg class="dl-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M12 19L5 12M12 19L19 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <div class="platform-info">
-              <span class="platform-name" data-translate-key="platform_epic">Epic Games</span>
-              <span class="platform-size">34.4 MB</span>
-            </div>
-
-            <div class="platform-arrow">⬇</div>
           </button>
         </div>
 
-        <div class="download-footer">
-          <span class="download-hint" data-translate-key="download_hint">🔒 Secure download via Cloudflare</span>
+        <!-- Trust Footer -->
+        <div class="dl-trust">
+          <div class="dl-trust-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span data-translate-key="dl_trust_cf">Via Cloudflare R2</span>
+          </div>
+          <div class="dl-trust-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 12L11 14L15 10M21 12C21 16.97 12 22 12 22C12 22 3 16.97 3 12V5L12 2L21 5V12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span data-translate-key="dl_trust_scan">Scan diário</span>
+          </div>
+          <div class="dl-trust-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 6V12L16 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span data-translate-key="dl_trust_update">Atualizado hoje</span>
+          </div>
         </div>
+      </div>
       </div>
     </div>
 
@@ -631,9 +930,9 @@
         <span data-translate-key="support_button">🆘 Suporte</span>
       </button>
 
-      <a href="https://donate.stripe.com/3cI3cw7Y19Uw5094RlcAo02" target="_blank" class="donate-button"
+      <a href="https://donate.stripe.com/3cI3cw7Y19Uw5094RlcAo02" target="_blank" rel="noopener noreferrer" class="donate-button"
         id="donateButton">
-        <span class="donate-icon">💖</span>
+        <span class="donate-icon" aria-hidden="true"><svg class="icon" width="16" height="16"><use href="#icon-heart"/></svg></span>
         <span class="donate-text-wrapper">
           <span data-translate-key="donate_button">Doar ❤️</span>
           <span class="donate-subtitle" data-translate-key="donate_subtitle">(apoie o desenvolvimento, não é
@@ -646,25 +945,28 @@
       </button>
     </div>
 
-    <!-- Download Button (Moved to bottom) -->
-    <section class="download-section" id="downloadSection" style="margin-top: 1.5rem;">
-      <button class="download-main-btn" id="downloadMainBtn" onclick="openDownloadModal()">
-        <span class="download-main-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round" />
-            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Download Trigger Button -->
+    <section class="download-section" id="downloadSection">
+      <button class="dl-trigger-btn" id="downloadMainBtn" onclick="openDownloadModal()">
+        <div class="dl-trigger-glow"></div>
+        <div class="dl-trigger-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15V19C21 19.53 20.79 20.04 20.41 20.41C20.04 20.79 19.53 21 19 21H5C4.47 21 3.96 20.79 3.59 20.41C3.21 20.04 3 19.53 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-        </span>
-        <div class="download-btn-text">
-          <span class="download-btn-title" data-translate-key="download_client_title">Download Mod</span>
-          <span class="download-btn-subtitle" data-translate-key="download_client_subtitle">Mod V6.0.5 • Game
-            v17.1.0</span>
         </div>
-
+        <div class="dl-trigger-text">
+          <span class="dl-trigger-title" data-translate-key="download_client_title">Baixar Mod</span>
+          <span class="dl-trigger-sub" data-translate-key="download_client_subtitle">Mod V6.0.5 • Game v17.1.0</span>
+        </div>
+        <div class="dl-trigger-platforms">
+          <span class="dl-trigger-badge">Steam</span>
+          <span class="dl-trigger-badge">Epic</span>
+        </div>
+        <svg class="dl-trigger-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
     </section>
 
@@ -672,13 +974,20 @@
 
   <div id="userProfileModal" class="modal">
     <div class="modal-content profile-modal">
-      <span class="close-modal">&times;</span>
+      <span class="close-modal" role="button" tabindex="0" aria-label="Fechar perfil">&times;</span>
       <div class="modal-header">
-        <img id="modalUserAvatar" src="" alt="Avatar" class="modal-avatar">
+        <div class="modal-avatar-wrap">
+          <img id="modalUserAvatar" src="" alt="Avatar" class="modal-avatar">
+          <div class="avatar-ring" id="avatarRing"></div>
+          <span class="avatar-tier-badge" id="avatarTierBadge"></span>
+        </div>
         <div class="modal-user-info">
           <h3 id="modalUserName"></h3>
           <p id="modalUserDiscriminator" class="user-handle"></p>
-          <div id="modalServerStatus" class="server-badge"></div>
+          <div class="modal-user-tags">
+            <div id="modalServerStatus" class="server-badge"></div>
+            <div id="modalPremiumBadge" class="premium-status-badge" style="display: none;"></div>
+          </div>
         </div>
       </div>
       <div class="modal-stats">
@@ -711,6 +1020,7 @@
           </div>
         </div>
       </div>
+      <div class="modal-divider"></div>
       <div class="modal-actions">
         <button id="modalGenerateBtn" class="modal-action-btn generate-btn">
           <span data-translate-key="modal_generate_button">🚀 Gerar Nova Key</span>
@@ -730,7 +1040,7 @@
   <!-- Modal Premium Key Success -->
   <div id="premiumSuccessModal" class="modal">
     <div class="modal-content premium-success-modal">
-      <span class="close-modal" id="closePremiumModal">&times;</span>
+      <span class="close-modal" id="closePremiumModal" role="button" tabindex="0" aria-label="Fechar">&times;</span>
       <div class="premium-success-icon">🎉</div>
       <h2 class="premium-success-title" data-translate-key="premium_payment_confirmed">Pagamento Confirmado!</h2>
       <p class="premium-success-subtitle" data-translate-key="premium_key_ready">Sua chave Premium está pronta!</p>
@@ -781,16 +1091,16 @@
 
   <footer class="site-footer">
     <p data-translate-key="footer_made_with">Made with <span class="footer-heart">❤️</span> by <a
-        href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a></p>
+        href="https://discord.gg/ucm7pKGrVv" target="_blank" rel="noopener noreferrer">CrewCore Team</a></p>
     <div class="footer-links">
-      <a href="https://github.com/MRLuke956/ModMenuCrew" target="_blank">
+      <a href="https://github.com/MRLuke956/ModMenuCrew" target="_blank" rel="noopener noreferrer">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path
             d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
         </svg>
         GitHub
       </a>
-      <a href="https://discord.gg/ucm7pKGrVv" target="_blank">
+      <a href="https://discord.gg/ucm7pKGrVv" target="_blank" rel="noopener noreferrer">
         <svg width="16" height="16" viewBox="0 0 71 55" fill="currentColor">
           <path
             d="M60.1 4.9c-4.5-2.1-9.4-3.6-14.5-4.5-.6 1.1-1.3 2.5-1.8 3.7-5.5-.8-10.9-.8-16.3 0-.5-1.2-1.2-2.6-1.8-3.7-5.1.9-10 2.4-14.5 4.5C1.6 18.7-.9 32.1.3 45.4c6.1 4.5 12 7.2 17.8 9 1.4-1.9 2.6-3.8 3.6-5.9-2-.8-3.8-1.7-5.6-2.7.4-.3.8-.6 1.1-.9 11.6 5.3 24.2 5.3 35.7 0 .4.3.7.6 1.1.9-1.8 1-3.6 1.9-5.6 2.7 1.1 2.1 2.3 4 3.6 5.9 5.8-1.8 11.7-4.5 17.8-9 1.5-15.4-2.5-28.7-10.4-40.5z" />
@@ -798,9 +1108,8 @@
         Discord
       </a>
     </div>
-    <p class="newyear-footer-msg" style="margin-top: 0.75rem; font-size: 0.8rem;" data-translate-key="newyear_footer">©
-      2026 CrewCore • O Ano da Vitória começa agora 🎆</p>
-    <p style="font-size: 0.7rem; opacity: 0.4; margin-top: 0.3rem;">Among Us is a trademark of Innersloth LLC.</p>
+    <p class="footer-copyright">© 2026 CrewCore Network • Elite Mod Platform</p>
+    <p class="footer-trademark">Among Us is a trademark of Innersloth LLC.</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>

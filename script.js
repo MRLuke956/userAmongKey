@@ -38,7 +38,13 @@ window.onTurnstileSuccess = function (token) {
 window.onTurnstileError = function () {
     console.error('[Turnstile] ❌ Verification failed');
     window._turnstileToken = null;
-    alert('Erro na verificação Cloudflare. Recarregue a página.');
+    // UX: Use toast instead of blocking alert
+    const msg = document.getElementById('message');
+    if (msg) {
+        msg.textContent = '❌ Erro na verificação Cloudflare. Recarregue a página.';
+        msg.className = 'message visible show error';
+        msg.setAttribute('role', 'alert');
+    }
 };
 
 window.onTurnstileExpired = function () {
@@ -68,6 +74,179 @@ window.onTurnstileExpired = function () {
         if (widget) window.turnstile.reset(widget);
     }
 };
+
+// ============================================
+// TOAST NOTIFICATION SYSTEM
+// ============================================
+class ToastManager {
+    constructor() {
+        this.container = null;
+        this.queue = [];
+        this.maxVisible = 3;
+        this.init();
+    }
+
+    init() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this._createContainer());
+        } else {
+            this._createContainer();
+        }
+    }
+
+    _createContainer() {
+        if (this.container) return;
+        this.container = document.createElement('div');
+        this.container.className = 'toast-container';
+        this.container.setAttribute('role', 'status');
+        this.container.setAttribute('aria-live', 'polite');
+        this.container.setAttribute('aria-label', 'Notifications');
+        document.body.appendChild(this.container);
+    }
+
+    _getIcon(type) {
+        const icons = {
+            success: '#icon-checkmark',
+            error: '#icon-x-mark',
+            info: '#icon-crewmate-standing',
+            warning: '#icon-emergency-button'
+        };
+        return icons[type] || icons.info;
+    }
+
+    _getTitle(type) {
+        const titles = {
+            success: 'Task Complete',
+            error: 'Impostor Alert',
+            info: 'Comms Update',
+            warning: 'Warning'
+        };
+        return titles[type] || 'Info';
+    }
+
+    show(message, type = 'info', duration = 4500) {
+        if (!this.container) this._createContainer();
+        if (!message) return;
+
+        const sanitized = String(message).replace(/[<>]/g, '').slice(0, 250);
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <svg class="icon" width="20" height="20"><use href="${this._getIcon(type)}"/></svg>
+            </div>
+            <div class="toast-body">
+                <div class="toast-title">${this._getTitle(type)}</div>
+                <div class="toast-message">${sanitized}</div>
+            </div>
+            <button class="toast-close" aria-label="Dismiss">&times;</button>
+            ${duration > 0 ? `<div class="toast-progress" style="width:100%;transition-duration:${duration}ms;"></div>` : ''}
+        `;
+
+        toast.querySelector('.toast-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._dismiss(toast);
+        });
+        toast.addEventListener('click', () => this._dismiss(toast));
+
+        this.container.appendChild(toast);
+
+        // Trim excess toasts
+        const visible = this.container.querySelectorAll('.toast:not(.toast-exiting)');
+        if (visible.length > this.maxVisible) {
+            this._dismiss(visible[0]);
+        }
+
+        // Trigger entrance
+        requestAnimationFrame(() => {
+            toast.classList.add('toast-visible');
+            // Start progress bar
+            const progress = toast.querySelector('.toast-progress');
+            if (progress) {
+                requestAnimationFrame(() => { progress.style.width = '0%'; });
+            }
+        });
+
+        // Auto-dismiss
+        if (duration > 0) {
+            toast._timeout = setTimeout(() => this._dismiss(toast), duration);
+        }
+
+        // Announce to screen readers
+        const srEl = document.getElementById('srAnnouncements');
+        if (srEl) srEl.textContent = sanitized;
+
+        return toast;
+    }
+
+    _dismiss(toast) {
+        if (!toast || toast._dismissed) return;
+        toast._dismissed = true;
+        if (toast._timeout) clearTimeout(toast._timeout);
+        toast.classList.remove('toast-visible');
+        toast.classList.add('toast-exiting');
+        setTimeout(() => {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 350);
+    }
+
+    clearAll() {
+        if (!this.container) return;
+        this.container.querySelectorAll('.toast').forEach(t => this._dismiss(t));
+    }
+}
+
+// Global toast instance
+const toast = new ToastManager();
+
+// ============================================
+// SVG ICON HELPER
+// ============================================
+function svgIcon(name, size = 16, extraClass = '') {
+    return `<svg class="icon ${extraClass}" width="${size}" height="${size}"><use href="#icon-${name}"/></svg>`;
+}
+
+// ============================================
+// RIPPLE EFFECT
+// ============================================
+function addRipple(e) {
+    const btn = e.currentTarget;
+    if (!btn || btn.disabled) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple-effect';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    btn.appendChild(ripple);
+    setTimeout(() => { if (ripple.parentNode) ripple.parentNode.removeChild(ripple); }, 650);
+}
+
+// ============================================
+// SCROLL REVEAL (Intersection Observer)
+// ============================================
+function initScrollReveal() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+}
 
 // ============================================
 // MAIN APPLICATION
@@ -157,6 +336,11 @@ document.addEventListener('DOMContentLoaded', () => {
         userDiscriminatorHeader: document.getElementById('userDiscriminatorHeader'),
         authSection: document.getElementById('authSection'),
         userContent: document.getElementById('userContent'),
+        missionGreeting: document.getElementById('missionGreeting'),
+        missionAuthChip: document.getElementById('missionAuthChip'),
+        missionServerChip: document.getElementById('missionServerChip'),
+        missionPremiumChip: document.getElementById('missionPremiumChip'),
+        missionCtaBtn: document.getElementById('missionCtaBtn'),
         helpButton: document.getElementById('helpButton'),
         tutorialModal: document.getElementById('tutorialModal'),
         closeTutorialModal: document.getElementById('closeTutorialModal'),
@@ -240,10 +424,11 @@ document.addEventListener('DOMContentLoaded', () => {
             auth_section_hint: '🔒 No write permissions requested',
             cooldown_title: '⚠️ SYSTEM IN COOLDOWN',
             cooldown_subtitle: 'Wait for new request',
-            key_limit_text: 'You have {count} active ID(s) (maximum: {max} per Discord account)',
-            key_limit_helper: '💡 Use an ID to free up space for new ones.',
+            key_limit_text: 'You have {count} active ID(s) (maximum: {max} active per account)',
+            key_limit_helper: '💡 Max 5 active keys at a time. Use or delete one to generate more — unlimited!',
             generate_button: '🚀 START TASK',
             generate_button_hint: 'Generate your mod key here',
+            key_empty_state: 'Click START TASK to generate your key',
             view_keys_button: '🛰️ SYSTEM LOG',
             key_label: 'Assigned Crewmate ID:',
             copy_button: '📋 Copy ID',
@@ -288,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
             log_loaded: 'Report loaded.',
             no_id_found: 'No ID found.',
             wait_cooldown: '⏱️ WAIT: System in cooldown.',
-            limit_reached: '⚠️ LIMIT REACHED: Max 5 IDs.',
+            limit_reached: '⚠️ LIMIT: 5 active keys. Use or delete one to generate more!',
             starting_verification: '⏳ Starting verification...',
             redirecting_portal: '⏳ Redirecting to portal...',
             unknown_error: 'Unknown error.',
@@ -312,12 +497,12 @@ document.addEventListener('DOMContentLoaded', () => {
             help_button_title: 'How to use?',
             view_keys_title: 'Consult Active Crewmate IDs',
             download_badge: '📡 DOWNLOAD STATION',
-            download_title: 'CrewCore Mod Menu',
+            download_title: 'ModMenuCrew',
             version_latest: '✅ Latest version',
             download_hint: '🔒 Secure download via Cloudflare',
-            download_client_title: 'Download Client',
+            download_client_title: 'Download Mod',
             download_client_subtitle: 'Mod V6.0.5 • Game v17.1.0',
-            download_now: 'Download Now',
+            download_now: 'DOWNLOAD NOW',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',
             turnstile_hint: 'Complete the verification above to unlock the methods',
@@ -325,6 +510,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // === DOWNLOAD TURNSTILE ===
             download_turnstile_hint: '🔒 Complete the verification to unlock download',
             download_turnstile_success: '✅ Verified! Select platform below',
+            dl_chip_instant: 'Instant Activation',
+            dl_chip_undetected: 'Undetected',
+            dl_chip_easy: 'Easy to Use',
+            dl_verify_label: 'Verification required for download',
+            dl_trust_cf: 'Via Cloudflare R2',
+            dl_trust_scan: 'Daily scan',
+            dl_trust_update: 'Updated today',
             download_turnstile_error: '❌ Verification failed. Try reloading the page.',
             download_turnstile_expired: '⚠️ Verification expired. Complete again.',
             download_turnstile_required: '🔒 Complete Cloudflare verification first!',
@@ -376,7 +568,32 @@ document.addEventListener('DOMContentLoaded', () => {
             detail_save_28: '💰 28% savings',
             detail_save_20: '💰 20% savings',
             detail_save_50: '💰 50% savings',
-            premium_features_shared: '✓ No verification • Unlimited uses • Priority support',
+            // Premium Comparison & Social Proof
+            prem_title: 'Stop suffering with links',
+            prem_subtitle: 'Play without interruptions, with exclusive features',
+            prem_free_label: 'Free',
+            prem_premium_label: 'Premium',
+            prem_free_1: '2 shortener links per key',
+            prem_free_2: 'Expires when game closes',
+            prem_free_3: 'Max 5 active keys at once',
+            prem_free_4: 'No exclusive features',
+            prem_pro_1: 'Instant key, zero links',
+            prem_pro_2: 'Active until plan expires',
+            prem_pro_3: 'Unlimited usage',
+            prem_pro_4: '🎨 Same color for all',
+            prem_pro_5: '🐍 Always Viper / Phantom',
+            prem_social_proof: '<strong id="premiumActiveCount">--</strong> players use Premium now',
+            prem_most_popular: '⭐ MOST POPULAR',
+            prem_best_value: '🏆 BEST VALUE',
+            prem_try: 'Try it',
+            prem_card_instant: '⚡ Instant key',
+            prem_card_nolinks: '🚫 Zero links',
+            prem_card_allfeatures: '✨ All features',
+            prem_card_colors: '🎨 Same color for all',
+            prem_card_roles: '🐍 Always Viper/Phantom',
+            prem_per_day_30: '~$0.15/day',
+            prem_per_day_90: '~$0.12/day',
+            prem_cancel: 'Cancel anytime',
             // Plan Names
             plan_48h: '48h',
             plan_7days: '7 Days',
@@ -387,10 +604,12 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_forever: 'Forever!',
             plan_per_month: '~$2.50/month',
             verifying_payment: 'Verifying payment...',
-            // New Year
-            newyear_premium_badge: '🎆 2026 PREMIUM',
-            newyear_footer: '© 2026 CrewCore • The Year of Victory starts now 🎆',
-            newyear_banner_text: '🎆 2026: Your Year of Victory 🎆',
+            // Elite Network
+            premium_badge: '⚡ ELITE ACCESS',
+            net_online: 'online now',
+            net_keys_today: 'keys today',
+            net_members: 'on Discord',
+            net_uptime: 'hrs uptime',
             // Premium Success Modal
             premium_payment_confirmed: 'Payment Confirmed!',
             premium_key_ready: 'Your Premium key is ready!',
@@ -420,8 +639,17 @@ document.addEventListener('DOMContentLoaded', () => {
             delete_key_success: '✅ Key deleted successfully!',
             delete_key_error: '❌ Error deleting key',
             session_expired: 'Session expired. Please login again.',
+            captcha_first: 'Complete the captcha first.',
+            captcha_expired: 'Captcha expired. Complete again.',
+            step1_done: '✅ Step 1 complete! Step 2 unlocked.',
+            security_checking: 'Checking security... please wait.',
+            session_expired_login: 'Session expired. Please login again.',
+            delete_confirm_title: 'Delete this key?',
+            delete_confirm_desc: 'This action cannot be undone.',
+            delete_confirm_yes: 'Yes, delete',
+            delete_confirm_no: 'Cancel',
             // Footer
-            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
+            footer_made_with: 'Made with <span class="footer-heart">❤️</span> by <a href="https://discord.gg/ucm7pKGrVv" target="_blank" rel="noopener noreferrer">CrewCore Team</a>',
             donate_button: 'Donate ❤️',
             donate_subtitle: '(support development, not premium)',
             // === TWO-STEP VERIFICATION MODAL ===
@@ -436,7 +664,36 @@ document.addEventListener('DOMContentLoaded', () => {
             step2_locked: 'Complete Step 1 first',
             twostep_hint: '⏱️ You have 15 minutes to complete both steps',
             step1_badge: 'STEP 1',
-            step2_badge: 'STEP 2'
+            step2_badge: 'STEP 2',
+            // === FLOW GUIDE & UX ===
+            welcome_headline: 'Generate your key and play Among Us with mods in minutes',
+            flow_step1: 'Login',
+            flow_step2: 'Generate Key',
+            flow_step3: 'Download Mod',
+            flow_step4: 'Play!',
+            mission_kicker: 'CrewCore Pulse',
+            mission_title: 'Your journey starts here',
+            mission_greeting_guest: 'Sign in with Discord to personalize your experience and track your progress in real time.',
+            mission_greeting_member: 'Welcome back, {name}. Your terminal is ready for a new key.',
+            mission_greeting_join: 'Hi {name}. Join our Discord server to unlock key generation.',
+            mission_chip_guest: 'Session: guest',
+            mission_chip_session: 'Session: @{name}',
+            mission_chip_server_pending: 'Server: pending',
+            mission_chip_server_yes: 'Server: verified',
+            mission_chip_server_no: 'Server: not verified',
+            mission_chip_plan_free: 'Plan: free',
+            mission_chip_plan_premium: 'Plan: premium',
+            mission_cta_login: 'Login with Discord',
+            mission_cta_join: 'Join Discord server',
+            mission_cta_generate: 'Generate my key now',
+            keys_empty_msg: 'No keys generated yet. Click START TASK to get started!',
+            next_steps_label: 'Next step:',
+            next_steps_text: 'Copy the key above, download the mod and paste it in the game activator',
+            // === PREMIUM & PROFILE ===
+            prem_urgency: '🔥 Promotional prices — may increase at any time',
+            prem_guarantee: '✅ Instant activation after payment • Discord support',
+            premium_active_label: 'PREMIUM',
+            skip_to_content: 'Skip to content'
         },
         pt: {
             main_title: 'Terminal de Acesso - MIRA HQ',
@@ -448,10 +705,11 @@ document.addEventListener('DOMContentLoaded', () => {
             auth_section_hint: '🔒 Nenhuma permissão de escrita é solicitada',
             cooldown_title: '⚠️ SISTEMA EM COOLDOWN',
             cooldown_subtitle: 'Aguarde para nova solicitação',
-            key_limit_text: 'Você possui {count} ID{s} ativa{s} (máximo: {max} por conta Discord)',
-            key_limit_helper: '💡 Use uma ID para liberar espaço para novas.',
+            key_limit_text: 'Você possui {count} ID{s} ativa{s} (máximo: {max} ativas por conta)',
+            key_limit_helper: '💡 Máximo de 5 keys ativas por vez. Use ou delete uma para gerar mais — infinitamente!',
             generate_button: '🚀 START TASK',
             generate_button_hint: 'Gere sua key do mod aqui',
+            key_empty_state: 'Clique em START TASK para gerar sua key',
             view_keys_button: '🛰️ LOG DE SISTEMA',
             key_label: 'ID de Tripulante Designada:',
             copy_button: '📋 Copiar ID',
@@ -498,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
             log_loaded: 'Relatório carregado.',
             no_id_found: 'Nenhuma ID encontrada.',
             wait_cooldown: '⏱️ AGUARDE: Sistema em cooldown.',
-            limit_reached: '⚠️ LIMITE ATINGIDO: Máximo de 5 IDs.',
+            limit_reached: '⚠️ LIMITE: 5 keys ativas. Use ou delete uma para gerar mais!',
             starting_verification: '⏳ Iniciando verificação...',
             redirecting_portal: '⏳ Redirecionando para o portal...',
             unknown_error: 'Erro desconhecido.',
@@ -522,10 +780,9 @@ document.addEventListener('DOMContentLoaded', () => {
             help_button_title: 'Como usar?',
             view_keys_title: 'Consultar IDs de Tripulantes Ativos',
             download_badge: '📡 ESTAÇÃO DE DOWNLOAD',
-            download_title: 'CrewCore Mod Menu',
+            download_title: 'ModMenuCrew',
             version_latest: '✅ Última versão',
             download_hint: '🔒 Download seguro via Cloudflare',
-            download_now: 'Baixar Agora',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',
             turnstile_hint: 'Complete a verificação acima para desbloquear os métodos',
@@ -584,7 +841,32 @@ document.addEventListener('DOMContentLoaded', () => {
             detail_save_28: '💰 28% economia',
             detail_save_20: '💰 20% economia',
             detail_save_50: '💰 50% economia',
-            premium_features_shared: '✓ Sem verificação • Uso ilimitado • Suporte prioritário',
+            // Premium Comparison & Social Proof
+            prem_title: 'Pare de sofrer com links',
+            prem_subtitle: 'Jogue sem interrupções, com features exclusivas',
+            prem_free_label: 'Gratuito',
+            prem_premium_label: 'Premium',
+            prem_free_1: '2 links por key',
+            prem_free_2: 'Expira ao fechar o jogo',
+            prem_free_3: 'Máximo 5 keys ativas por vez',
+            prem_free_4: 'Sem features exclusivas',
+            prem_pro_1: 'Key instantânea, zero links',
+            prem_pro_2: 'Ativa até o plano expirar',
+            prem_pro_3: 'Uso ilimitado',
+            prem_pro_4: '🎨 Todos da mesma cor',
+            prem_pro_5: '🐍 Sempre Viper / Phantom',
+            prem_social_proof: '<strong id="premiumActiveCount">--</strong> jogadores usam Premium agora',
+            prem_most_popular: '⭐ MAIS POPULAR',
+            prem_best_value: '🏆 MELHOR VALOR',
+            prem_try: 'Experimentar',
+            prem_card_instant: '⚡ Key instantânea',
+            prem_card_nolinks: '🚫 Zero links',
+            prem_card_allfeatures: '✨ Todas as features',
+            prem_card_colors: '🎨 Mesma cor p/ todos',
+            prem_card_roles: '🐍 Sempre Viper/Phantom',
+            prem_per_day_30: '~R$0,83/dia',
+            prem_per_day_90: '~R$0,66/dia',
+            prem_cancel: 'Cancele quando quiser',
             // Plan Names
             plan_48h: '48h',
             plan_7days: '7 Dias',
@@ -595,10 +877,12 @@ document.addEventListener('DOMContentLoaded', () => {
             plan_forever: 'Para sempre!',
             plan_per_month: '~R$12/mês',
             verifying_payment: 'Verificando pagamento...',
-            // New Year
-            newyear_premium_badge: '🎆 2026 PREMIUM',
-            newyear_footer: '© 2026 CrewCore • O Ano da Vitória começa agora 🎆',
-            newyear_banner_text: '🎆 2026: Seu Ano de Vitória 🎆',
+            // Elite Network
+            premium_badge: '⚡ ACESSO ELITE',
+            net_online: 'online agora',
+            net_keys_today: 'keys hoje',
+            net_members: 'no Discord',
+            net_uptime: 'hrs uptime',
             // Premium Success Modal
             premium_payment_confirmed: 'Pagamento Confirmado!',
             premium_key_ready: 'Sua chave Premium está pronta!',
@@ -628,10 +912,27 @@ document.addEventListener('DOMContentLoaded', () => {
             delete_key_success: '✅ Key excluída com sucesso!',
             delete_key_error: '❌ Erro ao excluir key',
             session_expired: 'Sessão expirada. Faça login novamente.',
+            captcha_first: 'Complete o captcha primeiro.',
+            captcha_expired: 'Captcha expirado. Complete novamente.',
+            step1_done: '✅ Passo 1 concluído! Passo 2 liberado.',
+            security_checking: 'Verificando segurança... aguarde.',
+            session_expired_login: 'Sessão expirada. Faça login novamente.',
+            delete_confirm_title: 'Excluir esta key?',
+            delete_confirm_desc: 'Esta ação não pode ser desfeita.',
+            delete_confirm_yes: 'Sim, excluir',
+            delete_confirm_no: 'Cancelar',
             // Footer
-            footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank">CrewCore Team</a>',
-            download_client_title: 'Obter Cliente',
+            footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank" rel="noopener noreferrer">CrewCore Team</a>',
+            download_client_title: 'Baixar Mod',
             download_client_subtitle: 'Mod V6.0.5 • Game v17.1.0',
+            download_now: 'BAIXAR AGORA',
+            dl_chip_instant: 'Ativação Instantânea',
+            dl_chip_undetected: 'Indetectável',
+            dl_chip_easy: 'Fácil de Usar',
+            dl_verify_label: 'Verificação necessária para download',
+            dl_trust_cf: 'Via Cloudflare R2',
+            dl_trust_scan: 'Scan diário',
+            dl_trust_update: 'Atualizado hoje',
             // === TWO-STEP VERIFICATION MODAL ===
             twostep_title: '🔐 Verificação em 2 Passos',
             twostep_desc: 'Complete os dois passos para gerar sua key',
@@ -644,66 +945,149 @@ document.addEventListener('DOMContentLoaded', () => {
             step2_locked: 'Complete o Passo 1 primeiro',
             twostep_hint: '⏱️ Você tem 15 minutos para completar ambos os passos',
             step1_badge: 'PASSO 1',
-            step2_badge: 'PASSO 2'
+            step2_badge: 'PASSO 2',
+            // === FLOW GUIDE & UX ===
+            welcome_headline: 'Gere sua key e jogue Among Us com mods em minutos',
+            flow_step1: 'Login',
+            flow_step2: 'Gerar Key',
+            flow_step3: 'Baixar Mod',
+            flow_step4: 'Jogar!',
+            mission_kicker: 'CrewCore Pulse',
+            mission_title: 'Sua jornada começa aqui',
+            mission_greeting_guest: 'Faça login com Discord para personalizar sua experiência e acompanhar seu progresso em tempo real.',
+            mission_greeting_member: 'Bem-vindo de volta, {name}. Seu terminal já está pronto para uma nova key.',
+            mission_greeting_join: 'Olá, {name}. Entre no nosso servidor Discord para liberar a geração de keys.',
+            mission_chip_guest: 'Sessão: visitante',
+            mission_chip_session: 'Sessão: @{name}',
+            mission_chip_server_pending: 'Servidor: pendente',
+            mission_chip_server_yes: 'Servidor: verificado',
+            mission_chip_server_no: 'Servidor: não verificado',
+            mission_chip_plan_free: 'Plano: gratuito',
+            mission_chip_plan_premium: 'Plano: premium',
+            mission_cta_login: 'Entrar com Discord',
+            mission_cta_join: 'Entrar no servidor',
+            mission_cta_generate: 'Gerar minha key agora',
+            keys_empty_msg: 'Nenhuma key gerada ainda. Clique em START TASK para começar!',
+            next_steps_label: 'Próximo passo:',
+            next_steps_text: 'Copie a key acima, baixe o mod e cole no ativador do jogo',
+            // === PREMIUM & PROFILE ===
+            prem_urgency: '🔥 Preços promocionais — podem aumentar a qualquer momento',
+            prem_guarantee: '✅ Ativação instantânea após pagamento • Suporte via Discord',
+            premium_active_label: 'PREMIUM',
+            skip_to_content: 'Pular para o conteúdo'
         }
     };
 
     // ==========================================
-    // NEW YEAR 2026 VISUAL EFFECTS
+    // ELITE PLATFORM EFFECTS & LIVE STATS
     // ==========================================
-    function initNewYearEffects() {
-        // 1. Champagne Bubbles
-        const bubbleContainer = document.getElementById('champagneBubbles');
-        if (bubbleContainer) {
-            const createBubble = () => {
-                const bubble = document.createElement('div');
-                bubble.classList.add('c-bubble');
+    function initEliteEffects() {
+        // 1. Live Platform Stats (polls /platform-stats every 30s)
+        const statsElements = {
+            online: document.getElementById('netOnline'),
+            keysToday: document.getElementById('netKeysToday'),
+            totalUsers: document.getElementById('netTotalUsers'),
+            uptime: document.getElementById('netUptime')
+        };
 
-                // Random properties
-                const size = Math.random() * 6 + 2; // 2px to 8px
-                const left = Math.random() * 100; // 0% to 100%
-                const duration = Math.random() * 4 + 4; // 4s to 8s
-                const wobble = (Math.random() - 0.5) * 50 + 'px'; // -25px to 25px
-                const delay = Math.random() * 5;
+        let lastStats = {};
+        let statsFetchFailCount = 0;
 
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${left}%`;
-                bubble.style.setProperty('--wobble', wobble);
-                bubble.style.animationDuration = `${duration}s`;
-                bubble.style.animationDelay = `${delay}s`;
-
-                bubbleContainer.appendChild(bubble);
-
-                // Remove after animation
-                setTimeout(() => {
-                    bubble.remove();
-                }, (duration + delay) * 1000);
-            };
-
-            // Spawn initial batch
-            for (let i = 0; i < 30; i++) createBubble();
-            // Continuous spawn
-            setInterval(createBubble, 300);
+        function animateCounter(el, newValue) {
+            if (!el) return;
+            const formatted = typeof newValue === 'number' ? newValue.toLocaleString() : String(newValue);
+            if (el.textContent === formatted) return;
+            el.textContent = formatted;
+            el.classList.add('updated');
+            setTimeout(() => el.classList.remove('updated'), 800);
         }
 
-        // 2. Button Interactive Effects & Magnetic Pull
+        async function fetchPlatformStats() {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE_URL}/platform-stats`, { signal: AbortSignal.timeout(8000) });
+                if (!res.ok) return;
+                const json = await res.json();
+                if (json.status !== 'success' || !json.data) return;
+                const d = json.data;
+
+                animateCounter(statsElements.online, d.online_now || 0);
+                animateCounter(statsElements.keysToday, d.keys_today || 0);
+                animateCounter(statsElements.totalUsers, d.discord_members || 0);
+                animateCounter(statsElements.uptime, d.uptime_hours || 0);
+
+                // Update premium active count for social proof
+                const premCountEl = document.getElementById('premiumActiveCount');
+                if (premCountEl && d.premium_active !== undefined) {
+                    premCountEl.textContent = d.premium_active;
+                }
+
+                // Update download modal "Updated" date from R2 object metadata
+                if (d.mod_updated_at) {
+                    const modDate = new Date(d.mod_updated_at);
+                    const lang = appState.currentLanguage;
+                    const now = new Date();
+                    const diffDays = Math.floor((now - modDate) / (1000 * 60 * 60 * 24));
+                    let dateStr;
+                    if (diffDays === 0) {
+                        dateStr = lang === 'pt' ? 'Atualizado hoje' : 'Updated today';
+                    } else if (diffDays === 1) {
+                        dateStr = lang === 'pt' ? 'Atualizado ontem' : 'Updated yesterday';
+                    } else {
+                        dateStr = (lang === 'pt' ? 'Atualizado ' : 'Updated ') + modDate.toLocaleDateString(lang === 'pt' ? 'pt-BR' : 'en-US', { day: '2-digit', month: 'short' });
+                    }
+                    const updateEl = document.querySelector('[data-translate-key="dl_trust_update"]');
+                    if (updateEl) updateEl.textContent = dateStr;
+                }
+
+                lastStats = d;
+                statsFetchFailCount = 0;
+                const bar = document.getElementById('networkBar');
+                if (bar) bar.style.opacity = '';
+            } catch (e) {
+                console.debug('[Stats] Fetch failed:', e.message);
+                statsFetchFailCount++;
+                if (statsFetchFailCount >= 3) {
+                    const bar = document.getElementById('networkBar');
+                    if (bar) bar.style.opacity = '0.5';
+                }
+            }
+        }
+
+        // Initial fetch + poll every 30s
+        fetchPlatformStats();
+        setInterval(fetchPlatformStats, 30000);
+
+        // Fetch Discord server icon for download modal
+        (async () => {
+            try {
+                const inviteCode = 'ucm7pKGrVv';
+                if (!inviteCode) return;
+                const res = await fetch(`https://discord.com/api/v9/invites/${inviteCode}?with_counts=true`, { signal: AbortSignal.timeout(5000) });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.guild && data.guild.icon) {
+                    const ext = data.guild.icon.startsWith('a_') ? 'gif' : 'png';
+                    const iconUrl = `https://cdn.discordapp.com/icons/${data.guild.id}/${data.guild.icon}.${ext}?size=128`;
+                    const iconEl = document.getElementById('dlServerIcon');
+                    if (iconEl) iconEl.src = iconUrl;
+                }
+            } catch (e) {
+                console.debug('[DL] Discord icon fetch failed:', e.message);
+            }
+        })();
+
+        // 2. Magnetic Button Effect
         const mainBtn = document.getElementById('btnOpenMethodMenu');
         if (mainBtn) {
-            // Magnetic Effect Variables
-            const magnetStrength = 0.4; // How strong the pull is
-            const magnetRange = 100; // Pixels
+            const magnetStrength = 0.35;
+            const magnetRange = 100;
             let btnRect = mainBtn.getBoundingClientRect();
 
-            // Re-calculate rect on scroll/resize
             window.addEventListener('scroll', () => { btnRect = mainBtn.getBoundingClientRect(); });
             window.addEventListener('resize', () => { btnRect = mainBtn.getBoundingClientRect(); });
 
             document.addEventListener('mousemove', (e) => {
-                // Accessibility: Disable if reduced motion is preferred
                 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-                // Return if button is hidden or disabled to save perf
                 if (mainBtn.offsetParent === null) return;
 
                 const dx = e.clientX - (btnRect.left + btnRect.width / 2);
@@ -715,31 +1099,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const ty = dy * magnetStrength;
                     mainBtn.style.transform = `translate(${tx}px, ${ty}px) scale(1.05)`;
 
-                    // Sound: Low Sci-Fi Hum on enter
                     if (!mainBtn.hasMagnetSoundPlayed && appState.soundEnabled) {
-                        playSound(100, 150, 'triangle'); // Low hum
+                        playSound(100, 150, 'triangle');
                         mainBtn.hasMagnetSoundPlayed = true;
-                    }
-
-                    // Throttle confetti inside the magnetic field
-                    if (dist < 40 && Math.random() > 0.92) {
-                        if (window.confetti) {
-                            const xRatio = (e.clientX - btnRect.left) / btnRect.width;
-                            const yRatio = (e.clientY - btnRect.top) / btnRect.height;
-                            window.confetti({
-                                particleCount: 2,
-                                spread: 20,
-                                origin: {
-                                    x: (btnRect.left + btnRect.width * xRatio) / window.innerWidth,
-                                    y: (btnRect.top + btnRect.height * yRatio) / window.innerHeight
-                                },
-                                colors: ['#FFD700', '#FFF8DC'],
-                                scalar: 0.4,
-                                gravity: 0.8,
-                                ticks: 30,
-                                disableForReducedMotion: true
-                            });
-                        }
                     }
                 } else {
                     mainBtn.style.transform = 'translate(0, 0) scale(1)';
@@ -748,7 +1110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // 3. Holographic 3D Tilt (Optimized with Caching & rAF)
+        // 3. Holographic 3D Tilt on Premium Cards
         const cards = document.querySelectorAll('.premium-plan');
         if (cards.length > 0) {
             let cardRects = [];
@@ -756,7 +1118,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let mouseX = 0;
             let mouseY = 0;
 
-            // Cache Rects to avoid layout thrashing
             const updateCardRects = () => {
                 cardRects = Array.from(cards).map(card => ({
                     element: card,
@@ -764,16 +1125,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }));
             };
 
-            // Update rects on load, scroll, resize
             updateCardRects();
             window.addEventListener('scroll', updateCardRects, { passive: true });
             window.addEventListener('resize', updateCardRects, { passive: true });
 
-            // Animation Loop
             const animateCards = () => {
                 if (!isAnimating) return;
-
-                // Accessibility: Stop if reduced motion is preferred
                 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                     isAnimating = false;
                     return;
@@ -783,47 +1140,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     const x = mouseX - rect.left;
                     const y = mouseY - rect.top;
 
-                    // Check bounds with some padding
                     if (x > -50 && x < rect.width + 50 && y > -50 && y < rect.height + 50) {
-                        const centerX = rect.width / 2;
-                        const centerY = rect.height / 2;
-
-                        // Calculate rotation (Limit to ±10deg)
-                        const rotateX = ((y - centerY) / centerY) * -10;
-                        const rotateY = ((x - centerX) / centerX) * 10;
+                        const rotateX = ((y - rect.height / 2) / (rect.height / 2)) * -10;
+                        const rotateY = ((x - rect.width / 2) / (rect.width / 2)) * 10;
 
                         element.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`;
-
-                        // Update shine position CSS vars
-                        const shineX = ((x / rect.width) * 100).toFixed(1) + '%';
-                        const shineY = ((y / rect.height) * 100).toFixed(1) + '%';
-
-                        element.style.setProperty('--shine-x', shineX);
-                        element.style.setProperty('--shine-y', shineY);
-                    } else {
-                        // Reset if active local style exists
-                        if (element.style.transform) {
-                            element.style.transform = '';
-                        }
+                        element.style.setProperty('--shine-x', ((x / rect.width) * 100).toFixed(1) + '%');
+                        element.style.setProperty('--shine-y', ((y / rect.height) * 100).toFixed(1) + '%');
+                    } else if (element.style.transform) {
+                        element.style.transform = '';
                     }
                 });
 
                 requestAnimationFrame(animateCards);
             };
 
-            // Mouse Listener just updates coordinates and starts loop
             document.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
                 mouseY = e.clientY;
-
                 if (!isAnimating) {
                     isAnimating = true;
                     requestAnimationFrame(animateCards);
                 }
-
-                // Optional: Stop animation if no mouse movement for a while (debounce or specific logic),
-                // but for now, constant rAF when mouse moves is standard for this effect.
-                // To save battery, we could use a timeout to set isAnimating = false.
                 clearTimeout(window.hoverTimeout);
                 window.hoverTimeout = setTimeout(() => { isAnimating = false; }, 500);
             }, { passive: true });
@@ -831,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize effects
-    initNewYearEffects();
+    initEliteEffects();
 
     class DiscordAuthSystem {
         constructor() {
@@ -869,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         setupModal() {
-            const closeBtn = document.querySelector('.close-modal');
+            const closeBtn = elements.userProfileModal ? elements.userProfileModal.querySelector('.close-modal') : null;
             if (closeBtn) closeBtn.addEventListener('click', () => this.hideUserModal());
             if (elements.userProfileModal) elements.userProfileModal.addEventListener('click', (e) => { if (e.target === elements.userProfileModal) this.hideUserModal(); });
             if (elements.modalGenerateBtn) elements.modalGenerateBtn.addEventListener('click', () => { this.hideUserModal(); initiateShortenerRedirect(); });
@@ -886,7 +1224,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showUIMessage(translations[appState.currentLanguage].auth_connecting, 'info');
                 const response = await fetch(`${CONFIG.API_BASE_URL}/auth/discord`);
                 const data = await response.json();
-                if (data.status === 'success') window.location.href = data.auth_url;
+                // SECURITY: Validate redirect URL to prevent open redirect
+                if (data.status === 'success' && typeof data.auth_url === 'string' && data.auth_url.startsWith('https://discord.com/')) window.location.href = data.auth_url;
             } catch (error) {
                 showUIMessage(translations[appState.currentLanguage].auth_error, 'error');
             }
@@ -959,10 +1298,13 @@ document.addEventListener('DOMContentLoaded', () => {
         handleServerRequired(data) {
             const lang = appState.currentLanguage;
             showUIMessage(data.message, 'error', 10000);
+            // SECURITY: Validate URL protocol to prevent javascript: XSS
+            const safeInvite = (typeof data.discord_invite === 'string' && /^https?:\/\//i.test(data.discord_invite))
+                ? data.discord_invite : 'https://discord.gg/ucm7pKGrVv';
             elements.authSection.innerHTML = `
               <div class="server-required-message">
                 <p>${translations[lang].server_required_msg_title}</p>
-                <a href="${data.discord_invite}" target="_blank" class="server-invite-btn">${translations[lang].server_required_msg_btn}</a>
+                <a href="${safeInvite}" target="_blank" rel="noopener noreferrer" class="server-invite-btn">${translations[lang].server_required_msg_btn}</a>
                 <p style="margin-top: 0.5rem; font-size: 0.9em;">${translations[lang].server_required_msg_desc}</p>
               </div>`;
         }
@@ -1003,6 +1345,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         this.userStats = data.stats;
                         localStorage.setItem('crewbot_stats', JSON.stringify(this.userStats));
                         this.updateModal();
+                        updateMissionPanel();
                     }
                 }
             } catch (error) { console.error('Erro ao carregar estatísticas:', error); }
@@ -1062,6 +1405,42 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.statMemberSince.textContent = memberText;
 
             elements.modalGenerateBtn.disabled = !this.userStats.is_server_member;
+
+            // === TIER BADGE (based on total keys generated) ===
+            const tierBadge = document.getElementById('avatarTierBadge');
+            if (tierBadge) {
+                const total = this.userStats.keys_total || 0;
+                tierBadge.className = 'avatar-tier-badge';
+                if (total >= 100) {
+                    tierBadge.textContent = '💎';
+                    tierBadge.classList.add('visible', 'tier-diamond');
+                } else if (total >= 50) {
+                    tierBadge.textContent = '🥇';
+                    tierBadge.classList.add('visible', 'tier-gold');
+                } else if (total >= 20) {
+                    tierBadge.textContent = '🥈';
+                    tierBadge.classList.add('visible', 'tier-silver');
+                } else if (total >= 5) {
+                    tierBadge.textContent = '🥉';
+                    tierBadge.classList.add('visible', 'tier-bronze');
+                }
+            }
+
+            // === PREMIUM RING + BADGE ===
+            const avatarRing = document.getElementById('avatarRing');
+            const premBadge = document.getElementById('modalPremiumBadge');
+            const isPremium = this.userStats.is_premium || false;
+            if (avatarRing) {
+                avatarRing.classList.toggle('premium', isPremium);
+            }
+            if (premBadge) {
+                if (isPremium) {
+                    premBadge.textContent = '👑 ' + (translations[lang].premium_active_label || 'PREMIUM');
+                    premBadge.style.display = '';
+                } else {
+                    premBadge.style.display = 'none';
+                }
+            }
         }
 
         async logout() {
@@ -1108,6 +1487,9 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.userContent.style.display = isAuthenticated ? 'block' : 'none';
             elements.userProfileHeader.style.display = isAuthenticated ? 'flex' : 'none';
 
+            // Update flow guide
+            updateFlowGuide(isAuthenticated ? 'logged-in' : 'initial');
+
             if (isAuthenticated) {
                 const userId = this.userData.id || this.userData.userId;
                 const avatarUrl = this.getAvatarUrl(userId, this.userData.avatar, 40);
@@ -1116,6 +1498,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.userDiscriminatorHeader.textContent = `@${this.userData.username}`;
                 this.updateGenerateButton(this.userStats ? this.userStats.is_server_member : false);
             }
+
+            updateMissionPanel();
         }
 
         updateGenerateButton(isServerMember) {
@@ -1125,13 +1509,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lang = appState.currentLanguage; // Define lang here
                 if (isServerMember && this.isAuthenticated) {
                     btn.disabled = false;
-                    btn.title = 'Iniciar Task';
+                    btn.title = '';
                 } else {
                     btn.disabled = true;
                     if (!this.isAuthenticated) {
-                        btn.title = 'Faça login com Discord para gerar keys';
+                        btn.title = lang === 'pt' ? 'Faça login com Discord para gerar keys' : 'Login with Discord to generate keys';
                     } else {
-                        btn.title = 'Entre no servidor Discord para gerar keys';
+                        btn.title = lang === 'pt' ? 'Entre no servidor Discord para gerar keys' : 'Join our Discord server to generate keys';
                     }
                 }
             }
@@ -1150,10 +1534,104 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const discordAuth = new DiscordAuthSystem();
 
+    function setMissionChip(el, text, tone) {
+        if (!el) return;
+        el.textContent = text;
+        el.setAttribute('data-tone', tone || 'dim');
+    }
+
+    function updateMissionPanel() {
+        if (!elements.missionGreeting) return;
+
+        const lang = appState.currentLanguage || 'pt';
+        const t = translations[lang] || translations.pt;
+        const isAuthenticated = !!(discordAuth.isAuthenticated && discordAuth.userData);
+        const userName = discordAuth.userData?.global_name || discordAuth.userData?.username || (lang === 'pt' ? 'Tripulante' : 'Crewmate');
+        const isServerMember = typeof discordAuth.userStats?.is_server_member === 'boolean'
+            ? discordAuth.userStats.is_server_member
+            : !!discordAuth.userData?.isServerMember;
+        const isPremium = !!discordAuth.userStats?.is_premium;
+
+        if (!isAuthenticated) {
+            elements.missionGreeting.textContent = t.mission_greeting_guest;
+            setMissionChip(elements.missionAuthChip, t.mission_chip_guest, 'warn');
+            setMissionChip(elements.missionServerChip, t.mission_chip_server_pending, 'dim');
+            setMissionChip(elements.missionPremiumChip, t.mission_chip_plan_free, 'dim');
+            return;
+        }
+
+        if (isServerMember) {
+            elements.missionGreeting.textContent = t.mission_greeting_member.replace('{name}', userName);
+        } else {
+            elements.missionGreeting.textContent = t.mission_greeting_join.replace('{name}', userName);
+        }
+
+        setMissionChip(elements.missionAuthChip, t.mission_chip_session.replace('{name}', userName), 'ok');
+        setMissionChip(elements.missionServerChip, isServerMember ? t.mission_chip_server_yes : t.mission_chip_server_no, isServerMember ? 'ok' : 'warn');
+        setMissionChip(elements.missionPremiumChip, isPremium ? t.mission_chip_plan_premium : t.mission_chip_plan_free, isPremium ? 'ok' : 'dim');
+    }
+
+    async function handleMissionCTA() {
+        if (!discordAuth.isAuthenticated) {
+            if (elements.discordAuthBtn) elements.discordAuthBtn.click();
+            return;
+        }
+
+        if (!discordAuth.userStats?.is_server_member) {
+            openDiscordWidget();
+            return;
+        }
+
+        await openTwoStepModal();
+    }
+
+    // ==================== FLOW GUIDE SYSTEM ====================
+    function updateFlowGuide(state) {
+        const steps = document.querySelectorAll('.flow-step-mini');
+        if (!steps.length) return;
+
+        // Reset all steps
+        steps.forEach(s => s.classList.remove('active', 'done'));
+
+        switch (state) {
+            case 'initial':
+                // Step 1 (Login) is active
+                if (steps[0]) steps[0].classList.add('active');
+                break;
+            case 'logged-in':
+                // Step 1 done, Step 2 (Generate Key) active
+                if (steps[0]) steps[0].classList.add('done');
+                if (steps[1]) steps[1].classList.add('active');
+                break;
+            case 'key-generated':
+                // Steps 1-2 done, Step 3 (Download) active
+                if (steps[0]) steps[0].classList.add('done');
+                if (steps[1]) steps[1].classList.add('done');
+                if (steps[2]) steps[2].classList.add('active');
+                break;
+            case 'downloaded':
+                // Steps 1-3 done, Step 4 (Play) active
+                if (steps[0]) steps[0].classList.add('done');
+                if (steps[1]) steps[1].classList.add('done');
+                if (steps[2]) steps[2].classList.add('done');
+                if (steps[3]) steps[3].classList.add('active');
+                break;
+        }
+    }
+
+    // Expose to global scope for use by handleDownload (which is outside DOMContentLoaded)
+    window.updateFlowGuide = updateFlowGuide;
+
+    // Initialize flow guide on page load
+    updateFlowGuide('initial');
+
     // sanitizeInput removido pois textContent já é seguro e isso causava escape duplo.
 
     function validateKey(key) { return typeof key === 'string' && /^[A-Z0-9-]{19}$/.test(key); }
     function validateToken(token) { return typeof token === 'string' && /^[a-zA-Z0-9\-_]{20,}$/.test(token); }
+
+    // SECURITY: HTML entity escaping for innerHTML contexts with server data
+    function escHtml(s) { return typeof s === 'string' ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 
     function initAudioContext() {
         if (!appState.audioContext && appState.soundEnabled) {
@@ -1213,6 +1691,11 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.messageEl.classList.remove('show');
             setTimeout(() => { elements.messageEl.className = 'message'; }, 300);
         }, duration);
+
+        // Also show toast notification
+        if (typeof toast !== 'undefined' && toast.show) {
+            toast.show(sanitizedText, type, duration > 0 ? duration : 8000);
+        }
     }
 
     function updateKeyLimitDisplay() {
@@ -1247,26 +1730,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 li.className = 'key-item';
                 li.innerHTML = `
-                    <span class="key-value">${key}</span>
-                    <button class="key-delete-btn" title="${translations[appState.currentLanguage].delete_key_confirm}" data-key="${key}">
-                        ${translations[appState.currentLanguage].delete_key_button}
+                    <span class="key-value">${escHtml(key)}</span>
+                    <button class="key-delete-btn" title="${escHtml(translations[appState.currentLanguage].delete_key_confirm)}" data-key="${escHtml(key)}">
+                        ${escHtml(translations[appState.currentLanguage].delete_key_button)}
                     </button>
                 `;
                 // Add click listener for delete button
                 const deleteBtn = li.querySelector('.key-delete-btn');
-                deleteBtn.addEventListener('click', () => handleDeleteKey(key));
+                deleteBtn.addEventListener('click', (e) => handleDeleteKey(key, e.currentTarget));
                 elements.keysListUl.appendChild(li);
             }
         });
     }
 
     // === DELETE KEY FUNCTION (SECURE) ===
-    async function handleDeleteKey(key) {
+    async function handleDeleteKey(key, triggerBtn) {
         const lang = appState.currentLanguage;
 
-        // Confirmation dialog
-        if (!confirm(translations[lang].delete_key_confirm)) {
+        // UX: Custom inline confirmation instead of native confirm()
+        if (triggerBtn && !triggerBtn.dataset.confirmed) {
+            triggerBtn.dataset.confirmed = 'pending';
+            const origHTML = triggerBtn.innerHTML;
+            triggerBtn.innerHTML = `<span style="font-size:0.75rem">${translations[lang].delete_confirm_yes}?</span>`;
+            triggerBtn.classList.add('confirm-active');
+            const revert = () => {
+                triggerBtn.innerHTML = origHTML;
+                triggerBtn.classList.remove('confirm-active');
+                delete triggerBtn.dataset.confirmed;
+            };
+            // Auto-revert after 3s if not clicked again
+            triggerBtn._revertTimeout = setTimeout(revert, 3000);
             return;
+        }
+        // Second click = confirmed
+        if (triggerBtn) {
+            clearTimeout(triggerBtn._revertTimeout);
+            delete triggerBtn.dataset.confirmed;
         }
 
         try {
@@ -1426,11 +1925,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.btnOpenMethodMenu) elements.btnOpenMethodMenu.disabled = true;
 
         let remaining = Math.max(0, seconds);
+        const total = remaining;
         elements.cooldownTime.textContent = `${remaining}s`;
+
+        // UX: Animate cooldown progress bar
+        const progressFill = document.getElementById('cooldownProgressFill');
+        if (progressFill) progressFill.style.width = '100%';
 
         appState.cooldownTimer = setInterval(() => {
             remaining--;
             elements.cooldownTime.textContent = `${remaining}s`;
+            if (progressFill) progressFill.style.width = `${(remaining / total) * 100}%`;
             if (remaining <= 0) {
                 clearInterval(appState.cooldownTimer);
                 appState.isInCooldown = false;
@@ -1468,7 +1973,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${CONFIG.API_BASE_URL}/generate_key`, { method: 'GET', headers });
 
             if (response.status === 401) {
-                showUIMessage('Sessão expirada. Faça login novamente.', 'error');
+                showUIMessage(translations[appState.currentLanguage].session_expired_login, 'error');
                 await discordAuth.logout();
                 return;
             }
@@ -1488,6 +1993,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.keyContainerEl.classList.add('visible', 'success');
                 elements.keyContainerEl.classList.add('pop-in');
 
+                // UX: Smooth scroll key into view
+                setTimeout(() => {
+                    elements.keyContainerEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 400);
+
                 // Remove success class after animation
                 setTimeout(() => elements.keyContainerEl.classList.remove('success'), 600);
 
@@ -1499,6 +2009,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.keyActions.style.display = 'flex';
                 elements.keyMetadata.style.display = 'block';
                 elements.keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+
+                // Show next steps hint
+                const nextSteps = document.getElementById('keyNextSteps');
+                if (nextSteps) nextSteps.style.display = 'block';
+
+                // Update flow guide steps
+                updateFlowGuide('key-generated');
 
                 // Adiciona animação de pulso ao botão de copiar para chamar atenção
                 if (elements.copyButton) {
@@ -1526,7 +2043,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Se for erro de "muito rápido" (400) ou rate limit (429), tenta novamente após um delay curto
                 if (response.status === 400 && errorMessage.includes('rápida')) {
-                    showUIMessage('Verificando segurança... aguarde.', 'info', 2000);
+                    showUIMessage(translations[appState.currentLanguage].security_checking, 'info', 2000);
                     setTimeout(() => generateNewKey(), 2500); // Tenta de novo em 2.5s
                     return;
                 }
@@ -1608,7 +2125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="premium-active-banner">
                                 <span class="premium-badge-large">${t.premium_active_title}</span>
                                 <p class="premium-status-text">
-                                    ${t.premium_active_text.replace('{type}', `<strong>${(appState.activePremiumType || '').toString().replace(/[<>\"'&]/g, '').toUpperCase()}</strong>`)}
+                                    ${t.premium_active_text.replace('{type}', `<strong>${escHtml((appState.activePremiumType || '').toString().toUpperCase())}</strong>`)}
                                 </p>
                                 <p class="premium-status-sub">${t.premium_active_sub}</p>
                             </div>
@@ -1664,14 +2181,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.className = 'premium-key-item';
 
                 const statusBadge = key.status === 'active'
-                    ? `<span class="key-status active">✅ ${key.time_remaining || 'Ativo'}</span>`
+                    ? `<span class="key-status active">✅ ${escHtml(key.time_remaining) || 'Ativo'}</span>`
                     : key.status === 'unused'
                         ? '<span class="key-status unused">🔑 Não usada</span>'
                         : '<span class="key-status expired">❌ Expirada</span>';
 
                 li.innerHTML = `
-                    <span class="premium-key-value">${key.key}</span>
-                    <span class="premium-key-type">${key.type?.toUpperCase()}</span>
+                    <span class="premium-key-value">${escHtml(key.key)}</span>
+                    <span class="premium-key-type">${escHtml(key.type?.toUpperCase())}</span>
                     ${statusBadge}
                 `;
                 listEl.appendChild(li);
@@ -1804,13 +2321,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function startStep1() {
         if (appState.isProcessing) return;
         if (!appState.turnstileToken) {
-            showUIMessage('Complete o captcha primeiro.', 'error');
+            showUIMessage(translations[appState.currentLanguage].captcha_first, 'error');
             return;
         }
 
         const tokenAge = Date.now() - (appState.turnstileVerifiedAt || 0);
         if (tokenAge > 4 * 60 * 1000) {
-            showUIMessage('Captcha expirado. Complete novamente.', 'error');
+            showUIMessage(translations[appState.currentLanguage].captcha_expired, 'error');
             if (window.turnstile && elements.twoStepTurnstile) {
                 window.turnstile.reset(elements.twoStepTurnstile);
             }
@@ -1852,7 +2369,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (response.status === 401) {
-                showUIMessage('Sessão expirada. Faça login novamente.', 'error');
+                showUIMessage(translations[lang].session_expired_login, 'error');
                 await discordAuth.logout();
                 appState.isProcessing = false;
                 if (elements.btnStep1) setButtonLoading(elements.btnStep1, false);
@@ -1900,7 +2417,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step2`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...discordAuth.getAuthHeaders() },
                 body: JSON.stringify({ step1_token: twoStepState.step1Token })
             });
             const data = await response.json();
@@ -2116,7 +2633,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 twoStepState.step1Token = data.step1_token;
                 twoStepState.step = 1;
 
-                showUIMessage('✅ Passo 1 concluído! Passo 2 liberado.', 'success', 5000);
+                showUIMessage(translations[lang].step1_done, 'success', 5000);
                 if (appState.soundEnabled) playSoundSequence([
                     { freq: 523, duration: 100, type: 'sine' },
                     { freq: 659, duration: 100, type: 'sine' },
@@ -2297,8 +2814,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Question - limpa e clara
         if (elements.challengeQuestion) {
             elements.challengeQuestion.innerHTML = `
-                <div class="challenge-instruction" style="font-size: 1.1em; margin-bottom: 1rem; font-weight: 500; color: #e0e0e0;">${instructionText}</div>
-                ${visualContent ? `<div class="challenge-visual" style="font-size: 2.5em; letter-spacing: 0.15em; padding: 10px;">${visualContent}</div>` : ''}
+                <div class="challenge-instruction" style="font-size: 1.1em; margin-bottom: 1rem; font-weight: 500; color: #e0e0e0;">${escHtml(instructionText)}</div>
+                ${visualContent ? `<div class="challenge-visual" style="font-size: 2.5em; letter-spacing: 0.15em; padding: 10px;">${escHtml(visualContent)}</div>` : ''}
             `;
         }
 
@@ -2486,7 +3003,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyTranslation(lang) {
         if (!translations[lang]) return;
         // Keys that contain HTML and need innerHTML instead of textContent
-        const htmlKeys = ['footer_made_with'];
+        const htmlKeys = ['footer_made_with', 'prem_social_proof'];
 
         document.querySelectorAll('[data-translate-key]').forEach(el => {
             const key = el.getAttribute('data-translate-key');
@@ -2520,6 +3037,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Atualiza preços baseado no novo idioma (BRL/USD)
         updatePremiumPrices();
+        updateMissionPanel();
     }
 
     function toggleTranslation() {
@@ -2600,6 +3118,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (elements.btnOpenMethodMenu) {
             elements.btnOpenMethodMenu.addEventListener('click', async () => {
+                // UX: Shake feedback on disabled button click
+                if (elements.btnOpenMethodMenu.disabled) {
+                    elements.btnOpenMethodMenu.classList.add('shake');
+                    setTimeout(() => elements.btnOpenMethodMenu.classList.remove('shake'), 500);
+                    return;
+                }
                 // [FIX 2026] Verificação adicional antes de abrir modal
                 if (appState.isInCooldown) {
                     const lang = appState.currentLanguage;
@@ -2635,6 +3159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (elements.btnView) elements.btnView.addEventListener('click', () => { if (appState.soundEnabled) playSound(500, 100, 'square'); fetchUserKeyList(); });
+        if (elements.missionCtaBtn) elements.missionCtaBtn.addEventListener('click', handleMissionCTA);
         if (elements.translateButton) elements.translateButton.addEventListener('click', toggleTranslation);
         if (elements.supportButton) elements.supportButton.addEventListener('click', openDiscordWidget);
         const downloadModBtn = document.getElementById('downloadModBtn');
@@ -2649,6 +3174,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && elements.discordWidgetContainer.classList.contains('active')) closeDiscordWidget(); });
         }
         window.addEventListener('beforeunload', () => { if (appState.cooldownTimer) clearInterval(appState.cooldownTimer); });
+
+        // Ripple effect on all action buttons
+        document.querySelectorAll('.action-button, .plan-buy-btn, .step-btn, .modal-action-btn, .dl-trigger-btn').forEach(btn => {
+            btn.addEventListener('click', addRipple);
+        });
+
+        // Initialize scroll reveal for sections
+        initScrollReveal();
     }
 
     function setupSessionWatcher() {
@@ -2783,6 +3316,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Botões de compra (múltiplos planos)
     document.querySelectorAll('.plan-buy-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
+            // UX: Login gate — must be authenticated to buy premium
+            if (!discordAuth.isAuthenticated) {
+                const lang = appState.currentLanguage;
+                showUIMessage(lang === 'pt' ? '🔐 Faça login com Discord antes de comprar!' : '🔐 Login with Discord before purchasing!', 'error');
+                // Scroll to auth section
+                if (elements.authSection) elements.authSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
             const priceId = btn.dataset.priceId;
             if (!priceId || priceId.includes('AQUI')) {
                 showUIMessage('⚠️ Plano em breve!', 'info');
@@ -2810,7 +3352,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const data = await response.json();
 
-                if (data.status === 'success' && data.checkout_url) {
+                // SECURITY: Validate Stripe checkout URL
+                if (data.status === 'success' && data.checkout_url && typeof data.checkout_url === 'string' && data.checkout_url.startsWith('https://checkout.stripe.com/')) {
                     window.location.href = data.checkout_url;
                 } else {
                     throw new Error(data.message || 'Erro ao criar checkout');
@@ -2894,11 +3437,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         setTimeout(tryVerify, 2000);
                     } else {
                         if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
-                        showMessage('⏳ Pagamento em processamento. Atualize a página em alguns minutos.', 'info');
+                        showUIMessage('⏳ Pagamento em processamento. Atualize a página em alguns minutos.', 'info');
                     }
                 } else {
                     if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
-                    showMessage(data.message || '❌ Erro ao verificar pagamento.', 'error');
+                    showUIMessage(data.message || '❌ Erro ao verificar pagamento.', 'error');
                 }
             } catch (error) {
                 console.error('Erro ao verificar pagamento:', error);
@@ -2907,7 +3450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(tryVerify, 2000);
                 } else {
                     if (premiumLoadingModal) premiumLoadingModal.style.display = 'none';
-                    showMessage('❌ Erro de conexão. Tente atualizar a página.', 'error');
+                    showUIMessage('❌ Erro de conexão. Tente atualizar a página.', 'error');
                 }
             }
         }
@@ -3038,8 +3581,8 @@ async function handleDownload(platform) {
         if (btn) {
             btn.disabled = true;
             btn.classList.add('loading');
-            const arrowEl = btn.querySelector('.platform-arrow');
-            if (arrowEl) arrowEl.textContent = '⏳';
+            const actionEl = btn.querySelector('.dl-platform-action');
+            if (actionEl) { actionEl.dataset.origHtml = actionEl.innerHTML; actionEl.innerHTML = '<span>⏳</span>'; }
         }
 
         // === ANTI-BOT: Verify token on server before allowing download ===
@@ -3088,18 +3631,27 @@ async function handleDownload(platform) {
         }
 
         // Use signed URL from server (more secure) or direct R2 link
+        // SECURITY: Validate download URL domain
         const downloadUrl = verifyData.url || `https://mira.crewcore.online/${fileName}`;
-        window.location.href = downloadUrl;
+        if (typeof downloadUrl === 'string' && /^https:\/\/(api\.crewcore\.online|mira\.crewcore\.online|[\w-]+\.r2\.cloudflarestorage\.com)\//i.test(downloadUrl)) {
+            window.location.href = downloadUrl;
+        } else {
+            console.error('[Download] Blocked untrusted URL:', downloadUrl);
+            throw new Error('Download URL inválida');
+        }
 
         console.log(`📥 [Download] Starting download for ${platform}: ${fileName}`);
+
+        // Update flow guide to 'downloaded' state
+        if (window.updateFlowGuide) window.updateFlowGuide('downloaded');
 
         // Reset button state after a short delay
         setTimeout(() => {
             if (btn) {
                 btn.disabled = false;
                 btn.classList.remove('loading');
-                const arrowEl = btn.querySelector('.platform-arrow');
-                if (arrowEl) arrowEl.textContent = '⬇';
+                const actionEl = btn.querySelector('.dl-platform-action');
+                if (actionEl && actionEl.dataset.origHtml) actionEl.innerHTML = actionEl.dataset.origHtml;
             }
         }, 2000);
 
@@ -3110,13 +3662,14 @@ async function handleDownload(platform) {
         if (btn) {
             btn.disabled = false;
             btn.classList.remove('loading');
-            const arrowEl = btn.querySelector('.platform-arrow');
-            if (arrowEl) arrowEl.textContent = '❌';
-
-            // Restore arrow after 2s
-            setTimeout(() => {
-                if (arrowEl) arrowEl.textContent = '⬇';
-            }, 2000);
+            const actionEl = btn.querySelector('.dl-platform-action');
+            if (actionEl) {
+                actionEl.innerHTML = '<span>❌</span>';
+                // Restore original after 2s
+                setTimeout(() => {
+                    if (actionEl.dataset.origHtml) actionEl.innerHTML = actionEl.dataset.origHtml;
+                }, 2000);
+            }
         }
 
         // Show error message
@@ -3268,7 +3821,9 @@ function getPlanDisplayName(type) {
 async function updateKeyStatus(key) {
     try {
         const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
-        const response = await fetch(`${apiUrl}/key-status?key=${encodeURIComponent(key)}`);
+        const sessionId = localStorage.getItem('crewbot_session');
+        const headers = sessionId ? { 'X-Session-ID': sessionId } : {};
+        const response = await fetch(`${apiUrl}/key-status?key=${encodeURIComponent(key)}`, { headers });
         const data = await response.json();
 
         if (data.status === 'success') {

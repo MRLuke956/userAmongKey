@@ -3641,7 +3641,10 @@ async function handleDownload(platform) {
 
         // Use signed URL from server (more secure) or direct R2 link
         // SECURITY: Validate download URL domain
-        const downloadUrl = verifyData.url || `https://mira.crewcore.online/${fileName}`;
+        // Cache-bust: append timestamp to avoid Cloudflare CDN serving stale files
+        const cacheBuster = `cb=${Date.now()}`;
+        const rawUrl = verifyData.url || `https://mira.crewcore.online/${fileName}`;
+        const downloadUrl = rawUrl.includes('?') ? `${rawUrl}&${cacheBuster}` : `${rawUrl}?${cacheBuster}`;
         if (typeof downloadUrl === 'string' && /^https:\/\/(api\.crewcore\.online|mira\.crewcore\.online|[\w-]+\.r2\.cloudflarestorage\.com)\//i.test(downloadUrl)) {
             window.location.href = downloadUrl;
         } else {

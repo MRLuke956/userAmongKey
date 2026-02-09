@@ -610,7 +610,6 @@ document.addEventListener('DOMContentLoaded', () => {
             net_keys_today: 'keys today',
             net_members: 'on Discord',
             net_uptime: 'hrs uptime',
-            net_uptime_percent: 'uptime',
             // Premium Success Modal
             premium_payment_confirmed: 'Payment Confirmed!',
             premium_key_ready: 'Your Premium key is ready!',
@@ -884,7 +883,6 @@ document.addEventListener('DOMContentLoaded', () => {
             net_keys_today: 'keys hoje',
             net_members: 'no Discord',
             net_uptime: 'hrs uptime',
-            net_uptime_percent: 'uptime',
             // Premium Success Modal
             premium_payment_confirmed: 'Pagamento Confirmado!',
             premium_key_ready: 'Sua chave Premium está pronta!',
@@ -989,8 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
             online: document.getElementById('netOnline'),
             keysToday: document.getElementById('netKeysToday'),
             totalUsers: document.getElementById('netTotalUsers'),
-            uptime: document.getElementById('netUptime'),
-            uptimePercent: document.getElementById('netUptimePercent')
+            uptime: document.getElementById('netUptime')
         };
 
         let lastStats = {};
@@ -1017,12 +1014,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 animateCounter(statsElements.keysToday, d.keys_today || 0);
                 animateCounter(statsElements.totalUsers, d.discord_members || 0);
                 animateCounter(statsElements.uptime, d.uptime_hours || 0);
-                if (statsElements.uptimePercent) {
-                    const pct = d.uptime_percent !== undefined ? d.uptime_percent : 0;
-                    statsElements.uptimePercent.textContent = pct + '%';
-                    statsElements.uptimePercent.classList.add('updated');
-                    setTimeout(() => statsElements.uptimePercent.classList.remove('updated'), 800);
-                }
 
                 // Update premium active count for social proof
                 const premCountEl = document.getElementById('premiumActiveCount');

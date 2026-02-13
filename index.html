@@ -123,13 +123,34 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=VT323&family=Varela+Round&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Mono:wght@400;700&family=VT323&family=Varela+Round&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
   <link rel="stylesheet" href="style_elite.css">
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    // Lazy-load canvas-confetti only when needed
+    window._confettiLoaded = false;
+    window._confettiQueue = [];
+    window.confetti = function() {
+      var args = arguments;
+      if (window._confettiLoaded && window._realConfetti) { return window._realConfetti.apply(null, args); }
+      window._confettiQueue.push(args);
+      if (!window._confettiLoaded) {
+        window._confettiLoaded = true;
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+        s.onload = function() {
+          window._realConfetti = window.confetti;
+          window.confetti = window._realConfetti;
+          window._confettiQueue.forEach(function(a) { window._realConfetti.apply(null, a); });
+          window._confettiQueue = [];
+        };
+        document.head.appendChild(s);
+      }
+    };
+  </script>
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self' https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.discordapp.com https://cdn.jsdelivr.net; frame-src https://discord.com https://challenges.cloudflare.com; connect-src 'self' https://api.crewcore.online https://discord.com https://challenges.cloudflare.com https://cdn.jsdelivr.net https://checkout.stripe.com;">
 </head>
@@ -1088,8 +1109,8 @@
       <button class="close-widget" id="closeWidget">&times;</button>
     </div>
     <div class="discord-widget">
-      <iframe src="https://discord.com/widget?id=1372893306727563284&theme=dark" allowtransparency="true"
-        frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+      <iframe data-src="https://discord.com/widget?id=1372893306727563284&theme=dark" allowtransparency="true"
+        frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts" loading="lazy"></iframe>
     </div>
   </div>
 
@@ -1114,18 +1135,10 @@
         Discord
       </a>
     </div>
-    <p class="footer-copyright">© 2026 CrewCore Network • Elite Mod Platform</p>
+    <p class="footer-copyright">© 2026 CrewCore Network • Mod Platform</p>
     <p class="footer-trademark">Among Us is a trademark of Innersloth LLC.</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
-  <script>
-    // Configura Twemoji para usar SVGs (melhor qualidade visual em todas as telas)
-    twemoji.parse(document.body, {
-      folder: 'svg',
-      ext: '.svg'
-    });
-  </script>
   <script src="script.js" defer></script>
 </body>
 

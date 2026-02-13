@@ -13,6 +13,15 @@
     --elite-border: rgba(76, 219, 196, 0.15);
 }
 
+/* Global: disable all animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
 /* === NETWORK STATUS BAR (Top of page) === */
 .network-bar {
     position: fixed;
@@ -23,6 +32,7 @@
     background: linear-gradient(180deg, rgba(5, 5, 5, 0.95) 0%, rgba(5, 5, 5, 0.85) 100%);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    will-change: backdrop-filter;
     border-bottom: 1px solid var(--elite-border);
     padding: 0;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
@@ -130,8 +140,7 @@ header h1 {
 /* === STATUS INDICATOR ELITE === */
 .status-indicator {
     border: 1px solid var(--elite-border);
-    background: var(--elite-glass);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 18, 25, 0.85);
 }
 
 .status-dot.online {
@@ -141,10 +150,8 @@ header h1 {
 
 /* === PREMIUM PLANS - ELITE GLASS STYLE === */
 .premium-plan {
-    background: var(--elite-glass);
+    background: rgba(15, 18, 25, 0.85);
     border: 1px solid var(--elite-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     transition: transform 0.2s ease-out, box-shadow 0.3s ease, border-color 0.3s ease;
     transform-style: preserve-3d;
     perspective: 1000px;
@@ -334,7 +341,6 @@ header h1 {
     background: var(--elite-glass);
     border: 1px solid rgba(245, 158, 11, 0.2);
     border-radius: 12px;
-    backdrop-filter: blur(8px);
 }
 
 .cooldown-icon {
@@ -912,6 +918,7 @@ header h1 {
     background: rgba(0, 0, 0, 0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    will-change: backdrop-filter;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1038,7 +1045,7 @@ header h1 {
     justify-content: center;
     margin: 0 auto 1.2rem;
     color: var(--elite-cyan);
-    animation: dlLogoFloat 4s ease-in-out infinite;
+    animation: dlLogoFloat 4s ease-in-out 3;
     box-shadow:
         0 0 40px rgba(76, 219, 196, 0.12),
         inset 0 0 20px rgba(76, 219, 196, 0.05);
@@ -1054,7 +1061,7 @@ header h1 {
     z-index: -1;
     opacity: 0.5;
     background-size: 300% 300%;
-    animation: dlBorderGlow 4s ease infinite;
+    animation: dlBorderGlow 4s ease 3;
 }
 
 @keyframes dlBorderGlow {
@@ -1489,9 +1496,7 @@ header h1 {
 /* === GLASS PANEL ELITE BORDER GLOW === */
 .glass-panel {
     border: 1px solid var(--elite-border);
-    background: var(--elite-glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(15, 18, 25, 0.85);
     position: relative;
 }
 
@@ -1540,7 +1545,7 @@ header h1 {
         rgba(76, 219, 196, 0.03),
         transparent
     );
-    animation: missionSweep 8s ease-in-out infinite;
+    animation: missionSweep 8s ease-in-out 3;
     pointer-events: none;
 }
 
@@ -1606,8 +1611,7 @@ header h1 {
 /* === WELCOME FLOW ELITE === */
 .welcome-flow {
     border: 1px solid var(--elite-border);
-    background: var(--elite-glass);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 18, 25, 0.85);
 }
 
 .flow-step-mini .flow-step-icon {
@@ -1638,7 +1642,7 @@ header h1 {
         rgba(255, 255, 255, 0.08) 55%,
         transparent 70%
     );
-    animation: discordShine 4s ease-in-out infinite;
+    animation: discordShine 4s ease-in-out 3;
 }
 
 @keyframes discordShine {
@@ -1714,7 +1718,7 @@ header h1 {
         rgba(124, 58, 237, 0.03),
         transparent
     );
-    animation: keyHoloSweep 6s ease-in-out infinite;
+    animation: keyHoloSweep 6s ease-in-out 3;
     pointer-events: none;
     z-index: 0;
 }
@@ -1787,7 +1791,7 @@ header h1 {
         rgba(255, 215, 0, 0.03) 55%,
         transparent 65%
     );
-    animation: premPanelShimmer 8s ease-in-out infinite;
+    animation: premPanelShimmer 8s ease-in-out 3;
     pointer-events: none;
 }
 
@@ -1809,10 +1813,8 @@ header h1 {
 }
 
 .toast {
-    background: linear-gradient(165deg, rgba(15, 18, 25, 0.97) 0%, rgba(10, 14, 22, 0.98) 100%);
+    background: linear-gradient(165deg, rgba(15, 18, 25, 0.98) 0%, rgba(10, 14, 22, 0.99) 100%);
     border: 1px solid var(--elite-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(76, 219, 196, 0.05);
@@ -1940,9 +1942,7 @@ header h1 {
 /* === ACHIEVEMENT POPUP ELITE === */
 #achievementPopup {
     border: 1px solid rgba(76, 219, 196, 0.3);
-    background: linear-gradient(135deg, rgba(15, 18, 25, 0.95) 0%, rgba(10, 14, 22, 0.98) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: linear-gradient(135deg, rgba(15, 18, 25, 0.97) 0%, rgba(10, 14, 22, 0.99) 100%);
     box-shadow:
         0 0 40px rgba(76, 219, 196, 0.15),
         0 15px 50px rgba(0, 0, 0, 0.5);
@@ -2007,7 +2007,7 @@ header h1 {
         transparent 50%
     );
     pointer-events: none;
-    animation: premBannerGlow 6s ease-in-out infinite alternate;
+    animation: premBannerGlow 6s ease-in-out 3 alternate;
 }
 
 @keyframes premBannerGlow {

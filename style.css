@@ -1,5 +1,14 @@
 /* Fonts are loaded via <link> in index.html (VT323, Varela Round) */
 
+/* Global: disable all animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 :root {
   /* MOD MENU PALETTE */
   --background-color: #050505;
@@ -153,9 +162,7 @@
   gap: 0.65rem;
   padding: 0.85rem 1rem;
   border-radius: 12px;
-  background: rgba(15, 18, 25, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(15, 18, 25, 0.97);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
   pointer-events: auto;
@@ -369,19 +376,8 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 2;
-  opacity: 0.05;
-  background: repeating-linear-gradient(transparent, transparent 2px, rgba(100, 180, 255, 0.1) 3px, rgba(100, 180, 255, 0.1) 4px);
-  animation: scanlineAnim 15s linear infinite;
-}
-
-@keyframes scanlineAnim {
-  0% {
-    background-position: 0 0;
-  }
-
-  100% {
-    background-position: 0 100px;
-  }
+  opacity: 0.04;
+  background: repeating-linear-gradient(transparent, transparent 2px, rgba(100, 180, 255, 0.08) 3px, rgba(100, 180, 255, 0.08) 4px);
 }
 
 /* 💨 VENT POP ANIMATION (Modal Entry) */
@@ -446,8 +442,7 @@ body {
   align-items: center;
   gap: 0.8rem;
   padding: 0.4rem 0.8rem 0.4rem 0.4rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
+  background: rgba(20, 20, 25, 0.85);
   border-radius: 50px;
   border: 1px solid var(--glass-border);
   cursor: pointer;
@@ -553,6 +548,7 @@ body {
   background: var(--glass-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  will-change: backdrop-filter;
   padding: 2.5rem;
   border-radius: 24px;
   max-width: 620px;
@@ -565,7 +561,7 @@ body {
   text-align: center;
   overflow: hidden;
   animation: containerFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) both,
-    containerBorderGlow 6s ease-in-out infinite 1s;
+    containerBorderGlow 6s ease-in-out 3 1s;
 }
 
 @keyframes containerBorderGlow {
@@ -670,9 +666,7 @@ header p.subtitle {
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.25rem 1.5rem;
-  background: rgba(10, 14, 22, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 14, 22, 0.92);
   border: 1px solid rgba(76, 219, 196, 0.12);
   border-top: none;
   border-radius: 0 0 16px 16px;
@@ -699,9 +693,7 @@ header p.subtitle {
 
 /* Glass panel utility */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(20, 20, 25, 0.8);
   border: 1px solid var(--glass-border);
 }
 
@@ -823,7 +815,7 @@ header p.subtitle {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  animation: discordShine 4s ease-in-out infinite;
+  animation: discordShine 4s ease-in-out 3;
   pointer-events: none;
   z-index: 1;
 }
@@ -1071,9 +1063,7 @@ button.loading .button-text {
 }
 
 .key-display-area {
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0%, rgba(15, 18, 25, 0.6) 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(15, 18, 25, 0.8) 100%);
   border: 2px solid rgba(76, 219, 196, 0.4);
   padding: 1.8rem 1.5rem;
   border-radius: 12px;
@@ -1430,9 +1420,7 @@ button.loading .button-text {
 
 .support-button,
 .translate-button {
-  background: linear-gradient(135deg, rgba(30, 35, 45, 0.7) 0%, rgba(15, 18, 25, 0.8) 100%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: linear-gradient(135deg, rgba(30, 35, 45, 0.9) 0%, rgba(15, 18, 25, 0.95) 100%);
   color: var(--text-color-medium);
   border: 1px solid rgba(106, 147, 201, 0.2);
   padding: 0.8rem 1rem;
@@ -1684,14 +1672,11 @@ button.loading .button-text {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(5px);
+  background-color: rgba(0, 0, 0, 0.85);
 }
 
 .profile-modal {
-  background: linear-gradient(135deg, rgba(26, 36, 51, 0.95) 0%, rgba(15, 18, 25, 0.98) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, rgba(26, 36, 51, 0.98) 0%, rgba(15, 18, 25, 0.99) 100%);
   margin: 5% auto;
   padding: 0;
   border: 2px solid rgba(106, 147, 201, 0.4);
@@ -2096,9 +2081,7 @@ button.loading .button-text {
   border-radius: 16px 16px 0 0;
   background:
     linear-gradient(170deg, rgba(76, 219, 196, 0.06) 0%, rgba(124, 58, 237, 0.03) 40%, transparent 100%),
-    rgba(10, 14, 22, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+    rgba(10, 14, 22, 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
@@ -2328,9 +2311,8 @@ button.loading .button-text {
 
 /* Method Selection Modal Styles */
 .method-selection-content {
-  background: rgba(20, 25, 35, 0.95);
+  background: rgba(20, 25, 35, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
   max-width: 500px;
   width: 90%;
   border-radius: 15px;
@@ -2537,7 +2519,6 @@ button.loading .button-text {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  backdrop-filter: blur(5px);
 }
 
 .access-granted-overlay.show {
@@ -2668,10 +2649,9 @@ button:active:not([disabled]) {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.93);
   display: none;
   z-index: 10000;
-  backdrop-filter: blur(8px);
 }
 
 /* Quando visível, usa flexbox para centralizar */
@@ -3227,9 +3207,7 @@ button:active:not([disabled]) {
   text-align: center;
   color: var(--text-color-medium);
   font-size: 0.85rem;
-  background: linear-gradient(135deg, rgba(26, 36, 51, 0.6) 0%, rgba(15, 18, 25, 0.7) 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, rgba(26, 36, 51, 0.85) 0%, rgba(15, 18, 25, 0.9) 100%);
   border-top: 1px solid rgba(106, 147, 201, 0.2);
   border-radius: 16px 16px 0 0;
   width: 100%;
@@ -3626,7 +3604,7 @@ button:focus-visible {
   width: 200%;
   height: 3px;
   background: linear-gradient(90deg, transparent, #ffd700, #9b59b6, #ffd700, transparent);
-  animation: premiumBorderShine 6s linear infinite;
+  animation: premiumBorderShine 6s linear 5;
 }
 
 @keyframes premiumBorderShine {
@@ -3722,7 +3700,6 @@ button:focus-visible {
   position: relative;
   transition: all 0.35s ease;
   overflow: hidden;
-  backdrop-filter: blur(10px);
 }
 
 /* Animated gradient border effect */
@@ -3981,7 +3958,7 @@ button:focus-visible {
     rgba(255, 215, 0, 0.07) 60%,
     transparent 80%
   );
-  animation: featuredShimmer 4s ease-in-out infinite;
+  animation: featuredShimmer 4s ease-in-out 5;
   pointer-events: none;
   z-index: 0;
 }
@@ -3993,7 +3970,7 @@ button:focus-visible {
 
 /* Breathing glow on featured plan */
 .plan-featured {
-  animation: featuredGlow 3s ease-in-out infinite;
+  animation: featuredGlow 3s ease-in-out 5;
 }
 
 @keyframes featuredGlow {
@@ -4184,7 +4161,7 @@ button:focus-visible {
     0 8px 25px rgba(155, 89, 182, 0.15),
     0 0 40px rgba(155, 89, 182, 0.08);
   padding: 1.5rem 1.25rem !important;
-  animation: lifetimeFloat 5s ease-in-out infinite;
+  animation: lifetimeFloat 5s ease-in-out 3;
   transform: scale(1.01);
 }
 
@@ -4624,7 +4601,6 @@ button:focus-visible {
   z-index: 9999;
   overflow-y: auto;
   padding: 2rem 1rem;
-  backdrop-filter: blur(4px);
   animation: fadeIn 0.3s ease;
 }
 
@@ -5102,9 +5078,7 @@ button:focus-visible {
 }
 
 .download-card {
-  background: linear-gradient(135deg, rgba(26, 36, 51, 0.9) 0%, rgba(15, 18, 25, 0.95) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, rgba(26, 36, 51, 0.95) 0%, rgba(15, 18, 25, 0.98) 100%);
   border: 2px solid rgba(76, 219, 196, 0.3);
   border-radius: 16px;
   padding: 1.5rem;
@@ -5334,7 +5308,6 @@ button:focus-visible {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
@@ -5393,8 +5366,7 @@ button:focus-visible {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.92);
   display: none;
   align-items: center;
   justify-content: center;
@@ -5531,8 +5503,6 @@ button:focus-visible {
   margin: 2rem auto;
   max-width: 620px;
   width: 100%;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -6272,7 +6242,6 @@ button:focus-visible {
   gap: 0.75rem;
   border-radius: 14px;
   z-index: 5;
-  backdrop-filter: blur(4px);
   border: 2px dashed rgba(255, 255, 255, 0.1);
 }
 

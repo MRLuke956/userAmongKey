@@ -377,6 +377,42 @@ document.addEventListener('DOMContentLoaded', () => {
         proofToken: null
     };
 
+    const sleepMs = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function fetchWithTimeout(url, options = {}, timeoutMs = CONFIG.REQUEST_TIMEOUT, retries = 0) {
+        let attempt = 0;
+
+        while (true) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const response = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                const retriableStatus = response.status === 408 || response.status === 429 || response.status >= 500;
+                if (attempt < retries && retriableStatus) {
+                    attempt++;
+                    await sleepMs(Math.min(1200 * attempt, 3000));
+                    continue;
+                }
+
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+
+                const retriableError = error && (error.name === 'AbortError' || error.name === 'TypeError');
+                if (attempt < retries && retriableError) {
+                    attempt++;
+                    await sleepMs(Math.min(1200 * attempt, 3000));
+                    continue;
+                }
+
+                throw error;
+            }
+        }
+    }
+
     // Sincroniza o token global com o appState
     window._syncTurnstileState = function (token) {
         appState.turnstileToken = token;
@@ -1007,7 +1043,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function fetchPlatformStats() {
             try {
-                const res = await fetch(`${CONFIG.API_BASE_URL}/platform-stats`, { signal: AbortSignal.timeout(8000) });
+                const res = await fetchWithTimeout(
+                    `${CONFIG.API_BASE_URL}/platform-stats`,
+                    {},
+                    Math.min(CONFIG.REQUEST_TIMEOUT, 8000),
+                    1
+                );
                 if (!res.ok) return;
                 const json = await res.json();
                 if (json.status !== 'success' || !json.data) return;
@@ -1064,7 +1105,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initial fetch + poll every 30s
         fetchPlatformStats();
-        setInterval(fetchPlatformStats, 30000);
+        setInterval(() => {
+            if (!document.hidden) fetchPlatformStats();
+        }, 30000);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) fetchPlatformStats();
+        });
 
         // Fetch Discord server icon for download modal
         (async () => {
@@ -1085,17 +1131,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         })();
 
-        // 2. Magnetic Button Effect
+        // Skip mousemove-heavy effects on touch devices
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // 2. Magnetic Button Effect (desktop only)
         const mainBtn = document.getElementById('btnOpenMethodMenu');
-        if (mainBtn) {
+        if (mainBtn && !isTouchDevice) {
             const magnetStrength = 0.35;
             const magnetRange = 100;
             let btnRect = mainBtn.getBoundingClientRect();
+            let magnetThrottled = false;
 
-            window.addEventListener('scroll', () => { btnRect = mainBtn.getBoundingClientRect(); });
-            window.addEventListener('resize', () => { btnRect = mainBtn.getBoundingClientRect(); });
+            window.addEventListener('scroll', () => { btnRect = mainBtn.getBoundingClientRect(); }, { passive: true });
+            window.addEventListener('resize', () => { btnRect = mainBtn.getBoundingClientRect(); }, { passive: true });
 
             document.addEventListener('mousemove', (e) => {
+                if (magnetThrottled) return;
+                magnetThrottled = true;
+                requestAnimationFrame(() => { magnetThrottled = false; });
                 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
                 if (mainBtn.offsetParent === null) return;
 
@@ -1116,12 +1169,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     mainBtn.style.transform = 'translate(0, 0) scale(1)';
                     mainBtn.hasMagnetSoundPlayed = false;
                 }
-            });
+            }, { passive: true });
         }
 
-        // 3. Holographic 3D Tilt on Premium Cards
+        // 3. Holographic 3D Tilt on Premium Cards (desktop only)
         const cards = document.querySelectorAll('.premium-plan');
-        if (cards.length > 0) {
+        if (cards.length > 0 && !isTouchDevice) {
             let cardRects = [];
             let isAnimating = false;
             let mouseX = 0;
@@ -1231,7 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         async startAuth() {
             try {
                 showUIMessage(translations[appState.currentLanguage].auth_connecting, 'info');
-                const response = await fetch(`${CONFIG.API_BASE_URL}/auth/discord`);
+                const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/auth/discord`, {}, CONFIG.REQUEST_TIMEOUT, 1);
                 const data = await response.json();
                 // SECURITY: Validate redirect URL to prevent open redirect
                 if (data.status === 'success' && typeof data.auth_url === 'string' && data.auth_url.startsWith('https://discord.com/')) window.location.href = data.auth_url;
@@ -1272,11 +1325,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (code && state) {
                 try {
                     showUIMessage(translations[appState.currentLanguage].auth_verifying, 'info');
-                    const response = await fetch(`${CONFIG.API_BASE_URL}/auth/discord/callback`, {
+                    const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/auth/discord/callback`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ code, state })
-                    });
+                    }, CONFIG.REQUEST_TIMEOUT, 1);
                     const data = await response.json();
                     if (data.status === 'success') await this.handleAuthSuccess(data);
                     else if (data.status === 'server_required') this.handleServerRequired(data);
@@ -1321,7 +1374,12 @@ document.addEventListener('DOMContentLoaded', () => {
         async validateSession() {
             if (!this.sessionId) return false;
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/auth/me`, { headers: { 'X-Session-ID': this.sessionId } });
+                const response = await fetchWithTimeout(
+                    `${CONFIG.API_BASE_URL}/auth/me`,
+                    { headers: { 'X-Session-ID': this.sessionId } },
+                    CONFIG.REQUEST_TIMEOUT,
+                    1
+                );
                 if (response.status === 401) {
                     console.warn('Sessão expirada (401) no validateSession. Realizando logout...');
                     await this.logout();
@@ -1342,7 +1400,12 @@ document.addEventListener('DOMContentLoaded', () => {
         async loadUserStats() {
             if (!this.sessionId) return;
             try {
-                const response = await fetch(`${CONFIG.API_BASE_URL}/auth/user-stats`, { headers: { 'X-Session-ID': this.sessionId } });
+                const response = await fetchWithTimeout(
+                    `${CONFIG.API_BASE_URL}/auth/user-stats`,
+                    { headers: { 'X-Session-ID': this.sessionId } },
+                    CONFIG.REQUEST_TIMEOUT,
+                    1
+                );
                 if (response.status === 401) {
                     console.warn('Sessão expirada (401) no loadUserStats. Realizando logout...');
                     await this.logout();
@@ -1462,7 +1525,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Fire and forget logout to avoid blocking UI
                     fetch(`${CONFIG.API_BASE_URL}/auth/logout`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-Session-ID': this.sessionId },
                         body: JSON.stringify({ session_id: this.sessionId })
                     }).catch(e => console.warn('Logout request failed:', e));
                 } catch (error) { console.error('Erro no logout:', error); }
@@ -1813,9 +1876,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createConfetti(x, y) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const colors = ['#ffcb74', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
         confetti({
-            particleCount: 100,
+            particleCount: 60,
             spread: 70,
             origin: { x: x / window.innerWidth, y: y / window.innerHeight },
             colors: colors,
@@ -1824,23 +1888,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function triggerConfetti() {
-        const duration = 2000;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const duration = 1500;
         const end = Date.now() + duration;
 
         (function frame() {
             confetti({
-                particleCount: 3,
+                particleCount: 2,
                 angle: 60,
                 spread: 55,
                 origin: { x: 0 },
-                colors: ['#ffcb74', '#e74c3c', '#3498db']
+                colors: ['#ffcb74', '#e74c3c', '#3498db'],
+                disableForReducedMotion: true
             });
             confetti({
-                particleCount: 3,
+                particleCount: 2,
                 angle: 120,
                 spread: 55,
                 origin: { x: 1 },
-                colors: ['#ffcb74', '#e74c3c', '#3498db']
+                colors: ['#ffcb74', '#e74c3c', '#3498db'],
+                disableForReducedMotion: true
             });
 
             if (Date.now() < end) {
@@ -2083,7 +2150,12 @@ document.addEventListener('DOMContentLoaded', () => {
             setButtonLoading(elements.btnView, true);
             showUIMessage(translations[appState.currentLanguage].consulting_log, 'info', 0);
             const headers = discordAuth.getAuthHeaders();
-            const response = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
+            const response = await fetchWithTimeout(
+                `${CONFIG.API_BASE_URL}/user_keys`,
+                { headers },
+                CONFIG.REQUEST_TIMEOUT,
+                1
+            );
 
             if (response.status === 401) {
                 console.warn('Sessão expirada (401) no fetchUserKeyList. Realizando logout...');
@@ -2113,7 +2185,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const headers = discordAuth.getAuthHeaders();
-            const response = await fetch(`${CONFIG.API_BASE_URL}/user_premium_keys`, { headers });
+            const response = await fetchWithTimeout(
+                `${CONFIG.API_BASE_URL}/user_premium_keys`,
+                { headers },
+                CONFIG.REQUEST_TIMEOUT,
+                1
+            );
 
             if (response.status === 401) return;
 
@@ -2148,6 +2225,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Adiciona keys premium à lista de exibição
                 renderPremiumKeysList();
+
+                // Cache data globally so loadPremiumPanel() can reuse it
+                // instead of making a duplicate /user_premium_keys request
+                window._premiumKeysData = data;
+                if (typeof loadPremiumPanel === 'function') loadPremiumPanel();
             }
         } catch (error) {
             console.error('Erro ao verificar status premium:', error);
@@ -2234,7 +2316,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!skipChecks) {
             try {
                 const headers = discordAuth.getAuthHeaders();
-                const response = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
+                const response = await fetchWithTimeout(
+                    `${CONFIG.API_BASE_URL}/user_keys`,
+                    { headers },
+                    CONFIG.REQUEST_TIMEOUT,
+                    1
+                );
                 if (response.ok) {
                     const data = await response.json();
                     if (data.status === 'success') {
@@ -2996,6 +3083,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openDiscordWidget() {
+        // Lazy-load iframe src on first open
+        const iframe = elements.discordWidgetContainer?.querySelector('iframe[data-src]');
+        if (iframe) { iframe.src = iframe.getAttribute('data-src'); iframe.removeAttribute('data-src'); }
         elements.discordWidgetContainer.classList.add('active');
         elements.overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -3057,15 +3147,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupCanvasStarfield() {
         const canvas = elements.starfieldCanvas;
         if (!canvas) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { canvas.style.display = 'none'; return; }
         const ctx = canvas.getContext('2d');
         let stars = [];
-        const numStars = Math.min(250, Math.floor((window.innerWidth * window.innerHeight) / 8000));
+        const isMobile = window.innerWidth < 768;
+        const maxStars = isMobile ? 60 : 120;
+        const numStars = Math.min(maxStars, Math.floor((window.innerWidth * window.innerHeight) / 12000));
+        const TARGET_FPS = isMobile ? 20 : 30;
+        const FRAME_INTERVAL = 1000 / TARGET_FPS;
+        let lastFrameTime = 0;
+        let animationId = null;
+        let isRunning = false;
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             stars = [];
-            for (let i = 0; i < numStars; i++) {
+            const count = Math.min(maxStars, Math.floor((canvas.width * canvas.height) / 12000));
+            for (let i = 0; i < count; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
@@ -3078,9 +3177,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function animate() {
+        function animate(timestamp) {
+            if (!isRunning) return;
+            animationId = requestAnimationFrame(animate);
+            const delta = timestamp - lastFrameTime;
+            if (delta < FRAME_INTERVAL) return;
+            lastFrameTime = timestamp - (delta % FRAME_INTERVAL);
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            stars.forEach(star => {
+            for (let i = 0; i < stars.length; i++) {
+                const star = stars[i];
                 star.x += star.dx;
                 star.y += star.dy;
                 star.alpha += star.alphaChange;
@@ -3093,13 +3199,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
                 ctx.fill();
-            });
-            requestAnimationFrame(animate);
+            }
         }
 
+        function startAnimation() { if (!isRunning) { isRunning = true; lastFrameTime = 0; animationId = requestAnimationFrame(animate); } }
+        function stopAnimation() { isRunning = false; if (animationId) { cancelAnimationFrame(animationId); animationId = null; } }
+
+        document.addEventListener('visibilitychange', () => { document.hidden ? stopAnimation() : startAnimation(); });
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
-        animate();
+        startAnimation();
     }
 
     function setupEventListeners() {
@@ -3246,9 +3355,28 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error('[Config] Failed to load server config:', err));
     }
 
+    // Phase 3.2: Pause CSS animations on elements outside the viewport
+    function setupAnimationPausing() {
+        const animatedSelectors = '.premium-plan, .download-card, .mission-panel, .auth-section, .key-display-area, .welcome-flow, .site-footer';
+        const animatedElements = document.querySelectorAll(animatedSelectors);
+        if (!animatedElements.length || !('IntersectionObserver' in window)) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                entry.target.style.animationPlayState = entry.isIntersecting ? 'running' : 'paused';
+            });
+        }, { rootMargin: '50px' });
+
+        animatedElements.forEach(el => {
+            el.style.animationPlayState = 'paused';
+            observer.observe(el);
+        });
+    }
+
     initializeApp();
     updateSoundToggle();
     setupCanvasStarfield();
+    setupAnimationPausing();
     setupEventListeners();
     discordAuth.init().then(() => {
         checkAndProcessShortenerReturn();
@@ -3774,23 +3902,29 @@ async function loadPremiumPanel() {
     if (!premiumPanelElements.panel) return;
 
     try {
-        const sessionId = localStorage.getItem('crewbot_session');
-        if (!sessionId) {
-            premiumPanelElements.panel.style.display = 'none';
-            return;
+        // Use cached data from fetchUserPremiumStatus() if available
+        // This avoids a duplicate /user_premium_keys request on every page load
+        let data = window._premiumKeysData || null;
+
+        if (!data) {
+            const sessionId = localStorage.getItem('crewbot_session');
+            if (!sessionId) {
+                premiumPanelElements.panel.style.display = 'none';
+                return;
+            }
+
+            const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
+            const response = await fetch(`${apiUrl}/user_premium_keys`, {
+                headers: { 'X-Session-ID': sessionId }
+            });
+
+            if (!response.ok) {
+                premiumPanelElements.panel.style.display = 'none';
+                return;
+            }
+
+            data = await response.json();
         }
-
-        const apiUrl = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'https://api.crewcore.online';
-        const response = await fetch(`${apiUrl}/user_premium_keys`, {
-            headers: { 'X-Session-ID': sessionId }
-        });
-
-        if (!response.ok) {
-            premiumPanelElements.panel.style.display = 'none';
-            return;
-        }
-
-        const data = await response.json();
 
         if (!data.has_active_premium || !data.premium_keys || data.premium_keys.length === 0) {
             premiumPanelElements.panel.style.display = 'none';
@@ -3836,6 +3970,7 @@ async function updateKeyStatus(key) {
         const sessionId = localStorage.getItem('crewbot_session');
         const headers = sessionId ? { 'X-Session-ID': sessionId } : {};
         const response = await fetch(`${apiUrl}/key-status?key=${encodeURIComponent(key)}`, { headers });
+        if (!response.ok) return;
         const data = await response.json();
 
         if (data.status === 'success') {

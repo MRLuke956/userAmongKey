@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
             version_latest: '✅ Latest version',
             download_hint: '🔒 Secure download via Cloudflare',
             download_client_title: 'Download Mod',
-            download_client_subtitle: 'Mod V6.0.6d • Game v17.1.0',
+            download_client_subtitle: 'Mod V6.0.6Final • Game v17.1.0',
             download_now: 'DOWNLOAD NOW',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',
@@ -962,7 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Footer
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank" rel="noopener noreferrer">CrewCore Team</a>',
             download_client_title: 'Baixar Mod',
-            download_client_subtitle: 'Mod V6.0.6d • Game v17.1.0',
+            download_client_subtitle: 'Mod V6.0.6Final • Game v17.1.0',
             download_now: 'BAIXAR AGORA',
             dl_chip_instant: 'Ativação Instantânea',
             dl_chip_undetected: 'Indetectável',
@@ -3732,9 +3732,9 @@ async function handleDownload(platform) {
 
     // Mapeamento de plataforma para arquivo no R2
     const DOWNLOAD_FILES = {
-        'steam': 'Steam V6.0.6d.zip',
-        'epic': 'EpicGames V6.0.6d.zip',
-        'epicgames': 'EpicGames V6.0.6d.zip'
+        'steam': 'Steam V6.0.6Final.zip',
+        'epic': 'EpicGames V6.0.6Final.zip',
+        'epicgames': 'EpicGames V6.0.6Final.zip'
     };
 
     const fileName = DOWNLOAD_FILES[platform];

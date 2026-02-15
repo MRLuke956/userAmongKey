@@ -1549,7 +1549,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         getAvatarUrl(userId, avatarHash, size = 64) {
-            if (!avatarHash) return `https://cdn.discordapp.com/embed/avatars/${(userId >> 22) % 6}.png`;
+            if (!avatarHash) {
+                // FIX: Bitshift on string returns 0; use BigInt for large Discord snowflake IDs
+                const idx = userId ? Number((BigInt(userId) >> 22n) % 6n) : 0;
+                return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+            }
             return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.png?size=${size}`;
         }
 
@@ -1764,8 +1768,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => { elements.messageEl.className = 'message'; }, 300);
         }, duration);
 
-        // Also show toast notification
-        if (typeof toast !== 'undefined' && toast.show) {
+        // Show toast notification ONLY for important types (avoid double-notification UX)
+        // Info messages already appear inline in the key area — toast would be redundant.
+        if (typeof toast !== 'undefined' && toast.show && (type === 'error' || type === 'success')) {
             toast.show(sanitizedText, type, duration > 0 ? duration : 8000);
         }
     }
@@ -1843,10 +1848,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             showUIMessage(translations[lang].delete_key_deleting, 'info', 0);
             const headers = discordAuth.getAuthHeaders();
-            const response = await fetch(`${CONFIG.API_BASE_URL}/delete_key?key=${encodeURIComponent(key)}`, {
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/delete_key?key=${encodeURIComponent(key)}`, {
                 method: 'DELETE',
                 headers
-            });
+            }, CONFIG.REQUEST_TIMEOUT, 1);
 
             if (response.status === 401) {
                 showUIMessage(translations[lang].session_expired, 'error');
@@ -2046,7 +2051,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             showUIMessage(translations[appState.currentLanguage].connecting_server, 'info', 0);
             const headers = { 'X-Proof-Token': proofToken, ...discordAuth.getAuthHeaders() };
-            const response = await fetch(`${CONFIG.API_BASE_URL}/generate_key`, { method: 'GET', headers });
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/generate_key`, { method: 'GET', headers }, CONFIG.REQUEST_TIMEOUT, 2);
 
             if (response.status === 401) {
                 showUIMessage(translations[appState.currentLanguage].session_expired_login, 'error');
@@ -2084,7 +2089,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 elements.keyActions.style.display = 'flex';
                 elements.keyMetadata.style.display = 'block';
-                elements.keyTimestamp.textContent = new Date().toLocaleString('pt-BR');
+                elements.keyTimestamp.textContent = new Date().toLocaleString(appState.currentLanguage === 'en' ? 'en-US' : 'pt-BR');
 
                 // Show next steps hint
                 const nextSteps = document.getElementById('keyNextSteps');
@@ -2437,13 +2442,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const lang = appState.currentLanguage;
             showUIMessage(translations[lang].starting_verification, 'info', 0);
 
-            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step1`, {
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/initiate-step1`, {
                 method: 'GET',
                 headers: {
                     'X-Turnstile-Token': appState.turnstileToken,
                     ...discordAuth.getAuthHeaders()  // [FIX] Envia credenciais de autenticação
                 }
-            });
+            }, CONFIG.REQUEST_TIMEOUT, 1);
             const data = await response.json();
 
             if (response.status === 429) {
@@ -2511,11 +2516,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const lang = appState.currentLanguage;
             showUIMessage(translations[lang].starting_verification || 'Iniciando...', 'info', 0);
 
-            const response = await fetch(`${CONFIG.API_BASE_URL}/initiate-step2`, {
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/initiate-step2`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...discordAuth.getAuthHeaders() },
                 body: JSON.stringify({ step1_token: twoStepState.step1Token })
-            });
+            }, CONFIG.REQUEST_TIMEOUT, 1);
             const data = await response.json();
 
             if (!response.ok) {
@@ -2681,7 +2686,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // === FIX: Buscar keys ANTES de continuar para evitar bypass ===
         try {
             const headers = discordAuth.getAuthHeaders();
-            const keysResponse = await fetch(`${CONFIG.API_BASE_URL}/user_keys`, { headers });
+            const keysResponse = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/user_keys`, { headers }, CONFIG.REQUEST_TIMEOUT, 1);
             if (keysResponse.ok) {
                 const keysData = await keysResponse.json();
                 if (keysData.status === 'success') {
@@ -2701,14 +2706,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/verify-step1`, {
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/verify-step1`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     session_id: sessionId,
                     linkvertise_hash: linkvertiseHash || null
                 })
-            });
+            }, CONFIG.REQUEST_TIMEOUT, 1);
             const data = await response.json();
 
             if (data.bypass_detected) {
@@ -2754,14 +2759,14 @@ document.addEventListener('DOMContentLoaded', () => {
         window.history.replaceState({}, document.title, window.location.pathname);
 
         try {
-            const response = await fetch(`${CONFIG.API_BASE_URL}/verify-step2`, {
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}/verify-step2`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     session_id: sessionId,
                     linkvertise_hash: linkvertiseHash || null
                 })
-            });
+            }, CONFIG.REQUEST_TIMEOUT, 1);
             const data = await response.json();
 
             if (data.bypass_detected) {
@@ -2981,7 +2986,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? '/solve-challenge-step2'
                 : '/solve-challenge';
 
-            const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
+            const response = await fetchWithTimeout(`${CONFIG.API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2989,7 +2994,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     challenge_id: appState.currentChallenge.id,
                     answer: String(answer)
                 })
-            });
+            }, CONFIG.REQUEST_TIMEOUT, 1);
 
             const data = await response.json();
 
@@ -3148,33 +3153,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvas = elements.starfieldCanvas;
         if (!canvas) return;
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { canvas.style.display = 'none'; return; }
-        const ctx = canvas.getContext('2d');
-        let stars = [];
+        const ctx = canvas.getContext('2d', { alpha: true });
         const isMobile = window.innerWidth < 768;
-        const maxStars = isMobile ? 60 : 120;
-        const numStars = Math.min(maxStars, Math.floor((window.innerWidth * window.innerHeight) / 12000));
         const TARGET_FPS = isMobile ? 20 : 30;
         const FRAME_INTERVAL = 1000 / TARGET_FPS;
         let lastFrameTime = 0;
         let animationId = null;
         let isRunning = false;
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            stars = [];
-            const count = Math.min(maxStars, Math.floor((canvas.width * canvas.height) / 12000));
-            for (let i = 0; i < count; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5,
-                    alpha: Math.random() * 0.5 + 0.5,
-                    dx: (Math.random() - 0.5) * 0.1,
-                    dy: (Math.random() - 0.5) * 0.1,
-                    alphaChange: (Math.random() - 0.5) * 0.01
-                });
+        // Among Us style: stars drift diagonally (upper-left) like flying through space
+        // 3 parallax layers: far (slow, tiny, dim), mid, near (fast, bigger, bright)
+        const LAYERS = [
+            { speed: 0.15, sizeMin: 0.3, sizeMax: 0.8,  alphaMin: 0.2, alphaMax: 0.4, count: isMobile ? 40 : 80  },
+            { speed: 0.4,  sizeMin: 0.5, sizeMax: 1.2,  alphaMin: 0.3, alphaMax: 0.6, count: isMobile ? 20 : 45  },
+            { speed: 0.8,  sizeMin: 0.8, sizeMax: 1.8,  alphaMin: 0.5, alphaMax: 0.9, count: isMobile ? 8  : 18  }
+        ];
+        // Pre-allocated typed arrays for perf (avoid per-star objects + GC)
+        let starX, starY, starSize, starAlpha, starLayer, totalStars;
+
+        function initStars() {
+            totalStars = LAYERS.reduce((s, l) => s + l.count, 0);
+            starX     = new Float32Array(totalStars);
+            starY     = new Float32Array(totalStars);
+            starSize  = new Float32Array(totalStars);
+            starAlpha = new Float32Array(totalStars);
+            starLayer = new Uint8Array(totalStars);
+            let idx = 0;
+            for (let li = 0; li < LAYERS.length; li++) {
+                const L = LAYERS[li];
+                for (let i = 0; i < L.count; i++) {
+                    starX[idx]     = Math.random() * canvas.width;
+                    starY[idx]     = Math.random() * canvas.height;
+                    starSize[idx]  = L.sizeMin + Math.random() * (L.sizeMax - L.sizeMin);
+                    starAlpha[idx] = L.alphaMin + Math.random() * (L.alphaMax - L.alphaMin);
+                    starLayer[idx] = li;
+                    idx++;
+                }
             }
+        }
+
+        function resizeCanvas() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars();
         }
 
         function animate(timestamp) {
@@ -3184,21 +3205,32 @@ document.addEventListener('DOMContentLoaded', () => {
             if (delta < FRAME_INTERVAL) return;
             lastFrameTime = timestamp - (delta % FRAME_INTERVAL);
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < stars.length; i++) {
-                const star = stars[i];
-                star.x += star.dx;
-                star.y += star.dy;
-                star.alpha += star.alphaChange;
-                if (star.alpha <= 0.1 || star.alpha >= 1) star.alphaChange *= -1;
-                if (star.x < 0) star.x = canvas.width;
-                if (star.x > canvas.width) star.x = 0;
-                if (star.y < 0) star.y = canvas.height;
-                if (star.y > canvas.height) star.y = 0;
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
-                ctx.fill();
+            const W = canvas.width, H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+
+            // Batch by layer for fewer fillStyle changes
+            for (let li = 0; li < LAYERS.length; li++) {
+                const spd = LAYERS[li].speed;
+                for (let i = 0; i < totalStars; i++) {
+                    if (starLayer[i] !== li) continue;
+                    // Move diagonally (slight left + upward drift, like Among Us space)
+                    starX[i] -= spd * 0.6;
+                    starY[i] -= spd * 0.3;
+                    // Wrap around edges
+                    if (starX[i] < -2) starX[i] += W + 4;
+                    if (starY[i] < -2) starY[i] += H + 4;
+                    // Draw: fillRect for tiny stars (faster than arc), arc for larger
+                    const sz = starSize[i];
+                    const a = starAlpha[i];
+                    ctx.fillStyle = `rgba(255,255,255,${a})`;
+                    if (sz <= 1) {
+                        ctx.fillRect(starX[i], starY[i], sz, sz);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(starX[i], starY[i], sz * 0.5, 0, 6.2832);
+                        ctx.fill();
+                    }
+                }
             }
         }
 
@@ -3206,7 +3238,8 @@ document.addEventListener('DOMContentLoaded', () => {
         function stopAnimation() { isRunning = false; if (animationId) { cancelAnimationFrame(animationId); animationId = null; } }
 
         document.addEventListener('visibilitychange', () => { document.hidden ? stopAnimation() : startAnimation(); });
-        window.addEventListener('resize', resizeCanvas);
+        let resizeTimer;
+        window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(resizeCanvas, 200); });
         resizeCanvas();
         startAnimation();
     }

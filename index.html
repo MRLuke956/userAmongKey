@@ -162,6 +162,15 @@
   <!-- Screen reader announcements -->
   <div aria-live="polite" id="srAnnouncements" class="sr-only"></div>
 
+  <!-- Fallback for users with JavaScript disabled -->
+  <noscript>
+    <div style="background:#1a2433;color:#e0e0e0;text-align:center;padding:3rem 1rem;font-family:sans-serif;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+      <h1 style="font-size:1.8rem;margin-bottom:1rem;">⚠️ JavaScript Required</h1>
+      <p style="max-width:500px;line-height:1.6;">CrewCore requires JavaScript to generate keys, authenticate with Discord, and download the mod. Please enable JavaScript in your browser settings and reload the page.</p>
+      <p style="margin-top:1.5rem;"><a href="https://discord.gg/ucm7pKGrVv" style="color:#5865F2;text-decoration:underline;">Join our Discord for help</a></p>
+    </div>
+  </noscript>
+
   <!-- SVG Sprite Sheet (hidden) -->
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
     <defs>

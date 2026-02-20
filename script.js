@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
             version_latest: '✅ Latest version',
             download_hint: '🔒 Secure download via Cloudflare',
             download_client_title: 'Download Mod',
-            download_client_subtitle: 'Mod V6.0.7a • Game v17.1.0',
+            download_client_subtitle: 'Mod V6.0.7c • Game v17.1.0',
             download_now: 'DOWNLOAD NOW',
             platform_steam: 'Steam',
             platform_epic: 'Epic Games',
@@ -962,7 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Footer
             footer_made_with: 'Feito com <span class="footer-heart">❤️</span> por <a href="https://discord.gg/ucm7pKGrVv" target="_blank" rel="noopener noreferrer">CrewCore Team</a>',
             download_client_title: 'Baixar Mod',
-            download_client_subtitle: 'Mod V6.0.7a • Game v17.1.0',
+            download_client_subtitle: 'Mod V6.0.7c • Game v17.1.0',
             download_now: 'BAIXAR AGORA',
             dl_chip_instant: 'Ativação Instantânea',
             dl_chip_undetected: 'Indetectável',
@@ -1236,8 +1236,8 @@ document.addEventListener('DOMContentLoaded', () => {
     class DiscordAuthSystem {
         constructor() {
             this.sessionId = localStorage.getItem('crewbot_session');
-            this.userData = JSON.parse(localStorage.getItem('crewbot_user') || 'null');
-            this.userStats = JSON.parse(localStorage.getItem('crewbot_stats') || 'null');
+            try { this.userData = JSON.parse(localStorage.getItem('crewbot_user') || 'null'); } catch { this.userData = null; }
+            try { this.userStats = JSON.parse(localStorage.getItem('crewbot_stats') || 'null'); } catch { this.userStats = null; }
             this.isAuthenticated = !!this.sessionId;
             this.sessionExpiresAt = parseInt(localStorage.getItem('crewbot_session_expires') || '0');
         }
@@ -1276,9 +1276,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elements.modalLogoutBtn) elements.modalLogoutBtn.addEventListener('click', () => { this.hideUserModal(); this.logout(); });
             document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && elements.userProfileModal.style.display === 'block') this.hideUserModal(); });
 
-            if (elements.helpButton) elements.helpButton.addEventListener('click', () => { elements.tutorialModal.style.display = 'block'; });
-            if (elements.closeTutorialModal) elements.closeTutorialModal.addEventListener('click', () => { elements.tutorialModal.style.display = 'none'; });
-            window.addEventListener('click', (e) => { if (e.target === elements.tutorialModal) elements.tutorialModal.style.display = 'none'; });
+            if (elements.helpButton) elements.helpButton.addEventListener('click', () => { elements.tutorialModal.style.display = 'block'; _focusTrapHandlers.tutorial = trapFocus(elements.tutorialModal); });
+            if (elements.closeTutorialModal) elements.closeTutorialModal.addEventListener('click', () => { elements.tutorialModal.style.display = 'none'; releaseFocus(elements.tutorialModal, _focusTrapHandlers.tutorial); });
+            window.addEventListener('click', (e) => { if (e.target === elements.tutorialModal) { elements.tutorialModal.style.display = 'none'; releaseFocus(elements.tutorialModal, _focusTrapHandlers.tutorial); } });
         }
 
         async startAuth() {
@@ -1707,7 +1707,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function validateToken(token) { return typeof token === 'string' && /^[a-zA-Z0-9\-_]{20,}$/.test(token); }
 
     // SECURITY: HTML entity escaping for innerHTML contexts with server data
-    function escHtml(s) { return typeof s === 'string' ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+    function escHtml(s) { return typeof s === 'string' ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') : ''; }
+
+    // U1 (ACCESSIBILITY 2026): Focus trap for modals — keeps Tab/Shift+Tab inside the modal
+    function trapFocus(modal) {
+        const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return null;
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        function handler(e) {
+            if (e.key !== 'Tab') return;
+            if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+            else { if (document.activeElement === last) { e.preventDefault(); first.focus(); } }
+        }
+        modal.addEventListener('keydown', handler);
+        first.focus();
+        return handler;
+    }
+    function releaseFocus(modal, handler) {
+        if (handler) modal.removeEventListener('keydown', handler);
+    }
+    const _focusTrapHandlers = {};
 
     function initAudioContext() {
         if (!appState.audioContext && appState.soundEnabled) {
@@ -2028,6 +2047,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
+    let _generateKeyRetryCount = 0;
     async function generateNewKey() {
         if (appState.isProcessing) return;
         appState.isProcessing = true;
@@ -2104,6 +2124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => elements.copyButton.classList.remove('pulse-hint'), 4500);
                 }
 
+                _generateKeyRetryCount = 0; // Reset retry counter on success
                 appState.keyGenerationCount++;
                 appState.lastKeyGenerationTime = Date.now();
                 localStorage.setItem('keyGenerationCount', appState.keyGenerationCount.toString());
@@ -2124,8 +2145,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Se for erro de "muito rápido" (400) ou rate limit (429), tenta novamente após um delay curto
                 if (response.status === 400 && errorMessage.includes('rápida')) {
-                    showUIMessage(translations[appState.currentLanguage].security_checking, 'info', 2000);
-                    setTimeout(() => generateNewKey(), 2500); // Tenta de novo em 2.5s
+                    _generateKeyRetryCount++;
+                    if (_generateKeyRetryCount <= 3) {
+                        showUIMessage(translations[appState.currentLanguage].security_checking, 'info', 2000);
+                        setTimeout(() => generateNewKey(), 2500);
+                        return;
+                    }
+                    // Max retries reached — stop and show error
+                    _generateKeyRetryCount = 0;
+                    showUIMessage(appState.currentLanguage === 'pt' ? '⚠️ Muitas tentativas. Aguarde um momento.' : '⚠️ Too many retries. Please wait a moment.', 'error');
+                    appState.isProcessing = false;
+                    setButtonLoading(elements.btnOpenMethodMenu, false);
                     return;
                 }
 
@@ -2368,6 +2398,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         elements.twoStepModal.style.display = 'block';
+        _focusTrapHandlers.twoStep = trapFocus(elements.twoStepModal);
     }
 
     // Atualiza UI dos passos
@@ -2465,6 +2496,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fecha modal se limite atingido
                 if (data.limit_reached && elements.twoStepModal) {
                     elements.twoStepModal.style.display = 'none';
+                    releaseFocus(elements.twoStepModal, _focusTrapHandlers.twoStep);
                 }
                 return;
             }
@@ -2890,6 +2922,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Mostra modal
         modal.style.display = 'block';
+        _focusTrapHandlers.challenge = trapFocus(modal);
         if (appState.soundEnabled) playSound(660, 150, 'sine');
     }
 
@@ -3080,6 +3113,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideChallengeModal() {
         if (elements.challengeModal) {
             elements.challengeModal.style.display = 'none';
+            releaseFocus(elements.challengeModal, _focusTrapHandlers.challenge);
         }
         if (appState.challengeTimerInterval) {
             clearInterval(appState.challengeTimerInterval);
@@ -3288,12 +3322,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Close two-step modal
         if (elements.closeTwoStepModal) {
             elements.closeTwoStepModal.addEventListener('click', () => {
-                if (elements.twoStepModal) elements.twoStepModal.style.display = 'none';
+                if (elements.twoStepModal) { elements.twoStepModal.style.display = 'none'; releaseFocus(elements.twoStepModal, _focusTrapHandlers.twoStep); }
             });
         }
         if (elements.twoStepModal) {
             window.addEventListener('click', (e) => {
-                if (e.target === elements.twoStepModal) elements.twoStepModal.style.display = 'none';
+                if (e.target === elements.twoStepModal) { elements.twoStepModal.style.display = 'none'; releaseFocus(elements.twoStepModal, _focusTrapHandlers.twoStep); }
             });
         }
 
@@ -3732,9 +3766,9 @@ async function handleDownload(platform) {
 
     // Mapeamento de plataforma para arquivo no R2
     const DOWNLOAD_FILES = {
-        'steam': 'Steam V6.0.7a.zip',
-        'epic': 'EpicGames V6.0.7a.zip',
-        'epicgames': 'EpicGames V6.0.7a.zip'
+        'steam': 'Steam V6.0.7c.zip',
+        'epic': 'EpicGames V6.0.7c.zip',
+        'epicgames': 'EpicGames V6.0.7c.zip'
     };
 
     const fileName = DOWNLOAD_FILES[platform];
